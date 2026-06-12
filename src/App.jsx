@@ -1180,12 +1180,13 @@ export default function App() {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 9 }}>
                     {[{ l: t.goal, v: c.goal }, { l: t.weight, v: `${c.weight}kg` }, { l: t.age, v: `${c.age}y` }].map(x => (<div key={x.l} style={{ background: G.surf2, borderRadius: 6, padding: "6px 8px", textAlign: "center" }}><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 11, fontWeight: 700 }}>{x.v}</div></div>))}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5, marginBottom: 9 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 5, marginBottom: 9 }}>
                     <Btn ch="✏️" v="ghost" onClick={() => openEdit(c)} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="📋" v="ghost" onClick={() => { setSelC(c); setATab("plans"); }} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="💪" v="ghost" onClick={() => genAI(c, "workout")} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="🥗" v="green" onClick={() => genAI(c, "nutrition")} sx={{ padding: "6px", fontSize: 12 }} />
-                    <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "danger"} onClick={() => toggleStatus(c.id)} sx={{ padding: "6px", fontSize: 12 }} />
+                    <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "6px", fontSize: 12 }} />
+                    <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "هل تريد حذف" : "Delete"} ${c.name}?`)) setClients(p => p.filter(x => x.id !== c.id)); }} sx={{ padding: "6px", fontSize: 12 }} />
                   </div>
                   {c.phone && (
                     <a href={`https://wa.me/${c.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${c.name}!\n\n📧 Email: ${c.email}\n🔑 ${isAr ? "كلمة المرور" : "Password"}: ${c.password}\n\n🌐 ${TRAINER.appUrl}\n— ${TRAINER.name}`)}`}
