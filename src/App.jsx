@@ -789,11 +789,20 @@ export default function App() {
           <div style={{ marginBottom: 20 }}><div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{t.password}</div><input className="inp" type="password" placeholder="••••••••" value={lf.p} onChange={e => setLf(p => ({ ...p, p: e.target.value }))} onKeyDown={e => e.key === "Enter" && login()} /></div>
           <Btn ch={t.enter} v="gold" full onClick={login} sx={{ padding: "13px", fontSize: 15, letterSpacing: 1 }} />
           <div style={{ textAlign: "center", marginTop: 12 }}><a href="/register" style={{ fontSize: 13, color: G.gold, textDecoration: "none" }}>{t.newMember}</a></div>
-          <div style={{ marginTop: 18, background: "rgba(212,175,55,0.05)", border: `1px solid ${G.border}`, borderRadius: 10, padding: 12, fontSize: 12, color: G.muted, lineHeight: 2 }}>
-            <div style={{ fontSize: 10, color: G.dim, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6, textAlign: "center" }}>{t.demoAccess}</div>
-            <span style={{ color: G.gold }}>{t.trainer}:</span> admin / pd@rafi2024<br />
-            <span style={{ color: G.gold }}>{t.client}:</span> arjun@email.com / client123
+        </div>
+        {/* Professional trainer contact strip */}
+        <div style={{ marginTop: 20, textAlign: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#080600", fontSize: 13 }}>MR</div>
+            <div style={{ textAlign: isAr ? "right" : "left" }}>
+              <div className="sf gd" style={{ fontSize: 14, fontWeight: 700 }}>{TRAINER.name}</div>
+              <div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div>
+            </div>
           </div>
+          <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 20, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 600 }}>
+            💬 {isAr ? "تواصل معنا على واتساب" : "Contact us on WhatsApp"}
+          </a>
         </div>
       </div>
     </div>
