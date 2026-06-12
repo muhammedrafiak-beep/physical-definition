@@ -357,19 +357,246 @@ function openWelcomePDF(data, lang) {
   window.open(url, "_blank");
 }
 
-// ── EXERCISE ANIMATION ────────────────────────────────────────────────────────
-function ExAnim({ id, color, size = 120 }) {
-  const [t, setT] = useState(0);
-  useEffect(() => { const i = setInterval(() => setT(p => (p + 1) % 100), 40); return () => clearInterval(i); }, []);
-  const rad = (t / 100) * Math.PI * 2, s = Math.sin(rad), c = Math.cos(rad);
-  const anims = {
-    pushup: () => { const lift = Math.max(0, s) * 14, bY = 55 + lift * 0.8; return (<svg viewBox="0 0 120 90" width={size} height={size * 0.75}><rect x="10" y="74" width="100" height="3" rx="1.5" fill={color} opacity="0.2" /><circle cx="60" cy={bY - 20} r="9" fill={color} /><line x1="60" y1={bY - 11} x2="60" y2={bY + 8} stroke={color} strokeWidth="4" strokeLinecap="round" /><line x1="60" y1={bY - 2} x2={60 - 18 - lift * 0.6} y2={bY + 16 - lift * 0.5} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><line x1="60" y1={bY - 2} x2={60 + 18 + lift * 0.6} y2={bY + 16 - lift * 0.5} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><line x1="60" y1={bY + 8} x2="52" y2="74" stroke={color} strokeWidth="3.5" strokeLinecap="round" /><line x1="60" y1={bY + 8} x2="68" y2="74" stroke={color} strokeWidth="3.5" strokeLinecap="round" /></svg>); },
-    squat: () => { const dip = Math.max(0, s) * 18; return (<svg viewBox="0 0 120 110" width={size} height={size * 0.92}><circle cx="60" cy={22 + dip * 0.5} r="9" fill={color} /><line x1="60" y1={31 + dip * 0.5} x2="60" y2={52 + dip * 0.5} stroke={color} strokeWidth="4" strokeLinecap="round" /><line x1="60" y1={40 + dip * 0.5} x2="45" y2={45 + dip * 0.3} stroke={color} strokeWidth="3" strokeLinecap="round" /><line x1="60" y1={40 + dip * 0.5} x2="75" y2={45 + dip * 0.3} stroke={color} strokeWidth="3" strokeLinecap="round" /><line x1="60" y1={52 + dip * 0.5} x2={50 - dip * 0.3} y2={80 + dip * 0.1} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><line x1="60" y1={52 + dip * 0.5} x2={70 + dip * 0.3} y2={80 + dip * 0.1} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><line x1={50 - dip * 0.3} y1={80 + dip * 0.1} x2={48} y2={100} stroke={color} strokeWidth="3" strokeLinecap="round" /><line x1={70 + dip * 0.3} y1={80 + dip * 0.1} x2={72} y2={100} stroke={color} strokeWidth="3" strokeLinecap="round" /></svg>); },
-    deadlift: () => { const lift = ((1 - c) / 2) * 22, barY = 80 - lift, tX = lift * 0.4; return (<svg viewBox="0 0 120 110" width={size} height={size * 0.92}><rect x="20" y={barY - 3} width="80" height="6" rx="3" fill={color} opacity="0.7" /><circle cx="22" cy={barY} r="9" fill="none" stroke={color} strokeWidth="3" /><circle cx="98" cy={barY} r="9" fill="none" stroke={color} strokeWidth="3" /><circle cx="60" cy={20 + tX * 0.3} r="9" fill={color} /><line x1="60" y1={29 + tX * 0.3} x2="60" y2={55 + tX * 0.1} stroke={color} strokeWidth="4" strokeLinecap="round" /><line x1="60" y1={40 + tX * 0.2} x2="44" y2={barY + 3} stroke={color} strokeWidth="3" strokeLinecap="round" /><line x1="60" y1={40 + tX * 0.2} x2="76" y2={barY + 3} stroke={color} strokeWidth="3" strokeLinecap="round" /><line x1="60" y1={55 + tX * 0.1} x2="52" y2={95} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><line x1="60" y1={55 + tX * 0.1} x2="68" y2={95} stroke={color} strokeWidth="3.5" strokeLinecap="round" /></svg>); },
-    pullup: () => { const lift = Math.max(0, s) * 18, bY = 35 + lift; return (<svg viewBox="0 0 120 110" width={size} height={size * 0.92}><rect x="15" y="8" width="90" height="7" rx="3.5" fill={color} opacity="0.4" /><line x1="30" y1="15" x2="30" y2="30" stroke={color} strokeWidth="2.5" opacity="0.5" /><line x1="90" y1="15" x2="90" y2="30" stroke={color} strokeWidth="2.5" opacity="0.5" /><circle cx="60" cy={bY} r="9" fill={color} /><line x1="60" y1={bY + 9} x2="60" y2={bY + 30} stroke={color} strokeWidth="4" strokeLinecap="round" /><line x1="60" y1={bY + 18} x2="33" y2="22" stroke={color} strokeWidth="3" strokeLinecap="round" /><line x1="60" y1={bY + 18} x2="87" y2="22" stroke={color} strokeWidth="3" strokeLinecap="round" /><line x1="60" y1={bY + 30} x2="52" y2={bY + 55} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><line x1="60" y1={bY + 30} x2="68" y2={bY + 55} stroke={color} strokeWidth="3.5" strokeLinecap="round" /></svg>); },
-    plank: () => { const w = s * 1.5; return (<svg viewBox="0 0 140 80" width={size} height={size * 0.57}><circle cx="105" cy={30 + w} r="9" fill={color} /><line x1="105" y1={39 + w} x2="28" y2={50 + w * 0.4} stroke={color} strokeWidth="5" strokeLinecap="round" /><line x1="88" y1={45 + w * 0.7} x2="80" y2={62 + w * 0.3} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><circle cx="80" cy={62 + w * 0.3} r="3" fill={color} /><line x1="44" y1={48 + w * 0.5} x2="40" y2={64 + w * 0.2} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><circle cx="40" cy={64 + w * 0.2} r="3" fill={color} /><line x1="28" y1={50 + w * 0.4} x2="26" y2={65 + w * 0.2} stroke={color} strokeWidth="3.5" strokeLinecap="round" /><circle cx="26" cy={65 + w * 0.2} r="3" fill={color} /></svg>); },
+// ── REALISTIC EXERCISE ANIMATIONS ────────────────────────────────────────────
+function ExAnim({ id, color, size = 140 }) {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setFrame(f => (f + 1) % 120), 33);
+    return () => clearInterval(i);
+  }, []);
+
+  const phase = (frame / 120) * Math.PI * 2;
+  const s = Math.sin(phase);
+  const ease = (Math.sin(phase - Math.PI / 2) + 1) / 2; // 0→1 smooth
+
+  const skin = color;
+  const dark = color + "cc";
+  const light = color + "44";
+  const muscle = color + "88";
+
+  // Reusable body parts
+  const Head = ({ cx, cy, r = 9 }) => (
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill={skin} />
+      <circle cx={cx - 3} cy={cy - 2} r={1.5} fill="#080600" opacity="0.5" />
+      <circle cx={cx + 3} cy={cy - 2} r={1.5} fill="#080600" opacity="0.5" />
+      <path d={`M ${cx - 3} ${cy + 3} Q ${cx} ${cy + 6} ${cx + 3} ${cy + 3}`} stroke="#080600" strokeWidth="1" fill="none" opacity="0.4" />
+    </g>
+  );
+
+  const Torso = ({ x1, y1, x2, y2, w = 10 }) => {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const nx = -dy / len * w, ny = dx / len * w;
+    return (
+      <g>
+        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.7},${y2 - ny * 0.7} ${x2 + nx * 0.7},${y2 + ny * 0.7}`} fill={skin} />
+        <line x1={(x1 + x2) / 2 + nx * 0.3} y1={(y1 + y2) / 2 + ny * 0.3} x2={(x1 + x2) / 2 - nx * 0.3} y2={(y1 + y2) / 2 - ny * 0.3} stroke={muscle} strokeWidth="1.5" opacity="0.6" />
+      </g>
+    );
   };
-  return <div style={{ display: "flex", justifyContent: "center" }}>{(anims[id] || anims.pushup)()}</div>;
+
+  const Limb = ({ x1, y1, x2, y2, w = 6, joint = false }) => {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const nx = -dy / len * w, ny = dx / len * w;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    return (
+      <g>
+        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.5},${y2 - ny * 0.5} ${x2 + nx * 0.5},${y2 + ny * 0.5}`} fill={skin} />
+        <ellipse cx={mx} cy={my} rx={w * 0.5} ry={len * 0.18} transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI} ${mx} ${my})`} fill={muscle} opacity="0.5" />
+        {joint && <circle cx={x2} cy={y2} r={w * 0.55} fill={dark} opacity="0.7" />}
+      </g>
+    );
+  };
+
+  const Floor = ({ y, x1 = 10, x2 = 150 }) => (
+    <line x1={x1} y1={y} x2={x2} y2={y} stroke={color} strokeWidth="2" opacity="0.15" strokeDasharray="4,4" />
+  );
+
+  const anims = {
+    pushup: () => {
+      const lift = ease * 16;
+      const bY = 68 - lift;
+      const elbowAngle = ease * 35;
+      // Body horizontal
+      const bodyTilt = ease * 5;
+      return (
+        <svg viewBox="0 0 160 100" width={size} height={size * 0.625}>
+          <Floor y={82} />
+          {/* shadow */}
+          <ellipse cx="80" cy="83" rx={30 + lift} ry="3" fill={color} opacity={0.08 + ease * 0.05} />
+          {/* feet */}
+          <rect x="112" y="76" width="12" height="6" rx="3" fill={dark} opacity="0.8" />
+          {/* legs */}
+          <Limb x1={80} y1={bY + 14} x2={112} y2={78} w={7} />
+          {/* torso */}
+          <Torso x1={44} y1={bY + 4} x2={80} y2={bY + 14} w={9} />
+          {/* upper arms */}
+          <Limb x1={52} y1={bY + 4} x2={44 - elbowAngle * 0.3} y2={bY + 16 + elbowAngle * 0.4} w={5} joint />
+          <Limb x1={52} y1={bY + 4} x2={60 + elbowAngle * 0.3} y2={bY + 16 + elbowAngle * 0.4} w={5} joint />
+          {/* forearms */}
+          <Limb x1={44 - elbowAngle * 0.3} y1={bY + 16 + elbowAngle * 0.4} x2={36} y2={78} w={4} />
+          <Limb x1={60 + elbowAngle * 0.3} y1={bY + 16 + elbowAngle * 0.4} x2={68} y2={78} w={4} />
+          {/* hands */}
+          <circle cx="36" cy="78" r="4" fill={dark} opacity="0.8" />
+          <circle cx="68" cy="78" r="4" fill={dark} opacity="0.8" />
+          {/* head */}
+          <Head cx={36} cy={bY - 6} r={9} />
+          {/* muscle highlight on chest */}
+          <ellipse cx="55" cy={bY + 8} rx="7" ry="4" fill={color} opacity={0.15 + ease * 0.2} transform={`rotate(-10 55 ${bY + 8})`} />
+        </svg>
+      );
+    },
+
+    squat: () => {
+      const dip = ease * 22;
+      const kneeOut = ease * 8;
+      const hipY = 35 + dip;
+      const kneeY = 62 + dip * 0.4;
+      return (
+        <svg viewBox="0 0 120 120" width={size} height={size}>
+          <Floor y={108} x1={20} x2={100} />
+          <ellipse cx="60" cy="109" rx={18 + dip * 0.3} ry="3" fill={color} opacity={0.1 + ease * 0.05} />
+          {/* feet */}
+          <rect x="38" y="102" width="12" height="6" rx="3" fill={dark} opacity="0.8" />
+          <rect x="70" y="102" width="12" height="6" rx="3" fill={dark} opacity="0.8" />
+          {/* shins */}
+          <Limb x1={44} y1={kneeY} x2={44} y2={104} w={5} />
+          <Limb x1={76} y1={kneeY} x2={76} y2={104} w={5} />
+          {/* thighs */}
+          <Limb x1={56} y1={hipY + 10} x2={44 - kneeOut} y2={kneeY} w={7} joint />
+          <Limb x1={64} y1={hipY + 10} x2={76 + kneeOut} y2={kneeY} w={7} joint />
+          {/* torso */}
+          <Torso x1={60} y1={hipY - 14} x2={60} y2={hipY + 10} w={10} />
+          {/* arms out for balance */}
+          <Limb x1={54} y1={hipY - 6} x2={38} y2={hipY + 4 - dip * 0.3} w={4} />
+          <Limb x1={66} y1={hipY - 6} x2={82} y2={hipY + 4 - dip * 0.3} w={4} />
+          {/* head */}
+          <Head cx={60} cy={hipY - 24} r={9} />
+          {/* quad muscle highlight */}
+          <ellipse cx={46} cy={kneeY - 10} rx="4" ry="8" fill={color} opacity={0.12 + ease * 0.18} transform={`rotate(-15 46 ${kneeY - 10})`} />
+          <ellipse cx={74} cy={kneeY - 10} rx="4" ry="8" fill={color} opacity={0.12 + ease * 0.18} transform={`rotate(15 74 ${kneeY - 10})`} />
+        </svg>
+      );
+    },
+
+    deadlift: () => {
+      const liftH = ease * 26;
+      const hipAngle = (1 - ease) * 28;
+      const hipY = 72 - liftH * 0.5;
+      const barY = 88 - liftH;
+      const shoulderY = hipY - 24 - hipAngle * 0.3;
+      const shoulderX = 60 - hipAngle * 0.4;
+      return (
+        <svg viewBox="0 0 160 110" width={size} height={size * 0.6875}>
+          <Floor y={96} />
+          {/* barbell */}
+          <rect x="28" y={barY - 4} width="104" height="8" rx="4" fill={dark} opacity="0.85" />
+          <rect x="26" y={barY - 10} width="12" height="20" rx="6" fill={dark} opacity="0.7" />
+          <rect x="122" y={barY - 10} width="12" height="20" rx="6" fill={dark} opacity="0.7" />
+          <rect x="18" y={barY - 14} width="14" height="28" rx="7" fill={dark} opacity="0.5" />
+          <rect x="128" y={barY - 14} width="14" height="28" rx="7" fill={dark} opacity="0.5" />
+          {/* shadow */}
+          <ellipse cx="80" cy="97" rx="22" ry="3" fill={color} opacity="0.08" />
+          {/* feet */}
+          <rect x="52" y="90" width="12" height="6" rx="3" fill={dark} opacity="0.8" />
+          <rect x="76" y="90" width="12" height="6" rx="3" fill={dark} opacity="0.8" />
+          {/* legs */}
+          <Limb x1={58} y1={hipY + 4} x2={58} y2={92} w={7} />
+          <Limb x1={82} y1={hipY + 4} x2={82} y2={92} w={7} />
+          {/* torso tilted */}
+          <Torso x1={shoulderX} y1={shoulderY} x2={70} y2={hipY + 4} w={10} />
+          {/* arms to bar */}
+          <Limb x1={shoulderX - 2} y1={shoulderY + 6} x2={52} y2={barY + 2} w={5} joint />
+          <Limb x1={shoulderX + 10} y1={shoulderY + 6} x2={88} y2={barY + 2} w={5} joint />
+          {/* hands */}
+          <circle cx="52" cy={barY + 2} r="5" fill={dark} opacity="0.8" />
+          <circle cx="88" cy={barY + 2} r="5" fill={dark} opacity="0.8" />
+          {/* head */}
+          <Head cx={shoulderX - 4} cy={shoulderY - 10} r={9} />
+          {/* back muscle */}
+          <ellipse cx={shoulderX + 4} cy={shoulderY + 14} rx="5" ry="10" fill={color} opacity={0.1 + ease * 0.2} transform={`rotate(${-hipAngle * 0.5} ${shoulderX + 4} ${shoulderY + 14})`} />
+        </svg>
+      );
+    },
+
+    pullup: () => {
+      const pullH = ease * 20;
+      const bodyY = 32 + pullH;
+      const elbowFlare = ease * 18;
+      return (
+        <svg viewBox="0 0 120 130" width={size} height={size * 1.08}>
+          {/* pull-up bar */}
+          <rect x="10" y="10" width="100" height="10" rx="5" fill={dark} opacity="0.8" />
+          <rect x="16" y="10" width="8" height="24" rx="4" fill={dark} opacity="0.5" />
+          <rect x="96" y="10" width="8" height="24" rx="4" fill={dark} opacity="0.5" />
+          {/* shadow on floor */}
+          <ellipse cx="60" cy="128" rx="18" ry="3" fill={color} opacity="0.06" />
+          {/* hands */}
+          <circle cx="32" cy="24" r="5" fill={dark} opacity="0.8" />
+          <circle cx="88" cy="24" r="5" fill={dark} opacity="0.8" />
+          {/* forearms */}
+          <Limb x1={32} y1={24} x2={42 - elbowFlare} y2={bodyY - 18 + 8} w={4} />
+          <Limb x1={88} y1={24} x2={78 + elbowFlare} y2={bodyY - 18 + 8} w={4} />
+          {/* upper arms */}
+          <Limb x1={42 - elbowFlare} y1={bodyY - 18 + 8} x2={50} y2={bodyY - 14} w={6} joint />
+          <Limb x1={78 + elbowFlare} y1={bodyY - 18 + 8} x2={70} y2={bodyY - 14} w={6} joint />
+          {/* torso */}
+          <Torso x1={60} y1={bodyY - 14} x2={60} y2={bodyY + 12} w={10} />
+          {/* legs slightly bent */}
+          <Limb x1={56} y1={bodyY + 12} x2={52} y2={bodyY + 38} w={7} joint />
+          <Limb x1={64} y1={bodyY + 12} x2={68} y2={bodyY + 38} w={7} joint />
+          <Limb x1={52} y1={bodyY + 38} x2={54} y2={bodyY + 56} w={5} />
+          <Limb x1={68} y1={bodyY + 38} x2={66} y2={bodyY + 56} w={5} />
+          {/* head */}
+          <Head cx={60} cy={bodyY - 24} r={9} />
+          {/* bicep highlight */}
+          <ellipse cx={43 - elbowFlare * 0.5} cy={bodyY - 10} rx="3.5" ry="6" fill={color} opacity={0.1 + ease * 0.25} />
+          <ellipse cx={77 + elbowFlare * 0.5} cy={bodyY - 10} rx="3.5" ry="6" fill={color} opacity={0.1 + ease * 0.25} />
+        </svg>
+      );
+    },
+
+    plank: () => {
+      const breathe = s * 1.2;
+      const glowPulse = (Math.sin(phase * 2) + 1) / 2;
+      return (
+        <svg viewBox="0 0 180 90" width={size} height={size * 0.5}>
+          <Floor y={78} x1={10} x2={170} />
+          {/* shadow */}
+          <ellipse cx="95" cy="79" rx="70" ry="4" fill={color} opacity="0.07" />
+          {/* feet / toes */}
+          <rect x="138" y="70" width="14" height="8" rx="4" fill={dark} opacity="0.8" />
+          {/* legs */}
+          <Limb x1={82} y1={55 + breathe} x2={138} y2={74} w={9} />
+          {/* torso */}
+          <Torso x1={42} y1={48 + breathe * 0.6} x2={82} y2={55 + breathe} w={11} />
+          {/* core highlight pulses */}
+          <ellipse cx="62" cy={51 + breathe * 0.7} rx="10" ry="5" fill={color} opacity={0.06 + glowPulse * 0.12} transform={`rotate(-8 62 ${51 + breathe * 0.7})`} />
+          {/* upper arms */}
+          <Limb x1={50} y1={48 + breathe * 0.6} x2={36} y2={62} w={6} joint />
+          <Limb x1={50} y1={48 + breathe * 0.6} x2={62} y2={60} w={6} joint />
+          {/* forearms */}
+          <Limb x1={36} y1={62} x2={28} y2={74} w={5} />
+          <Limb x1={62} y1={60} x2={70} y2={74} w={5} />
+          {/* elbows on ground */}
+          <circle cx="28" cy="74" r="5" fill={dark} opacity="0.75" />
+          <circle cx="70" cy="74" r="5" fill={dark} opacity="0.75" />
+          {/* head */}
+          <Head cx={30} cy={40 + breathe * 0.4} r={9} />
+          {/* glute highlight */}
+          <ellipse cx="84" cy={54 + breathe * 0.9} rx="7" ry="5" fill={color} opacity={0.08 + glowPulse * 0.1} />
+        </svg>
+      );
+    },
+  };
+
+  return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", filter: `drop-shadow(0 4px 12px ${color}40)` }}>
+      {(anims[id] || anims.pushup)()}
+    </div>
+  );
 }
 
 // ── THEME ─────────────────────────────────────────────────────────────────────
@@ -377,7 +604,8 @@ const G = { bg: "#080600", surf: "#110e00", surf2: "#1c1500", border: "rgba(212,
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:#080600;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+html,body{background:#080600;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;max-width:100vw;}
 input,select,button,textarea{font-family:'Inter',sans-serif;}
 .sf{font-family:'Cormorant Garamond',serif;}
 .gd{background:linear-gradient(90deg,#f5d76e,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
