@@ -1327,7 +1327,7 @@ export default function App() {
           {aiLoading
             ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0", gap: 13 }}><div className="sp" /><div style={{ color: G.gold, fontWeight: 600, fontSize: 13 }}>{isAr ? "جاري التوليد بناءً على مستوى النشاط..." : "Generating based on TDEE & activity..."}</div></div>
             : aiText === "ERROR"
-            ? <div style={{ textAlign: "center", padding: "30px 0" }}><div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div><div style={{ color: G.amber, fontWeight: 700 }}>{isAr ? "فشل التوليد" : "Generation Failed"}</div><div style={{ fontSize: 12, color: G.muted, marginTop: 6 }}>{isAr ? "تحقق من متغير ANTHROPIC_API_KEY في Vercel" : "Check ANTHROPIC_API_KEY in Vercel environment variables"}</div></div>
+            ? <div style={{ textAlign: "center", padding: "30px 0" }}><div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div><div style={{ color: G.amber, fontWeight: 700 }}>{isAr ? "فشل التوليد" : "Generation Failed"}</div><div style={{ fontSize: 12, color: G.muted, marginTop: 6 }}>{isAr ? "تحقق من متغير ANTHROPIC_API_KEY → GEMINI_API_KEY في Vercel" : "Check ANTHROPIC_API_KEY → GEMINI_API_KEY in Vercel environment variables"}</div></div>
             : <div><div style={{ background: "rgba(212,175,55,0.08)", border: `1px solid ${G.border}`, borderRadius: 7, padding: "8px 11px", marginBottom: 12, fontSize: 11, color: G.gold }}>✦ {isAr ? "تم الحفظ" : "Saved to client profile"}</div><pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{aiText}</pre></div>}
         </div>
       } />
