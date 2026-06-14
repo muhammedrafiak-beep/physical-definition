@@ -262,9 +262,9 @@ const WORKOUTS = [
 
 async function callAI(prompt) {
   const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) });
-  if (!res.ok) throw new Error("HTTP_" + res.status);
   const d = await res.json();
   if (d.error) throw new Error(d.error);
+  if (!d.result || d.result.trim() === "") throw new Error("Empty response");
   return d.result;
 }
 const genPwd = () => { const c = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!"; return Array.from({ length: 9 }, () => c[Math.floor(Math.random() * c.length)]).join(""); };
@@ -977,7 +977,7 @@ export default function App() {
       : `Professional nutritionist. Daily meal plan for: ${client.name}, Age:${client.age}, ${client.weight}kg, ${client.height}cm, BMI:${bmi}, Goal:${client.goal}, TDEE:${tdee}kcal, Target:${target}kcal. Breakfast/lunch/dinner/2snacks with foods, portions, calories, macros total close to ${target}kcal.`;
     setAiLoading(true); setAiText(""); setAiTitle(type === "workout" ? "⚡ " + (isAr ? "خطة التمارين" : "Workout Plan") : "🥗 " + (isAr ? "خطة التغذية" : "Nutrition Plan")); setAiOpen(true);
     try { const r = await callAI(prompt); setAiText(r); setClients(prev => prev.map(c => c.id === client.id ? { ...c, [type === "workout" ? "workoutPlan" : "nutritionPlan"]: r } : c)); if (curUser?.id === client.id) setCurUser(p => ({ ...p, [type === "workout" ? "workoutPlan" : "nutritionPlan"]: r })); }
-    catch { setAiText("ERROR"); }
+    catch (e) { setAiText("ERROR:" + (e.message || "Unknown")); }
     setAiLoading(false);
   }, [curUser, isAr]);
 
@@ -1327,7 +1327,7 @@ export default function App() {
           {aiLoading
             ? <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0", gap: 13 }}><div className="sp" /><div style={{ color: G.gold, fontWeight: 600, fontSize: 13 }}>{isAr ? "جاري التوليد بناءً على مستوى النشاط..." : "Generating based on TDEE & activity..."}</div></div>
             : aiText === "ERROR"
-            ? <div style={{ textAlign: "center", padding: "30px 0" }}><div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div><div style={{ color: G.amber, fontWeight: 700 }}>{isAr ? "فشل التوليد" : "Generation Failed"}</div><div style={{ fontSize: 12, color: G.muted, marginTop: 6 }}>{isAr ? "تحقق من متغير ANTHROPIC_API_KEY → GEMINI_API_KEY في Vercel" : "Check ANTHROPIC_API_KEY → GEMINI_API_KEY in Vercel environment variables"}</div></div>
+            ? <div style={{ textAlign: "center", padding: "30px 0" }}><div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div><div style={{ color: G.amber, fontWeight: 700 }}>{isAr ? "فشل التوليد" : "Generation Failed"}</div><div style={{ fontSize: 12, color: G.muted, marginTop: 6 }}>{isAr ? "تحقق من GEMINI_API_KEY في Vercel" : "Check GEMINI_API_KEY in Vercel environment variables"}</div></div>
             : <div><div style={{ background: "rgba(212,175,55,0.08)", border: `1px solid ${G.border}`, borderRadius: 7, padding: "8px 11px", marginBottom: 12, fontSize: 11, color: G.gold }}>✦ {isAr ? "تم الحفظ" : "Saved to client profile"}</div><pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{aiText}</pre></div>}
         </div>
       } />
