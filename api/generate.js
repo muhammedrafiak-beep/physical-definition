@@ -1,44 +1,59 @@
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+export const config = { runtime: "edge" };
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+export default async function handler(req) {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
 
-  const apiKey = process.env.HF_API_KEY;
-  if (!apiKey) return res.status(200).json({ error: "HF_API_KEY not set" });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 200, headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "GEMINI_API_KEY not set" }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
-    const { prompt } = req.body;
-    if (!prompt) return res.status(200).json({ error: "No prompt" });
+    const { prompt } = await req.json();
 
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
       {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          inputs: `<s>[INST] ${prompt} [/INST]`,
-          parameters: {
-            max_new_tokens: 1200,
-            temperature: 0.7,
-            return_full_text: false,
-          },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 },
         }),
       }
     );
 
     const data = await response.json();
-    if (data?.error) return res.status(200).json({ error: data.error });
-    const text = Array.isArray(data) ? data[0]?.generated_text || "" : data?.generated_text || "";
-    if (!text) return res.status(200).json({ error: "Empty response" });
-    return res.status(200).json({ result: text });
+    if (data?.error) {
+      return new Response(JSON.stringify({ error: data.error.message }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return new Response(JSON.stringify({ result: text }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
   } catch (err) {
-    return res.status(200).json({ error: err.message });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
