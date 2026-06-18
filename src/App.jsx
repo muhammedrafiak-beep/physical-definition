@@ -456,17 +456,203 @@ const WORKOUT_SYSTEMS = [
         ]
       }
     ]
+  },
+  {
+    id: "homebw", name: "Home Bodyweight", nameAr: "تمارين منزلية بوزن الجسم",
+    color: "#10b981", emoji: "🏠",
+    desc: "No equipment needed — train anywhere using only your body weight",
+    descAr: "بدون معدات — تدريب في أي مكان بوزن الجسم فقط",
+    days: [
+      {
+        name: "Day 1 — Upper Body (Bodyweight)",
+        exercises: [
+          { name: "Push-ups", sets: "4", reps: "10-15", rest: "60s", notes: "Knee push-ups if needed" },
+          { name: "Incline Push-ups (on table/wall)", sets: "3", reps: "12", rest: "45s", notes: "Easier variation" },
+          { name: "Tricep Dips (chair)", sets: "3", reps: "12", rest: "45s", notes: "Use sturdy chair" },
+          { name: "Superman Hold", sets: "3", reps: "20 sec", rest: "30s", notes: "Back strength" },
+          { name: "Plank Shoulder Taps", sets: "3", reps: "10 each", rest: "45s", notes: "Core + shoulder stability" },
+        ]
+      },
+      {
+        name: "Day 2 — Lower Body (Bodyweight)",
+        exercises: [
+          { name: "Bodyweight Squats", sets: "4", reps: "15-20", rest: "60s", notes: "" },
+          { name: "Reverse Lunges", sets: "3", reps: "10 each", rest: "45s", notes: "Knee friendly" },
+          { name: "Glute Bridges", sets: "3", reps: "15", rest: "45s", notes: "" },
+          { name: "Calf Raises", sets: "3", reps: "20", rest: "30s", notes: "" },
+          { name: "Wall Sit", sets: "3", reps: "30 sec", rest: "45s", notes: "Isometric quad hold" },
+        ]
+      },
+      {
+        name: "Day 3 — Full Body + Core",
+        exercises: [
+          { name: "Burpees (or step-back version)", sets: "3", reps: "10", rest: "60s", notes: "Low impact option available" },
+          { name: "Mountain Climbers", sets: "3", reps: "30 sec", rest: "45s", notes: "" },
+          { name: "Plank", sets: "3", reps: "40 sec", rest: "30s", notes: "" },
+          { name: "Bicycle Crunches", sets: "3", reps: "20", rest: "30s", notes: "" },
+          { name: "Jumping Jacks", sets: "3", reps: "30 sec", rest: "30s", notes: "Cardio finisher" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "senior75", name: "Senior Fitness 75+", nameAr: "لياقة كبار السن 75+",
+    color: "#06b6d4", emoji: "🧓",
+    desc: "Gentle, safe training using resistance bands, foam roller, Pilates ring & self-massage — designed for elderly clients",
+    descAr: "تدريب لطيف وآمن باستخدام أحزمة المقاومة وأسطوانة الفوم وحلقة البيلاتس — مصمم لكبار السن",
+    days: [
+      {
+        name: "Day 1 — Seated & Standing Mobility",
+        exercises: [
+          { name: "Seated Resistance Band Row", sets: "3", reps: "10-12", rest: "60s", notes: "Light band — improves posture" },
+          { name: "Band Lateral Walk", sets: "2", reps: "10 steps each", rest: "60s", notes: "Loop band around ankles, hold support if needed" },
+          { name: "Pilates Ring Knee Squeeze (seated)", sets: "3", reps: "12", rest: "45s", notes: "Inner thigh + pelvic floor, very gentle" },
+          { name: "Standing Wall Push-ups", sets: "2", reps: "8-10", rest: "60s", notes: "Hands on wall, gentle chest/arm work" },
+          { name: "Foam Roller Calf Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Slow, gentle rolling — no pain" },
+        ]
+      },
+      {
+        name: "Day 2 — Balance & Gentle Strength",
+        exercises: [
+          { name: "Chair-Assisted Mini Squats", sets: "3", reps: "8", rest: "60s", notes: "Hold chair back for support" },
+          { name: "Band Seated Leg Extension", sets: "2", reps: "10 each", rest: "45s", notes: "Light tension band around ankle" },
+          { name: "Pilates Ring Chest Press (seated)", sets: "3", reps: "10", rest: "45s", notes: "Squeeze ring between palms" },
+          { name: "Single Leg Stand (hold support)", sets: "2", reps: "15 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
+          { name: "Hand Massage / Self Massage (forearms, hands)", sets: "1", reps: "3-5 min", rest: "0s", notes: "Improves circulation, very relaxing" },
+        ]
+      },
+      {
+        name: "Day 3 — Flexibility & Recovery",
+        exercises: [
+          { name: "Foam Roller Upper Back Release", sets: "1", reps: "60 sec", rest: "0s", notes: "Gentle, supported by floor or bed" },
+          { name: "Seated Band Shoulder Pull-Apart", sets: "3", reps: "10", rest: "45s", notes: "Posture + shoulder mobility" },
+          { name: "Pilates Ring Ankle Press", sets: "2", reps: "10 each", rest: "30s", notes: "Ankle strength, seated" },
+          { name: "Hand-held Massager — Lower Back & Legs", sets: "1", reps: "5-8 min", rest: "0s", notes: "Use on low setting, avoid joints directly" },
+          { name: "Deep Breathing + Gentle Neck Stretch", sets: "1", reps: "5 min", rest: "0s", notes: "Relaxation finish" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "lowback", name: "Lower Back Pain Relief", nameAr: "تخفيف آلام أسفل الظهر",
+    color: "#f43f5e", emoji: "🩹",
+    desc: "Gentle core stabilization and mobility work to relieve and prevent lower back pain",
+    descAr: "تمارين لطيفة لتقوية الجذع وتحسين الحركة لتخفيف آلام أسفل الظهر",
+    days: [
+      {
+        name: "Day 1 — Gentle Mobility",
+        exercises: [
+          { name: "Cat-Cow Stretch", sets: "3", reps: "10", rest: "30s", notes: "Slow controlled spinal movement" },
+          { name: "Pelvic Tilts (lying)", sets: "3", reps: "12", rest: "30s", notes: "Engage lower abs gently" },
+          { name: "Knee-to-Chest Stretch", sets: "2", reps: "20 sec each", rest: "20s", notes: "One leg at a time" },
+          { name: "Bird Dog", sets: "3", reps: "8 each side", rest: "45s", notes: "Core stability — go slow" },
+          { name: "Foam Roller Thoracic Release", sets: "1", reps: "60 sec", rest: "0s", notes: "Avoid rolling directly on lower back" },
+        ]
+      },
+      {
+        name: "Day 2 — Core Stabilization",
+        exercises: [
+          { name: "Glute Bridge", sets: "3", reps: "12", rest: "45s", notes: "Squeeze glutes, avoid arching" },
+          { name: "Dead Bug", sets: "3", reps: "8 each side", rest: "45s", notes: "Keep lower back flat on floor" },
+          { name: "Modified Side Plank (knees down)", sets: "2", reps: "20 sec each", rest: "30s", notes: "Builds side core support" },
+          { name: "Band Seated Row", sets: "3", reps: "12", rest: "45s", notes: "Strengthens upper back posture" },
+          { name: "Gentle Walking", sets: "1", reps: "10-15 min", rest: "0s", notes: "Low impact, daily recommended" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "shoulder", name: "Shoulder Pain Rehab", nameAr: "علاج تأهيلي لألم الكتف",
+    color: "#8b5cf6", emoji: "💢",
+    desc: "Rotator cuff strengthening and mobility to relieve shoulder pain and improve range of motion",
+    descAr: "تقوية الكتف وتحسين المرونة لتخفيف الألم",
+    days: [
+      {
+        name: "Day 1 — Mobility & Activation",
+        exercises: [
+          { name: "Pendulum Swing", sets: "2", reps: "30 sec each arm", rest: "30s", notes: "Lean forward, let arm swing gently" },
+          { name: "Band External Rotation", sets: "3", reps: "12 each", rest: "45s", notes: "Elbow at side, light band" },
+          { name: "Band Internal Rotation", sets: "3", reps: "12 each", rest: "45s", notes: "" },
+          { name: "Wall Slides", sets: "3", reps: "10", rest: "45s", notes: "Back against wall, slide arms up slowly" },
+          { name: "Scapular Squeeze", sets: "3", reps: "12", rest: "30s", notes: "Squeeze shoulder blades together" },
+        ]
+      },
+      {
+        name: "Day 2 — Strength & Stability",
+        exercises: [
+          { name: "Band Front Raise (light)", sets: "3", reps: "10", rest: "45s", notes: "Keep pain-free range only" },
+          { name: "Band Lateral Raise (light)", sets: "3", reps: "10", rest: "45s", notes: "" },
+          { name: "Prone Y-T-W Raises (no weight)", sets: "2", reps: "8 each letter", rest: "45s", notes: "Lying face down, rotator cuff activation" },
+          { name: "Massager — Upper Trap & Shoulder", sets: "1", reps: "5 min", rest: "0s", notes: "Low setting, avoid bone directly" },
+          { name: "Cross-body Shoulder Stretch", sets: "2", reps: "20 sec each", rest: "20s", notes: "Gentle, never forced" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "kneefriendly", name: "Knee Pain Friendly", nameAr: "تمارين مناسبة لألم الركبة",
+    color: "#eab308", emoji: "🦵",
+    desc: "Low-impact strength training that protects the knees while building leg strength",
+    descAr: "تدريب منخفض التأثير يحمي الركبة مع بناء قوة الأرجل",
+    days: [
+      {
+        name: "Day 1 — Quad & Glute Activation (Low Impact)",
+        exercises: [
+          { name: "Straight Leg Raises (lying)", sets: "3", reps: "12 each", rest: "45s", notes: "No knee bending — quad activation" },
+          { name: "Glute Bridge", sets: "3", reps: "12", rest: "45s", notes: "Strengthens hips, supports knees" },
+          { name: "Wall Sit (shallow angle only)", sets: "2", reps: "15-20 sec", rest: "45s", notes: "Stop if any knee discomfort" },
+          { name: "Band Seated Leg Extension", sets: "3", reps: "10 each", rest: "45s", notes: "Light resistance only" },
+          { name: "Foam Roller Quad & IT Band Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Gentle rolling above knee" },
+        ]
+      },
+      {
+        name: "Day 2 — Stability & Low Impact Cardio",
+        exercises: [
+          { name: "Clamshells (band optional)", sets: "3", reps: "12 each", rest: "30s", notes: "Hip stability, protects knee tracking" },
+          { name: "Step-ups (low step, controlled)", sets: "2", reps: "8 each", rest: "45s", notes: "Use low step, avoid if painful" },
+          { name: "Stationary Bike or Pool Walking", sets: "1", reps: "15-20 min", rest: "0s", notes: "Best low-impact cardio for knees" },
+          { name: "Pilates Ring Inner Thigh Squeeze", sets: "3", reps: "12", rest: "30s", notes: "Seated or lying, gentle" },
+          { name: "Hand Massager — Around Knee (not on joint)", sets: "1", reps: "5 min", rest: "0s", notes: "Massage quad/calf, avoid joint line" },
+        ]
+      }
+    ]
   }
 ];
 
 // ── MEAL PLANS ─────────────────────────────────────────────
 const MEALS = [
-  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#f59e0b", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=75", baseCal: 1800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu + Kadala curry + Banana", cal: 380, p: 14, c: 62, f: 8 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water + Nuts", cal: 180, p: 4, c: 22, f: 9 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice + Dal + Fish curry + Veg", cal: 520, p: 32, c: 68, f: 12 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana + Green tea", cal: 120, p: 2, c: 28, f: 0 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry + Salad", cal: 480, p: 38, c: 52, f: 10 }] },
-  { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#ef4444", image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=75", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "6 Egg whites + Oats + Milk", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake + Apple", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice + Veg", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana + Peanut butter toast", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish + Sweet potato + Salad", cal: 420, p: 40, c: 42, f: 8 }] },
-  { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#22c55e", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=75", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt + Berries + Chia", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber + Hummus", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad + Olive oil", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds + Black coffee", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish + Vegetables + Dal soup", cal: 380, p: 38, c: 28, f: 8 }] },
-  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#60a5fa", image: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400&q=75", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar + Chutney", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl + Buttermilk", cal: 200, p: 6, c: 38, f: 2 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice + Rajma + Paneer + Salad", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana + Green tea", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani + Veg curry", cal: 480, p: 22, c: 72, f: 10 }] },
-  { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#9333ea", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=75", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "4 Eggs + Oats + Banana + Full fat milk", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer + Dates", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice + Chicken 250g + Dal + Ghee", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter + Toast", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry + Milk", cal: 680, p: 48, c: 78, f: 20 }] },
+  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#f59e0b", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=75", baseCal: 1800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
+  { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#ef4444", image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=75", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Egg whites × 6 + Oats 60g + Milk 200ml", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake 30g + Apple × 1", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice 120g + Veg 80g", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 1 + Peanut butter toast 40g", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish 180g + Sweet potato 150g + Salad 80g", cal: 420, p: 40, c: 42, f: 8 }] },
+  { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#22c55e", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=75", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt 150g + Berries 60g + Chia 10g", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber 100g + Hummus 40g", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad 200g + Olive oil 10ml", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds 20g + Black coffee 150ml", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish 150g + Vegetables 100g + Dal soup 100g", cal: 380, p: 38, c: 28, f: 8 }] },
+  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#60a5fa", image: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400&q=75", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
+  { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#9333ea", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=75", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
 ];
+
+// Scale a meal plan's quantities + macros to match a target calorie goal
+function scaleMealPlan(plan, targetCal) {
+  const factor = targetCal / plan.baseCal;
+  const clampedFactor = Math.max(0.55, Math.min(1.8, factor)); // keep portions realistic
+  const scaledMeals = plan.meals.map(m => ({
+    ...m,
+    items: scaleItemsText(m.items, clampedFactor),
+    cal: Math.round(m.cal * clampedFactor),
+    p: Math.round(m.p * clampedFactor),
+    c: Math.round(m.c * clampedFactor),
+    f: Math.round(m.f * clampedFactor),
+  }));
+  return { ...plan, meals: scaledMeals, scaleFactor: clampedFactor };
+}
+
+// Scale numeric quantities inside an item description string (e.g. "200g" -> "260g", "× 3" -> "× 4")
+function scaleItemsText(text, factor) {
+  return text.replace(/(\d+(?:\.\d+)?)(g|ml|kg|l)\b/gi, (match, num, unit) => {
+    const scaled = Math.round(parseFloat(num) * factor);
+    return `${scaled}${unit}`;
+  }).replace(/×\s*(\d+)/g, (match, num) => {
+    const scaled = Math.max(1, Math.round(parseFloat(num) * factor));
+    return `× ${scaled}`;
+  });
+}
 
 const PAL = [
   { id: "sedentary", en: "Sedentary", ar: "خامل", desc_en: "No exercise", desc_ar: "لا تمارين", factor: 1.2, icon: "🪑" },
@@ -478,6 +664,16 @@ const PAL = [
 
 const GOALS_EN = ["Weight Loss", "Muscle Gain", "Endurance", "Flexibility", "General Fitness"];
 const GOALS_AR = ["خسارة الوزن", "بناء العضلات", "التحمل", "المرونة", "اللياقة العامة"];
+
+const COUNTRIES = [
+  { code: "+974", flag: "🇶🇦", name: "Qatar" }, { code: "+91", flag: "🇮🇳", name: "India" },
+  { code: "+971", flag: "🇦🇪", name: "UAE" }, { code: "+966", flag: "🇸🇦", name: "Saudi Arabia" },
+  { code: "+965", flag: "🇰🇼", name: "Kuwait" }, { code: "+973", flag: "🇧🇭", name: "Bahrain" },
+  { code: "+968", flag: "🇴🇲", name: "Oman" }, { code: "+20", flag: "🇪🇬", name: "Egypt" },
+  { code: "+44", flag: "🇬🇧", name: "UK" }, { code: "+1", flag: "🇺🇸", name: "USA" },
+  { code: "+92", flag: "🇵🇰", name: "Pakistan" }, { code: "+880", flag: "🇧🇩", name: "Bangladesh" },
+  { code: "+63", flag: "🇵🇭", name: "Philippines" }, { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
+];
 
 const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://physical-definition.vercel.app" };
 const ADMIN = { u: "admin", p: "pd@rafi2024" };
@@ -514,7 +710,8 @@ function generatePDF(client, lang) {
   const carbs = Math.round((target - protein * 4 - fat * 9) / 4);
   const bmi = (client.weight / ((client.height / 100) ** 2)).toFixed(1);
   const workoutSystem = WORKOUT_SYSTEMS.find(w => w.id === client.workoutSystemId);
-  const mealPlan = MEALS.find(m => m.id === client.mealPlanId);
+  const mealPlanRaw = MEALS.find(m => m.id === client.mealPlanId);
+  const mealPlan = mealPlanRaw ? scaleMealPlan(mealPlanRaw, target) : null;
 
   const workoutHTML = workoutSystem ? `
     <div class="section">
@@ -671,6 +868,18 @@ const Ovl = ({ show, close, ch, mw = 520 }) => { if (!show) return null; return 
 const LangBtn = ({ lang, setLang }) => (<button className="btn" onClick={() => setLang(lang === "en" ? "ar" : "en")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 20, color: G.gold, fontSize: 12, fontWeight: 700 }}><span style={{ fontSize: 14 }}>{lang === "en" ? "🇸🇦" : "🇬🇧"}</span><span>{lang === "en" ? "العربية" : "English"}</span></button>);
 const FF = ({ label, value, onChange, type = "text", ph, opts, dir = "ltr" }) => (<div><div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>{opts ? <select className="inp" value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }}>{opts.map(o => <option key={typeof o === "object" ? o.id : o} value={typeof o === "object" ? o.id : o} style={{ background: G.surf2 }}>{typeof o === "object" ? o.label : o}</option>)}</select> : <input className="inp" type={type} placeholder={ph} value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }} />}</div>);
 
+const PhoneField = ({ label, country, setCountry, phone, setPhone }) => (
+  <div>
+    <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+    <div style={{ display: "flex", gap: 6 }}>
+      <select className="inp" value={country} onChange={e => setCountry(e.target.value)} style={{ width: 92, flexShrink: 0, direction: "ltr", paddingInline: 8 }}>
+        {COUNTRIES.map(c => <option key={c.code} value={c.code} style={{ background: G.surf2 }}>{c.flag} {c.code}</option>)}
+      </select>
+      <input className="inp" type="tel" placeholder="00000000" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ""))} style={{ direction: "ltr", flex: 1 }} />
+    </div>
+  </div>
+);
+
 // ── TDEE CARD ──────────────────────────────────────────────
 function TDEECard({ client, t, lang }) {
   const isAr = lang === "ar";
@@ -775,27 +984,36 @@ function MealSelector({ client, onSelect, onClose, lang }) {
         <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{t.chooseMeal} {isAr ? "الخطة الغذائية" : "Meal Plan"}</div>
         <button className="btn" onClick={onClose} style={{ background: "none", color: G.muted, fontSize: 20 }}>✕</button>
       </div>
-      {client && <div style={{ fontSize: 12, color: G.muted, marginBottom: 14, background: G.surf2, borderRadius: 8, padding: "7px 12px" }}>{isAr ? "الهدف لـ" : "Target for"} {client.name}: <strong style={{ color: G.gold }}>{target} kcal</strong></div>}
+      {client && <div style={{ fontSize: 12, color: G.muted, marginBottom: 14, background: G.surf2, borderRadius: 8, padding: "7px 12px" }}>{isAr ? "الهدف لـ" : "Target for"} {client.name}: <strong style={{ color: G.gold }}>{target} kcal</strong> <span style={{ fontSize: 10, color: G.dim }}>— {isAr ? "سيتم ضبط الكميات تلقائياً" : "portions auto-adjusted to match"}</span></div>}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-        {MEALS.map(p => (
-          <div key={p.id} className="card btn" onClick={() => setSel(sel === p.id ? null : p.id)}
-            style={{ overflow: "hidden", border: sel === p.id ? `2px solid ${p.color}` : `1px solid ${G.border}` }}>
-            <div style={{ position: "relative" }}>
-              <img src={p.image} alt={p.name} style={{ width: "100%", height: 76, objectFit: "cover" }} />
-              {sel === p.id && <div style={{ position: "absolute", top: 5, right: 5, background: p.color, borderRadius: 20, padding: "2px 7px", fontSize: 10, fontWeight: 700, color: "#080600" }}>✓</div>}
+        {MEALS.map(p => {
+          const scaledCal = client ? Math.round(p.baseCal * Math.max(0.55, Math.min(1.8, target / p.baseCal))) : p.baseCal;
+          return (
+            <div key={p.id} className="card btn" onClick={() => setSel(sel === p.id ? null : p.id)}
+              style={{ overflow: "hidden", border: sel === p.id ? `2px solid ${p.color}` : `1px solid ${G.border}` }}>
+              <div style={{ position: "relative" }}>
+                <img src={p.image} alt={p.name} style={{ width: "100%", height: 76, objectFit: "cover" }} />
+                {sel === p.id && <div style={{ position: "absolute", top: 5, right: 5, background: p.color, borderRadius: 20, padding: "2px 7px", fontSize: 10, fontWeight: 700, color: "#080600" }}>✓</div>}
+              </div>
+              <div style={{ padding: "9px 10px 11px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{p.emoji} {isAr ? p.nameAr : p.name}</div>
+                <div style={{ fontSize: 10, color: p.color, marginTop: 3, fontWeight: 700 }}>{scaledCal} kcal {client && scaledCal !== p.baseCal && <span style={{ color: G.dim, fontWeight: 400 }}>({isAr ? "مُعدّل" : "adjusted"})</span>}</div>
+              </div>
             </div>
-            <div style={{ padding: "9px 10px 11px" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{p.emoji} {isAr ? p.nameAr : p.name}</div>
-              <div style={{ fontSize: 10, color: p.color, marginTop: 3, fontWeight: 700 }}>{p.baseCal} kcal</div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {sel && (() => {
-        const plan = MEALS.find(p => p.id === sel);
+        const rawPlan = MEALS.find(p => p.id === sel);
+        const plan = client ? scaleMealPlan(rawPlan, target) : rawPlan;
         const tot = plan.meals.reduce((a, m) => ({ cal: a.cal + m.cal, p: a.p + m.p, c: a.c + m.c, f: a.f + m.f }), { cal: 0, p: 0, c: 0, f: 0 });
         return (
           <div>
+            {client && plan.scaleFactor && Math.abs(plan.scaleFactor - 1) > 0.03 && (
+              <div style={{ fontSize: 11, color: G.gold, marginBottom: 10, background: `${plan.color}10`, borderRadius: 7, padding: "6px 10px" }}>
+                ⚖️ {isAr ? "تم ضبط الكميات بمعامل" : "Portions scaled by"} ×{plan.scaleFactor.toFixed(2)} {isAr ? "لمطابقة هدفك" : "to match your target"}
+              </div>
+            )}
             <div style={{ background: `${plan.color}12`, border: `1px solid ${plan.color}30`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7, marginBottom: 10 }}>
                 {[{ l: "Cal", v: tot.cal, c: plan.color }, { l: "Pro", v: `${tot.p}g`, c: "#ef4444" }, { l: "Carb", v: `${tot.c}g`, c: G.amber }, { l: "Fat", v: `${tot.f}g`, c: G.blue }].map(x => (
@@ -986,10 +1204,11 @@ function PlansTab({ clients, selC, setSelC, setClients, lang }) {
 // ── REGISTER PAGE ──────────────────────────────────────────
 function RegPage({ lang, setLang, onSubmit }) {
   const [f, setF] = useState({ name: "", email: "", phone: "", age: "", weight: "", height: "", gender: "male", goal: "Weight Loss", pal: "moderate" });
+  const [country, setCountry] = useState("+974");
   const [done, setDone] = useState(false);
   const t = T[lang]; const isAr = lang === "ar";
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
-  const submit = () => { if (!f.name || !f.email || !f.phone) return; onSubmit(f); setDone(true); };
+  const submit = () => { if (!f.name || !f.email || !f.phone) return; onSubmit({ ...f, phone: `${country} ${f.phone}` }); setDone(true); };
   const goals = isAr ? GOALS_AR : GOALS_EN;
 
   if (done) return (
@@ -1017,7 +1236,7 @@ function RegPage({ lang, setLang, onSubmit }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}>
             <div style={{ gridColumn: "1/-1" }}><FF label={`${t.fullName} *`} value={f.name} onChange={v => set("name", v)} ph="Name" /></div>
             <div style={{ gridColumn: "1/-1" }}><FF label="Email *" value={f.email} onChange={v => set("email", v)} ph="email@example.com" /></div>
-            <div style={{ gridColumn: "1/-1" }}><FF label={`${t.phone} *`} value={f.phone} onChange={v => set("phone", v)} ph="+974 00000000" /></div>
+            <div style={{ gridColumn: "1/-1" }}><PhoneField label={`${t.phone} *`} country={country} setCountry={setCountry} phone={f.phone} setPhone={v => set("phone", v)} /></div>
             <FF label={t.age} value={f.age} onChange={v => set("age", v)} ph="25" />
             <FF label={`${t.weight} (kg)`} value={f.weight} onChange={v => set("weight", v)} ph="70" />
             <FF label={`${t.height} (cm)`} value={f.height} onChange={v => set("height", v)} ph="170" />
@@ -1055,6 +1274,8 @@ export default function App() {
   const blank = { name: "", email: "", password: "", age: "", weight: "", height: "", gender: "male", goal: "Weight Loss", pal: "moderate", phone: "" };
   const [form, setForm] = useState(blank);
   const sf = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const [addCountry, setAddCountry] = useState("+974");
+  const [editCountry, setEditCountry] = useState("+974");
 
   const t = T[lang]; const isAr = lang === "ar";
 
@@ -1077,15 +1298,25 @@ export default function App() {
   const addClient = () => {
     if (!form.name || !form.email) return;
     const pwd = form.password || genPwd();
-    const c = { ...form, password: pwd, id: Date.now(), age: +form.age || 25, weight: +form.weight || 70, height: +form.height || 170, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +form.weight || 70 }] };
-    setClients(p => [...p, c]); setShowAdd(false); setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true); setForm(blank);
+    const fullPhone = form.phone ? `${addCountry} ${form.phone}` : "";
+    const c = { ...form, phone: fullPhone, password: pwd, id: Date.now(), age: +form.age || 25, weight: +form.weight || 70, height: +form.height || 170, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +form.weight || 70 }] };
+    setClients(p => [...p, c]); setShowAdd(false); setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true); setForm(blank); setAddCountry("+974");
   };
   const saveEdit = () => {
     if (!editC) return;
-    setClients(p => p.map(c => c.id === editC.id ? { ...c, name: form.name || c.name, email: form.email || c.email, password: form.password || c.password, age: +form.age || c.age, weight: +form.weight || c.weight, height: +form.height || c.height, gender: form.gender || c.gender, goal: form.goal || c.goal, pal: form.pal || c.pal, phone: form.phone !== undefined ? form.phone : c.phone } : c));
+    const fullPhone = form.phone ? `${editCountry} ${form.phone}` : editC.phone;
+    setClients(p => p.map(c => c.id === editC.id ? { ...c, name: form.name || c.name, email: form.email || c.email, password: form.password || c.password, age: +form.age || c.age, weight: +form.weight || c.weight, height: +form.height || c.height, gender: form.gender || c.gender, goal: form.goal || c.goal, pal: form.pal || c.pal, phone: fullPhone } : c));
     setShowEdit(false); setEditC(null); setForm(blank);
   };
-  const openEdit = (c) => { setEditC(c); setForm({ name: c.name, email: c.email, password: c.password, age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: c.phone || "" }); setShowEdit(true); };
+  const openEdit = (c) => {
+    setEditC(c);
+    const parts = (c.phone || "").split(" ");
+    const knownCode = COUNTRIES.find(cc => cc.code === parts[0]);
+    setEditCountry(knownCode ? parts[0] : "+974");
+    const restNumber = knownCode ? parts.slice(1).join("") : (c.phone || "").replace(/\D/g, "");
+    setForm({ name: c.name, email: c.email, password: c.password, age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber });
+    setShowEdit(true);
+  };
   const approveReg = (reg) => {
     const pwd = genPwd();
     const c = { id: Date.now(), name: reg.name, email: reg.email, password: pwd, age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170, gender: reg.gender || "male", goal: reg.goal || "General Fitness", pal: reg.pal || "moderate", phone: reg.phone, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +reg.weight || 70 }] };
@@ -1359,7 +1590,7 @@ export default function App() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div style={{ gridColumn: "1/-1" }}><FF label={`${t.fullName} *`} value={form.name} onChange={v => sf("name", v)} ph="Name" /></div>
             <FF label="Email *" value={form.email} onChange={v => sf("email", v)} ph="email@example.com" />
-            <FF label={t.phone} value={form.phone} onChange={v => sf("phone", v)} ph="+974 00000000" />
+            <PhoneField label={t.phone} country={addCountry} setCountry={setAddCountry} phone={form.phone} setPhone={v => sf("phone", v)} />
             <FF label={t.passwordAuto} value={form.password} onChange={v => sf("password", v)} ph={isAr ? "فارغ = تلقائي" : "Blank = auto"} />
             <FF label={t.age} value={form.age} onChange={v => sf("age", v)} ph="25" />
             <FF label={`${t.weight} (kg)`} value={form.weight} onChange={v => sf("weight", v)} ph="70" />
@@ -1382,7 +1613,7 @@ export default function App() {
           {editC && <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div style={{ gridColumn: "1/-1" }}><FF label={t.fullName} value={form.name} onChange={v => sf("name", v)} ph={editC.name} /></div>
             <FF label="Email" value={form.email} onChange={v => sf("email", v)} ph={editC.email} />
-            <FF label={t.phone} value={form.phone} onChange={v => sf("phone", v)} ph={editC.phone || ""} />
+            <PhoneField label={t.phone} country={editCountry} setCountry={setEditCountry} phone={form.phone} setPhone={v => sf("phone", v)} />
             <FF label={isAr ? "كلمة مرور جديدة" : "New Password"} value={form.password} onChange={v => sf("password", v)} ph={isAr ? "فارغ = نفس القديم" : "Blank = keep"} />
             <FF label={t.age} value={form.age} onChange={v => sf("age", v)} ph={String(editC.age)} />
             <FF label={`${t.weight} (kg)`} value={form.weight} onChange={v => sf("weight", v)} ph={String(editC.weight)} />
