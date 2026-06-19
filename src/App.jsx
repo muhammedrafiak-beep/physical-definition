@@ -679,6 +679,79 @@ const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Traine
 const ADMIN = { u: "admin", p: "pd@rafi2024" };
 const SK = "pd_v7_clients"; const RK = "pd_v7_regs"; const LK = "pd_v7_lang";
 
+// ── SUPABASE ───────────────────────────────────────────────
+import { createClient } from "@supabase/supabase-js";
+const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(SUPA_URL, SUPA_KEY);
+
+// DB helpers
+const dbGetClients = async () => {
+  const { data, error } = await supabase.from("clients").select("*").order("id");
+  if (error) { console.error("getClients:", error); return null; }
+  return data.map(r => ({
+    id: r.id, name: r.name, email: r.email, password: r.password,
+    age: r.age, weight: r.weight, height: r.height, gender: r.gender,
+    goal: r.goal, pal: r.pal, phone: r.phone,
+    joinDate: r.join_date, status: r.status,
+    workoutPlan: r.workout_plan, nutritionPlan: r.nutrition_plan,
+    workoutSystemId: r.workout_system_id, mealPlanId: r.meal_plan_id,
+    progress: r.progress || [],
+  }));
+};
+
+const dbAddClient = async (c) => {
+  const { data, error } = await supabase.from("clients").insert([{
+    name: c.name, email: c.email, password: c.password,
+    age: c.age, weight: c.weight, height: c.height, gender: c.gender,
+    goal: c.goal, pal: c.pal, phone: c.phone,
+    join_date: c.joinDate, status: c.status,
+    workout_plan: c.workoutPlan, nutrition_plan: c.nutritionPlan,
+    workout_system_id: c.workoutSystemId, meal_plan_id: c.mealPlanId,
+    progress: c.progress || [],
+  }]).select().single();
+  if (error) { console.error("addClient:", error); return null; }
+  return { ...c, id: data.id };
+};
+
+const dbUpdateClient = async (c) => {
+  const { error } = await supabase.from("clients").update({
+    name: c.name, email: c.email, password: c.password,
+    age: c.age, weight: c.weight, height: c.height, gender: c.gender,
+    goal: c.goal, pal: c.pal, phone: c.phone, status: c.status,
+    workout_plan: c.workoutPlan, nutrition_plan: c.nutritionPlan,
+    workout_system_id: c.workoutSystemId, meal_plan_id: c.mealPlanId,
+    progress: c.progress || [],
+  }).eq("id", c.id);
+  if (error) console.error("updateClient:", error);
+};
+
+const dbDeleteClient = async (id) => {
+  const { error } = await supabase.from("clients").delete().eq("id", id);
+  if (error) console.error("deleteClient:", error);
+};
+
+const dbGetRegs = async () => {
+  const { data, error } = await supabase.from("registrations").select("*").order("id");
+  if (error) { console.error("getRegs:", error); return null; }
+  return data.map(r => ({ ...r, submittedAt: r.submitted_at }));
+};
+
+const dbAddReg = async (r) => {
+  const { error } = await supabase.from("registrations").insert([{
+    name: r.name, email: r.email, phone: r.phone,
+    age: r.age ? +r.age : null, weight: r.weight ? +r.weight : null,
+    height: r.height ? +r.height : null, gender: r.gender,
+    goal: r.goal, pal: r.pal,
+  }]);
+  if (error) console.error("addReg:", error);
+};
+
+const dbDeleteReg = async (id) => {
+  const { error } = await supabase.from("registrations").delete().eq("id", id);
+  if (error) console.error("deleteReg:", error);
+};
+
 const ld = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch { return fb; } };
 const sv = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
@@ -1045,7 +1118,7 @@ function MealSelector({ client, onSelect, onClose, lang }) {
 }
 
 // ── PLANS TAB ──────────────────────────────────────────────
-function PlansTab({ clients, selC, setSelC, setClients, lang }) {
+function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState("");
   const [showMeal, setShowMeal] = useState(false);
@@ -1057,18 +1130,28 @@ function PlansTab({ clients, selC, setSelC, setClients, lang }) {
   const saveEdit = () => {
     if (!editing) return;
     const key = editing.type === "workout" ? "workoutPlan" : "nutritionPlan";
+    const updated = clients.find(c => c.id === editing.id);
+    if (updated) { const u = { ...updated, [key]: draft }; onUpdate?.(u); }
     setClients(p => p.map(c => c.id === editing.id ? { ...c, [key]: draft } : c));
     setSelC(p => p?.id === editing.id ? { ...p, [key]: draft } : p);
     setEditing(null); setDraft("");
   };
-  const clearPlan = (c, type) => setClients(p => p.map(x => x.id === c.id ? { ...x, [type === "workout" ? "workoutPlan" : "nutritionPlan"]: null, ...(type === "workout" ? { workoutSystemId: null } : { mealPlanId: null }) } : x));
+  const clearPlan = (c, type) => {
+    const key = type === "workout" ? "workoutPlan" : "nutritionPlan";
+    const skey = type === "workout" ? "workoutSystemId" : "mealPlanId";
+    const u = { ...c, [key]: null, [skey]: null };
+    onUpdate?.(u);
+    setClients(p => p.map(x => x.id === c.id ? u : x));
+  };
 
   const applyWorkoutSystem = (ws) => {
     if (!sc) return;
     const text = `${ws.emoji} ${isAr ? ws.nameAr : ws.name}\n${"─".repeat(30)}\n${isAr ? ws.descAr : ws.desc}\n\n` +
       ws.days.map(day => `📅 ${day.name}\n${"─".repeat(25)}\n` +
         day.exercises.map(ex => `• ${ex.name}\n  Sets: ${ex.sets} | Reps: ${ex.reps} | Rest: ${ex.rest}${ex.notes ? `\n  💡 ${ex.notes}` : ""}`).join("\n")).join("\n\n");
-    setClients(p => p.map(c => c.id === sc.id ? { ...c, workoutPlan: text, workoutSystemId: ws.id } : c));
+    const u = { ...sc, workoutPlan: text, workoutSystemId: ws.id };
+    onUpdate?.(u);
+    setClients(p => p.map(c => c.id === sc.id ? u : c));
     setShowWO(false);
   };
 
@@ -1076,7 +1159,9 @@ function PlansTab({ clients, selC, setSelC, setClients, lang }) {
     if (!sc) return;
     const text = `🥗 ${plan.emoji} ${isAr ? plan.nameAr : plan.name}\n${"─".repeat(28)}\n${isAr ? "الهدف اليومي" : "Daily Target"}: ${target} kcal | ${isAr ? "الإجمالي" : "Total"}: ${tot.cal} kcal\n${isAr ? "البروتين" : "Protein"}: ${tot.p}g | ${isAr ? "الكارب" : "Carbs"}: ${tot.c}g | ${isAr ? "الدهون" : "Fat"}: ${tot.f}g\n\n` +
       plan.meals.map(m => `🕐 ${m.time} — ${isAr ? m.nameAr : m.name}\n   ${m.items}\n   ${m.cal} kcal | P:${m.p}g C:${m.c}g F:${m.f}g`).join("\n\n");
-    setClients(p => p.map(c => c.id === sc.id ? { ...c, nutritionPlan: text, mealPlanId: plan.id } : c));
+    const u = { ...sc, nutritionPlan: text, mealPlanId: plan.id };
+    onUpdate?.(u);
+    setClients(p => p.map(c => c.id === sc.id ? u : c));
     setShowMeal(false);
   };
 
@@ -1257,10 +1342,15 @@ function RegPage({ lang, setLang, onSubmit }) {
 // ── MAIN APP ───────────────────────────────────────────────
 export default function App() {
   const [lang, setLang] = useState(() => ld(LK, "en"));
-  const [clients, setClients] = useState(() => ld(SK, DEMO));
-  const [regs, setRegs] = useState(() => ld(RK, []));
-  const [screen, setScreen] = useState("login");
-  const [curUser, setCurUser] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [regs, setRegs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [screen, setScreen] = useState(() => {
+    try { return sessionStorage.getItem("pd_screen") || "login"; } catch { return "login"; }
+  });
+  const [curUser, setCurUser] = useState(() => {
+    try { const u = sessionStorage.getItem("pd_user"); return u ? JSON.parse(u) : null; } catch { return null; }
+  });
   const [lf, setLf] = useState({ u: "", p: "" });
   const [lErr, setLErr] = useState("");
   const [aTab, setATab] = useState("dashboard");
@@ -1279,12 +1369,39 @@ export default function App() {
 
   const t = T[lang]; const isAr = lang === "ar";
 
-  useEffect(() => { sv(SK, clients); }, [clients]);
-  useEffect(() => { sv(RK, regs); }, [regs]);
+  // Load data from Supabase on mount
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const [cls, rgs] = await Promise.all([dbGetClients(), dbGetRegs()]);
+      if (cls) setClients(cls); else setClients(ld(SK, DEMO));
+      if (rgs) setRegs(rgs); else setRegs(ld(RK, []));
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  // Persist lang
   useEffect(() => { sv(LK, lang); }, [lang]);
 
+  // Persist login session across refresh
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("pd_screen", screen);
+      sessionStorage.setItem("pd_user", curUser ? JSON.stringify(curUser) : "");
+    } catch {}
+  }, [screen, curUser]);
+
+  // Keep curUser in sync with latest client data
+  useEffect(() => {
+    if (curUser?.id) {
+      const latest = clients.find(c => c.id === curUser.id);
+      if (latest) setCurUser(latest);
+    }
+  }, [clients]);
+
   if (window.location.pathname === "/register") {
-    return <RegPage lang={lang} setLang={setLang} onSubmit={data => { const r = ld(RK, []); sv(RK, [...r, { ...data, id: Date.now(), submittedAt: new Date().toISOString() }]); }} />;
+    return <RegPage lang={lang} setLang={setLang} onSubmit={async (data) => { await dbAddReg(data); }} />;
   }
 
   const login = () => {
@@ -1294,18 +1411,25 @@ export default function App() {
     if (c) { if (c.status !== "Active") { setLErr(t.accountDisabled); return; } setCurUser(c); setScreen("client"); return; }
     setLErr(t.invalidCredentials);
   };
-  const logout = () => { setScreen("login"); setCurUser(null); setLf({ u: "", p: "" }); };
-  const addClient = () => {
+  const logout = () => {
+    setScreen("login"); setCurUser(null); setLf({ u: "", p: "" });
+    try { sessionStorage.removeItem("pd_screen"); sessionStorage.removeItem("pd_user"); } catch {}
+  };
+  const addClient = async () => {
     if (!form.name || !form.email) return;
     const pwd = form.password || genPwd();
     const fullPhone = form.phone ? `${addCountry} ${form.phone}` : "";
-    const c = { ...form, phone: fullPhone, password: pwd, id: Date.now(), age: +form.age || 25, weight: +form.weight || 70, height: +form.height || 170, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +form.weight || 70 }] };
-    setClients(p => [...p, c]); setShowAdd(false); setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true); setForm(blank); setAddCountry("+974");
+    const c = { ...form, phone: fullPhone, password: pwd, age: +form.age || 25, weight: +form.weight || 70, height: +form.height || 170, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +form.weight || 70 }] };
+    const saved = await dbAddClient(c);
+    if (saved) setClients(p => [...p, saved]);
+    setShowAdd(false); setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true); setForm(blank); setAddCountry("+974");
   };
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editC) return;
     const fullPhone = form.phone ? `${editCountry} ${form.phone}` : editC.phone;
-    setClients(p => p.map(c => c.id === editC.id ? { ...c, name: form.name || c.name, email: form.email || c.email, password: form.password || c.password, age: +form.age || c.age, weight: +form.weight || c.weight, height: +form.height || c.height, gender: form.gender || c.gender, goal: form.goal || c.goal, pal: form.pal || c.pal, phone: fullPhone } : c));
+    const updated = { ...editC, name: form.name || editC.name, email: form.email || editC.email, password: form.password || editC.password, age: +form.age || editC.age, weight: +form.weight || editC.weight, height: +form.height || editC.height, gender: form.gender || editC.gender, goal: form.goal || editC.goal, pal: form.pal || editC.pal, phone: fullPhone };
+    await dbUpdateClient(updated);
+    setClients(p => p.map(c => c.id === editC.id ? updated : c));
     setShowEdit(false); setEditC(null); setForm(blank);
   };
   const openEdit = (c) => {
@@ -1317,12 +1441,26 @@ export default function App() {
     setForm({ name: c.name, email: c.email, password: c.password, age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber });
     setShowEdit(true);
   };
-  const approveReg = (reg) => {
+  const approveReg = async (reg) => {
     const pwd = genPwd();
-    const c = { id: Date.now(), name: reg.name, email: reg.email, password: pwd, age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170, gender: reg.gender || "male", goal: reg.goal || "General Fitness", pal: reg.pal || "moderate", phone: reg.phone, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +reg.weight || 70 }] };
-    setClients(p => [...p, c]); setRegs(p => p.filter(r => r.id !== reg.id)); setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true);
+    const c = { name: reg.name, email: reg.email, password: pwd, age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170, gender: reg.gender || "male", goal: reg.goal || "General Fitness", pal: reg.pal || "moderate", phone: reg.phone, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +reg.weight || 70 }] };
+    const saved = await dbAddClient(c);
+    if (saved) setClients(p => [...p, saved]);
+    await dbDeleteReg(reg.id);
+    setRegs(p => p.filter(r => r.id !== reg.id));
+    setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true);
   };
-  const toggleStatus = (id) => setClients(p => p.map(c => c.id === id ? { ...c, status: c.status === "Active" ? "Disabled" : "Active" } : c));
+  const toggleStatus = async (id) => {
+    const c = clients.find(x => x.id === id);
+    if (!c) return;
+    const updated = { ...c, status: c.status === "Active" ? "Disabled" : "Active" };
+    await dbUpdateClient(updated);
+    setClients(p => p.map(x => x.id === id ? updated : x));
+  };
+  const deleteClient = async (id) => {
+    await dbDeleteClient(id);
+    setClients(p => p.filter(x => x.id !== id));
+  };
   const waMsgUrl = (d) => { if (!d) return "#"; const msg = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${d.name}!\n\n📧 Email: ${d.email}\n🔑 ${isAr ? "كلمة المرور" : "Password"}: ${d.password}\n\n🌐 ${TRAINER.appUrl}\n— ${TRAINER.name}`; return `https://wa.me/${(d.phone || "").replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`; };
 
   const regLink = `${window.location.origin}/register`;
@@ -1331,6 +1469,16 @@ export default function App() {
   const goals = clients.reduce((a, c) => { a[c.goal] = (a[c.goal] || 0) + 1; return a; }, {});
   const GOALS = isAr ? GOALS_AR : GOALS_EN;
   const NAV = [{ id: "dashboard", l: t.dashboard, i: "◈" }, { id: "clients", l: t.clients, i: "◎" }, { id: "plans", l: t.plans, i: "▤" }, { id: "requests", l: `${t.requests}${regs.length ? `(${regs.length})` : ""}`, i: "📋" }];
+
+  // LOADING
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <style>{CSS}</style>
+      <Logo s={52} />
+      <div className="sp" />
+      <div style={{ color: G.muted, fontSize: 13 }}>Loading...</div>
+    </div>
+  );
 
   // LOGIN
   if (screen === "login") return (
@@ -1533,7 +1681,7 @@ export default function App() {
                     <Btn ch="📋" v="ghost" onClick={() => { setSelC(c); setATab("plans"); }} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="📄" v="blue" onClick={() => generatePDF(c, lang)} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "6px", fontSize: 12 }} />
-                    <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) setClients(p => p.filter(x => x.id !== c.id)); }} sx={{ padding: "6px", fontSize: 12 }} />
+                    <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) deleteClient(c.id); }} sx={{ padding: "6px", fontSize: 12 }} />
                   </div>
                   {c.phone && (
                     <a href={`https://wa.me/${c.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${c.name}!\n\n📧 Email: ${c.email}\n🔑 ${isAr ? "كلمة المرور" : "Password"}: ${c.password}\n\n🌐 ${TRAINER.appUrl}\n— ${TRAINER.name}`)}`}
@@ -1549,7 +1697,7 @@ export default function App() {
         )}
 
         {/* PLANS */}
-        {aTab === "plans" && <PlansTab clients={clients} selC={selC} setSelC={setSelC} setClients={setClients} lang={lang} />}
+        {aTab === "plans" && <PlansTab clients={clients} selC={selC} setSelC={setSelC} setClients={setClients} lang={lang} onUpdate={dbUpdateClient} />}
 
         {/* REQUESTS */}
         {aTab === "requests" && (
