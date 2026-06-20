@@ -679,6 +679,28 @@ const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Traine
 const ADMIN = { u: "admin", p: "pd@rafi2024" };
 const SK = "pd_v7_clients"; const RK = "pd_v7_regs"; const LK = "pd_v7_lang";
 
+// Progress photos helpers
+const dbGetPhotos = async (clientId) => {
+  const { data, error } = await supabase.from("progress_photos").select("*").eq("client_id", clientId).order("taken_at", { ascending: false });
+  if (error) { console.error("getPhotos:", error); return []; }
+  return data;
+};
+const dbAddPhoto = async (clientId, file, weight, notes) => {
+  const ext = file.name.split(".").pop();
+  const path = `${clientId}/${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage.from("progress-photos").upload(path, file);
+  if (upErr) { console.error("upload:", upErr); return null; }
+  const { data: { publicUrl } } = supabase.storage.from("progress-photos").getPublicUrl(path);
+  const { data, error } = await supabase.from("progress_photos").insert([{ client_id: clientId, photo_url: publicUrl, weight: weight ? +weight : null, notes, taken_at: new Date().toISOString().split("T")[0] }]).select().single();
+  if (error) { console.error("addPhoto:", error); return null; }
+  return data;
+};
+const dbDeletePhoto = async (id, photoUrl) => {
+  const path = photoUrl.split("/progress-photos/")[1];
+  if (path) await supabase.storage.from("progress-photos").remove([path]);
+  await supabase.from("progress_photos").delete().eq("id", id);
+};
+
 // ── SUPABASE ───────────────────────────────────────────────
 import { createClient } from "@supabase/supabase-js";
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -916,22 +938,35 @@ const G = { bg: "#080600", surf: "#110e00", surf2: "#1c1500", border: "rgba(212,
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
-html{font-size:16px;-webkit-text-size-adjust:100%;}
-html,body{background:#080600;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
-input,select,button,textarea{font-family:'Inter',sans-serif;}
+html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+html,body{background:#080600;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;max-width:100vw;touch-action:manipulation;}
+input,select,button,textarea{font-family:'Inter',sans-serif;font-size:16px;}
 .sf{font-family:'Cormorant Garamond',serif;}
 .gd{background:linear-gradient(90deg,#f5d76e,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.btn{cursor:pointer;border:none;transition:all .15s;outline:none;-webkit-tap-highlight-color:transparent;}
+.btn{cursor:pointer;border:none;transition:all .15s;outline:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 .btn:active{opacity:.75;transform:scale(.97);}
-.inp{background:#1c1500;border:1px solid rgba(212,175,55,0.15);border-radius:10px;padding:12px 14px;color:#f0e8cc;font-size:14px;width:100%;outline:none;}
+.inp{background:#1c1500;border:1px solid rgba(212,175,55,0.15);border-radius:10px;padding:12px 14px;color:#f0e8cc;font-size:16px;width:100%;outline:none;-webkit-appearance:none;appearance:none;}
 .inp:focus{border-color:rgba(212,175,55,0.5);}
 .inp::placeholder{color:#3a2d10;}
+select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6a30' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
 .card{background:#110e00;border:1px solid rgba(212,175,55,0.14);border-radius:14px;}
 .fd{animation:fi .25s ease;}
 @keyframes fi{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes spin{to{transform:rotate(360deg);}}
 .sp{width:34px;height:34px;border:3px solid #1c1500;border-top:3px solid #d4af37;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes squat3d{0%{transform:rotateX(0deg) translateY(0px);}50%{transform:rotateX(12deg) translateY(18px);}100%{transform:rotateX(0deg) translateY(0px);}}
+@keyframes push3d{0%{transform:rotateZ(0deg) translateY(0px);}50%{transform:rotateZ(2deg) translateY(-14px);}100%{transform:rotateZ(0deg) translateY(0px);}}
+@keyframes pull3d{0%{transform:translateY(0px);}50%{transform:translateY(-20px);}100%{transform:translateY(0px);}}
+@keyframes deadlift3d{0%{transform:rotateX(25deg) translateY(20px);}50%{transform:rotateX(0deg) translateY(0px);}100%{transform:rotateX(25deg) translateY(20px);}}
+@keyframes plank3d{0%,100%{transform:scaleX(1);}50%{transform:scaleX(1.02) translateY(-2px);}}
+@keyframes muscleGlow{0%,100%{opacity:0.2;}50%{opacity:0.7;}}
+@keyframes breathe{0%,100%{transform:scaleY(1);}50%{transform:scaleY(1.04);}}
+@media(max-width:480px){
+  html{font-size:15px;}
+  .inp{padding:11px 12px;}
+}
 `;
+
 
 const Logo = ({ s = 32 }) => (<svg width={s} height={s} viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="url(#lg)" /><defs><linearGradient id="lg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#d4af37" /><stop offset="50%" stopColor="#f5d76e" /><stop offset="100%" stopColor="#b8860b" /></linearGradient></defs><text x="6" y="33" fontFamily="Georgia,serif" fontSize="22" fontWeight="900" fill="#080600" letterSpacing="-1">PD</text><rect x="6" y="37" width="36" height="2.5" rx="1.25" fill="#080600" opacity="0.5" /></svg>);
 const Av = ({ name = "?", sz = 38 }) => (<div style={{ width: sz, height: sz, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontSize: sz * 0.33, fontWeight: 800, color: "#080600", flexShrink: 0 }}>{(name || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>);
@@ -991,6 +1026,307 @@ function TDEECard({ client, t, lang }) {
   );
 }
 
+// ── 3D CINEMATIC WORKOUT ANIMATIONS ──────────────────────────
+function WorkoutAnim3D({ exerciseId, color = "#d4af37", size = 160 }) {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setFrame(f => (f + 1) % 120), 30);
+    return () => clearInterval(i);
+  }, []);
+
+  const t = (frame / 120) * Math.PI * 2;
+  const ease = (Math.sin(t - Math.PI / 2) + 1) / 2;
+  const s = Math.sin(t);
+
+  const skin = color;
+  const dark = `${color}cc`;
+  const hi = `${color}33`;
+  const muscleActive = `${color}88`;
+
+  // Shared body part renderers
+  const Head = ({ cx, cy, r = 9 }) => (
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill={skin} />
+      <circle cx={cx} cy={cy} r={r * 0.85} fill="none" stroke={dark} strokeWidth="0.8" opacity="0.3" />
+      <circle cx={cx - 3} cy={cy - 2} r={1.8} fill="#060400" opacity="0.6" />
+      <circle cx={cx + 3} cy={cy - 2} r={1.8} fill="#060400" opacity="0.6" />
+      <path d={`M${cx - 2.5} ${cy + 3} Q${cx} ${cy + 5.5} ${cx + 2.5} ${cy + 3}`} stroke="#060400" strokeWidth="1.2" fill="none" opacity="0.4" />
+    </g>
+  );
+
+  const Torso = ({ x1, y1, x2, y2, w = 11 }) => {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    const nx = (-dy / len) * w, ny = (dx / len) * w;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    return (
+      <g>
+        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.65},${y2 - ny * 0.65} ${x2 + nx * 0.65},${y2 + ny * 0.65}`} fill={skin} />
+        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.65},${y2 - ny * 0.65} ${x2 + nx * 0.65},${y2 + ny * 0.65}`} fill="none" stroke={dark} strokeWidth="0.6" opacity="0.25" />
+        <ellipse cx={mx} cy={my} rx={w * 0.45} ry={len * 0.2} transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI} ${mx} ${my})`} fill={muscleActive} opacity="0.4" />
+      </g>
+    );
+  };
+
+  const Limb = ({ x1, y1, x2, y2, w = 6, glow = false }) => {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    const nx = (-dy / len) * w, ny = (dx / len) * w;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    return (
+      <g>
+        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.5},${y2 - ny * 0.5} ${x2 + nx * 0.5},${y2 + ny * 0.5}`} fill={skin} />
+        {glow && <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.5},${y2 - ny * 0.5} ${x2 + nx * 0.5},${y2 + ny * 0.5}`} fill={color} opacity={0.1 + ease * 0.25} />}
+        <ellipse cx={mx} cy={my} rx={w * 0.45} ry={len * 0.22} transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI} ${mx} ${my})`} fill={muscleActive} opacity="0.35" />
+        <circle cx={x2} cy={y2} r={w * 0.55} fill={dark} opacity="0.6" />
+      </g>
+    );
+  };
+
+  const Shadow = ({ cx, rx = 20, opacity = 0.08 }) => (
+    <ellipse cx={cx} cy="108" rx={rx} ry="4" fill={color} opacity={opacity} />
+  );
+
+  const animations = {
+    squat: () => {
+      const dip = ease * 24;
+      const kOut = ease * 9;
+      const hY = 38 + dip;
+      const kY = 66 + dip * 0.35;
+      return (
+        <svg viewBox="0 0 120 118" width={size} height={size * 0.98}>
+          <Shadow cx="60" rx={20 + dip * 0.4} opacity={0.06 + ease * 0.06} />
+          <rect x="38" y="104" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <rect x="68" y="104" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <Limb x1={45} y1={kY} x2={45} y2={106} w={5.5} />
+          <Limb x1={75} y1={kY} x2={75} y2={106} w={5.5} />
+          <Limb x1={57} y1={hY + 10} x2={45 - kOut} y2={kY} w={8} glow />
+          <Limb x1={63} y1={hY + 10} x2={75 + kOut} y2={kY} w={8} glow />
+          <Torso x1={60} y1={hY - 14} x2={60} y2={hY + 10} w={11} />
+          <Limb x1={53} y1={hY - 5} x2={36} y2={hY + 8 - dip * 0.3} w={4.5} />
+          <Limb x1={67} y1={hY - 5} x2={84} y2={hY + 8 - dip * 0.3} w={4.5} />
+          <Head cx={60} cy={hY - 24} />
+          <ellipse cx={46} cy={kY - 10} rx="5" ry="9" fill={color} opacity={0.1 + ease * 0.22} transform={`rotate(-15 46 ${kY - 10})`} />
+          <ellipse cx={74} cy={kY - 10} rx="5" ry="9" fill={color} opacity={0.1 + ease * 0.22} transform={`rotate(15 74 ${kY - 10})`} />
+        </svg>
+      );
+    },
+
+    pushup: () => {
+      const lift = ease * 18;
+      const bY = 62 - lift;
+      const eFlare = ease * 32;
+      return (
+        <svg viewBox="0 0 170 100" width={size * 1.06} height={size * 0.625}>
+          <Shadow cx="85" rx={35 + lift} opacity={0.07 + ease * 0.04} />
+          <rect x="120" y="79" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <Limb x1={80} y1={bY + 14} x2={120} y2={82} w={8} />
+          <Torso x1={44} y1={bY + 4} x2={80} y2={bY + 14} w={10} />
+          <Limb x1={52} y1={bY + 4} x2={44 - eFlare * 0.28} y2={bY + 16 + eFlare * 0.4} w={5.5} glow />
+          <Limb x1={52} y1={bY + 4} x2={62 + eFlare * 0.28} y2={bY + 16 + eFlare * 0.4} w={5.5} glow />
+          <Limb x1={44 - eFlare * 0.28} y1={bY + 16 + eFlare * 0.4} x2={34} y2={80} w={4.5} />
+          <Limb x1={62 + eFlare * 0.28} y1={bY + 16 + eFlare * 0.4} x2={70} y2={80} w={4.5} />
+          <circle cx="34" cy="80" r="5" fill={dark} opacity="0.8" />
+          <circle cx="70" cy="80" r="5" fill={dark} opacity="0.8" />
+          <Head cx={34} cy={bY - 6} />
+          <ellipse cx="52" cy={bY + 8} rx="8" ry="4.5" fill={color} opacity={0.1 + ease * 0.25} transform={`rotate(-8 52 ${bY + 8})`} />
+        </svg>
+      );
+    },
+
+    deadlift: () => {
+      const liftH = ease * 28;
+      const hipA = (1 - ease) * 30;
+      const hY = 72 - liftH * 0.5;
+      const barY = 88 - liftH;
+      const shX = 60 - hipA * 0.4;
+      const shY = hY - 26 - hipA * 0.3;
+      return (
+        <svg viewBox="0 0 160 112" width={size} height={size * 0.7}>
+          <Shadow cx="80" rx="24" opacity="0.07" />
+          <rect x="26" y={barY - 4} width="108" height="9" rx="4.5" fill={dark} opacity="0.85" />
+          <rect x="22" y={barY - 11} width="14" height="22" rx="7" fill={dark} opacity="0.7" />
+          <rect x="124" y={barY - 11} width="14" height="22" rx="7" fill={dark} opacity="0.7" />
+          <rect x="14" y={barY - 16} width="14" height="32" rx="7" fill={dark} opacity="0.45" />
+          <rect x="132" y={barY - 16} width="14" height="32" rx="7" fill={dark} opacity="0.45" />
+          <rect x="52" y="92" width="13" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <rect x="75" y="92" width="13" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <Limb x1={58} y1={hY + 4} x2={58} y2={94} w={7.5} />
+          <Limb x1={82} y1={hY + 4} x2={82} y2={94} w={7.5} />
+          <Torso x1={shX} y1={shY} x2={70} y2={hY + 4} w={10} />
+          <Limb x1={shX - 2} y1={shY + 7} x2={50} y2={barY + 3} w={5.5} glow />
+          <Limb x1={shX + 10} y1={shY + 7} x2={90} y2={barY + 3} w={5.5} glow />
+          <circle cx="50" cy={barY + 3} r="5.5" fill={dark} opacity="0.85" />
+          <circle cx="90" cy={barY + 3} r="5.5" fill={dark} opacity="0.85" />
+          <Head cx={shX - 4} cy={shY - 11} />
+          <ellipse cx={shX + 4} cy={shY + 16} rx="6" ry="11" fill={color} opacity={0.08 + ease * 0.22} transform={`rotate(${-hipA * 0.5} ${shX + 4} ${shY + 16})`} />
+        </svg>
+      );
+    },
+
+    pullup: () => {
+      const pullH = ease * 22;
+      const bY = 34 + pullH;
+      const elbowFlare = ease * 20;
+      return (
+        <svg viewBox="0 0 120 135" width={size} height={size * 1.125}>
+          <rect x="10" y="8" width="100" height="11" rx="5.5" fill={dark} opacity="0.85" />
+          <rect x="16" y="8" width="9" height="26" rx="4.5" fill={dark} opacity="0.5" />
+          <rect x="95" y="8" width="9" height="26" rx="4.5" fill={dark} opacity="0.5" />
+          <Shadow cx="60" rx="20" opacity="0.05" />
+          <circle cx="32" cy="24" r="5.5" fill={dark} opacity="0.85" />
+          <circle cx="88" cy="24" r="5.5" fill={dark} opacity="0.85" />
+          <Limb x1={32} y1={24} x2={42 - elbowFlare} y2={bY - 20 + 8} w={4.5} />
+          <Limb x1={88} y1={24} x2={78 + elbowFlare} y2={bY - 20 + 8} w={4.5} />
+          <Limb x1={42 - elbowFlare} y1={bY - 20 + 8} x2={50} y2={bY - 14} w={6.5} glow />
+          <Limb x1={78 + elbowFlare} y1={bY - 20 + 8} x2={70} y2={bY - 14} w={6.5} glow />
+          <Torso x1={60} y1={bY - 14} x2={60} y2={bY + 12} w={11} />
+          <Limb x1={56} y1={bY + 12} x2={52} y2={bY + 40} w={7.5} />
+          <Limb x1={64} y1={bY + 12} x2={68} y2={bY + 40} w={7.5} />
+          <Limb x1={52} y1={bY + 40} x2={54} y2={bY + 58} w={5.5} />
+          <Limb x1={68} y1={bY + 40} x2={66} y2={bY + 58} w={5.5} />
+          <Head cx={60} cy={bY - 24} />
+          <ellipse cx={43 - elbowFlare * 0.5} cy={bY - 10} rx="4" ry="7" fill={color} opacity={0.08 + ease * 0.28} />
+          <ellipse cx={77 + elbowFlare * 0.5} cy={bY - 10} rx="4" ry="7" fill={color} opacity={0.08 + ease * 0.28} />
+        </svg>
+      );
+    },
+
+    plank: () => {
+      const breathe = s * 1.4;
+      const glow = (Math.sin(t * 2) + 1) / 2;
+      return (
+        <svg viewBox="0 0 188 92" width={size * 1.175} height={size * 0.575}>
+          <Shadow cx="98" rx="74" opacity="0.06" />
+          <rect x="140" y="73" width="16" height="8" rx="4" fill={dark} opacity="0.85" />
+          <Limb x1={82} y1={56 + breathe} x2={140} y2={76} w={10} />
+          <Torso x1={42} y1={49 + breathe * 0.6} x2={82} y2={56 + breathe} w={12} />
+          <ellipse cx="62" cy={52 + breathe * 0.7} rx="12" ry="5.5" fill={color} opacity={0.05 + glow * 0.14} transform={`rotate(-8 62 ${52 + breathe * 0.7})`} />
+          <Limb x1={50} y1={49 + breathe * 0.6} x2={34} y2={64} w={6.5} />
+          <Limb x1={50} y1={49 + breathe * 0.6} x2={64} y2={62} w={6.5} />
+          <Limb x1={34} y1={64} x2={26} y2={76} w={5.5} />
+          <Limb x1={64} y1={62} x2={72} y2={76} w={5.5} />
+          <circle cx="26" cy="76" r="6" fill={dark} opacity="0.8" />
+          <circle cx="72" cy="76" r="6" fill={dark} opacity="0.8" />
+          <Head cx={28} cy={41 + breathe * 0.4} />
+          <ellipse cx="84" cy={55 + breathe * 0.9} rx="8" ry="5.5" fill={color} opacity={0.07 + glow * 0.11} />
+        </svg>
+      );
+    },
+
+    row: () => {
+      const pull = ease * 16;
+      const lean = 15;
+      return (
+        <svg viewBox="0 0 160 100" width={size} height={size * 0.625}>
+          <Shadow cx="80" rx="28" opacity="0.07" />
+          <rect x="20" y="85" width="16" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <rect x="110" y="85" width="16" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <Limb x1={55} y1={52} x2={28} y2={87} w={7} />
+          <Limb x1={72} y1={52} x2={118} y2={87} w={7} />
+          <Torso x1={38} y1={44} x2={72} y2={52} w={10} />
+          <Limb x1={46} y1={46} x2={46 + pull} y2={55} w={5.5} glow />
+          <Limb x1={46 + pull} y1={55} x2={80 + pull * 0.5} y2={48} w={4.5} />
+          <circle cx={80 + pull * 0.5} cy="48" r="5" fill={dark} opacity="0.8" />
+          <Head cx={36} cy={35} />
+          <ellipse cx="50" cy="47" rx="7" ry="4" fill={color} opacity={0.1 + ease * 0.25} transform="rotate(-15 50 47)" />
+        </svg>
+      );
+    },
+
+    press: () => {
+      const pressH = ease * 20;
+      const armY = 40 - pressH;
+      return (
+        <svg viewBox="0 0 120 140" width={size * 0.75} height={size * 1.1}>
+          <Shadow cx="60" rx="18" opacity="0.07" />
+          <rect x="46" y="128" width="12" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <rect x="62" y="128" width="12" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <Limb x1={52} y1={96} x2={52} y2={130} w={6} />
+          <Limb x1={68} y1={96} x2={68} y2={130} w={6} />
+          <Torso x1={60} y1={58} x2={60} y2={96} w={11} />
+          <Limb x1={53} y1={65} x2={36} y2={armY + 30} w={5.5} glow />
+          <Limb x1={67} y1={65} x2={84} y2={armY + 30} w={5.5} glow />
+          <Limb x1={36} y1={armY + 30} x2={30} y2={armY + 10} w={4.5} />
+          <Limb x1={84} y1={armY + 30} x2={90} y2={armY + 10} w={4.5} />
+          <rect x="24" y={armY + 5} width="72" height="8" rx="4" fill={dark} opacity="0.8" />
+          <rect x="18" y={armY - 4} width="14" height="22" rx="7" fill={dark} opacity="0.65" />
+          <rect x="88" y={armY - 4} width="14" height="22" rx="7" fill={dark} opacity="0.65" />
+          <Head cx={60} cy={48} />
+          <ellipse cx="35" cy={armY + 22} rx="4" ry="7" fill={color} opacity={0.1 + ease * 0.24} />
+          <ellipse cx="85" cy={armY + 22} rx="4" ry="7" fill={color} opacity={0.1 + ease * 0.24} />
+        </svg>
+      );
+    },
+
+    lunge: () => {
+      const step = ease * 22;
+      const hY = 44 + step * 0.3;
+      return (
+        <svg viewBox="0 0 120 125" width={size * 0.75} height={size * 1.04}>
+          <Shadow cx="60" rx="22" opacity="0.07" />
+          <rect x="26" y="110" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <rect x="76" y="110" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
+          <Limb x1={58} y1={hY + 10} x2={33} y2={112} w={7.5} glow />
+          <Limb x1={33} y1={88} x2={33} y2={112} w={6} />
+          <Limb x1={62} y1={hY + 10} x2={83} y2={80 + step * 0.3} w={7.5} glow />
+          <Limb x1={83} y1={80 + step * 0.3} x2={83} y2={112} w={6} />
+          <Torso x1={60} y1={hY - 14} x2={60} y2={hY + 10} w={11} />
+          <Limb x1={53} y1={hY} x2={42} y2={hY + 12} w={4.5} />
+          <Limb x1={67} y1={hY} x2={78} y2={hY + 12} w={4.5} />
+          <Head cx={60} cy={hY - 24} />
+          <ellipse cx="36" cy="88" rx="5" ry="9" fill={color} opacity={0.1 + ease * 0.2} />
+        </svg>
+      );
+    },
+  };
+
+  // Map common exercise names to animation keys
+  const getAnimKey = (id) => {
+    const lower = (id || "").toLowerCase();
+    if (lower.includes("squat") || lower.includes("goblet") || lower.includes("hack")) return "squat";
+    if (lower.includes("push") || lower.includes("bench") || lower.includes("chest") || lower.includes("dip")) return "pushup";
+    if (lower.includes("deadlift") || lower.includes("rdl") || lower.includes("sumo")) return "deadlift";
+    if (lower.includes("pull") || lower.includes("chin") || lower.includes("lat")) return "pullup";
+    if (lower.includes("plank") || lower.includes("bird") || lower.includes("crawl")) return "plank";
+    if (lower.includes("row") || lower.includes("cable") || lower.includes("back")) return "row";
+    if (lower.includes("press") || lower.includes("ohp") || lower.includes("shoulder") || lower.includes("military")) return "press";
+    if (lower.includes("lunge") || lower.includes("step")) return "lunge";
+    return "squat"; // default
+  };
+
+  const key = getAnimKey(exerciseId);
+  const fn = animations[key] || animations.squat;
+
+  return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", filter: `drop-shadow(0 6px 18px ${color}50)`, perspective: "400px" }}>
+      {fn()}
+    </div>
+  );
+}
+
+// Exercise info card with animation
+function ExerciseCard({ exercise, color = "#d4af37", lang }) {
+  const isAr = lang === "ar";
+  return (
+    <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}25` }}>
+      <div style={{ background: `linear-gradient(135deg, ${color}18, ${color}08)`, padding: "20px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <WorkoutAnim3D exerciseId={exercise.name} color={color} size={140} />
+        <div style={{ fontSize: 14, fontWeight: 700, color: G.text, marginTop: 12, textAlign: "center" }}>{exercise.name}</div>
+      </div>
+      <div style={{ padding: "10px 14px 14px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: exercise.notes ? 8 : 0 }}>
+          {[{ l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: color }, { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green }, { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber }].map(x => (
+            <div key={x.l} style={{ background: G.surf, borderRadius: 7, padding: "6px 4px", textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: x.c }}>{x.v}</div>
+              <div style={{ fontSize: 9, color: G.muted, marginTop: 1 }}>{x.l}</div>
+            </div>
+          ))}
+        </div>
+        {exercise.notes && <div style={{ fontSize: 11, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>💡 {exercise.notes}</div>}
+      </div>
+    </div>
+  );
+}
+
 // ── WORKOUT SYSTEM SELECTOR ────────────────────────────────
 function WorkoutSystemSelector({ client, onSelect, onClose, lang }) {
   const [sel, setSel] = useState(null);
@@ -1022,16 +1358,13 @@ function WorkoutSystemSelector({ client, onSelect, onClose, lang }) {
               <div style={{ fontSize: 15, fontWeight: 700, color: ws.color, marginBottom: 8 }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
               <div style={{ fontSize: 12, color: G.muted, marginBottom: 14 }}>{isAr ? ws.descAr : ws.desc}</div>
               {ws.days.map((day, di) => (
-                <div key={di} style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 8, padding: "6px 10px", background: `${ws.color}18`, borderRadius: 6 }}>{day.name}</div>
-                  {day.exercises.map((ex, ei) => (
-                    <div key={ei} style={{ display: "flex", gap: 10, padding: "6px 0", borderBottom: `1px solid ${G.border}`, fontSize: 12 }}>
-                      <div style={{ flex: 2, fontWeight: 600, color: G.text }}>{ex.name}</div>
-                      <div style={{ flex: 1, color: G.gold }}>{ex.sets} sets</div>
-                      <div style={{ flex: 1, color: G.muted }}>{ex.reps}</div>
-                      <div style={{ flex: 1, color: G.dim }}>{ex.rest}</div>
-                    </div>
-                  ))}
+                <div key={di} style={{ marginBottom: 18 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "6px 10px", background: `${ws.color}18`, borderRadius: 6 }}>{day.name}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {day.exercises.map((ex, ei) => (
+                      <ExerciseCard key={ei} exercise={ex} color={ws.color} lang={lang} />
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -1287,6 +1620,158 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
 }
 
 // ── REGISTER PAGE ──────────────────────────────────────────
+// ── PROGRESS TAB ───────────────────────────────────────────
+function ProgressTab({ client, setClients, lang, isAr, t }) {
+  const [photos, setPhotos] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newWeight, setNewWeight] = useState("");
+  const [newNotes, setNewNotes] = useState("");
+  const [newFile, setNewFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const fileRef = useCallback(node => {}, []);
+
+  useEffect(() => {
+    if (!client?.id) return;
+    dbGetPhotos(client.id).then(p => { setPhotos(p); setLoadingPhotos(false); });
+  }, [client?.id]);
+
+  const handleFile = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setNewFile(f);
+    setPreviewUrl(URL.createObjectURL(f));
+  };
+
+  const addEntry = async () => {
+    if (!newWeight && !newFile) return;
+    setUploading(true);
+    // Update weight in progress array
+    if (newWeight) {
+      const entry = { date: new Date().toISOString().split("T")[0], weight: +newWeight };
+      const updatedProgress = [...(client.progress || []), entry];
+      const updated = { ...client, weight: +newWeight, progress: updatedProgress };
+      await dbUpdateClient(updated);
+      setClients(p => p.map(c => c.id === client.id ? updated : c));
+    }
+    // Upload photo
+    if (newFile) {
+      const photo = await dbAddPhoto(client.id, newFile, newWeight, newNotes);
+      if (photo) setPhotos(p => [photo, ...p]);
+    }
+    setNewWeight(""); setNewNotes(""); setNewFile(null); setPreviewUrl(null);
+    setShowAdd(false); setUploading(false);
+  };
+
+  const progress = client?.progress || [];
+  const startW = progress[0]?.weight;
+  const currentW = client?.weight;
+  const totalChange = startW && currentW ? (currentW - startW).toFixed(1) : null;
+
+  return (
+    <div className="fd">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+        <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{t.progress}</div>
+        <Btn ch={`+ ${isAr ? "تحديث" : "Update"}`} v="gold" onClick={() => setShowAdd(!showAdd)} sx={{ padding: "8px 14px", fontSize: 13 }} />
+      </div>
+
+      {/* Add Entry Form */}
+      {showAdd && (
+        <div className="card" style={{ padding: 16, marginBottom: 14, border: `1px solid ${G.borderHi}` }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: G.gold, marginBottom: 12 }}>📊 {isAr ? "تحديث التقدم" : "Log Progress"}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{isAr ? "الوزن (كج)" : "Weight (kg)"}</div>
+              <input className="inp" type="number" placeholder={`${client?.weight || 70}`} value={newWeight} onChange={e => setNewWeight(e.target.value)} />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{isAr ? "ملاحظات" : "Notes"}</div>
+              <input className="inp" placeholder={isAr ? "اختياري" : "Optional"} value={newNotes} onChange={e => setNewNotes(e.target.value)} />
+            </div>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>📸 {isAr ? "صورة التقدم" : "Progress Photo"}</div>
+            <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: G.surf2, border: `1px dashed ${G.border}`, borderRadius: 10, cursor: "pointer" }}>
+              <span style={{ fontSize: 20 }}>📷</span>
+              <span style={{ fontSize: 13, color: G.muted }}>{newFile ? newFile.name : (isAr ? "اضغط لاختيار صورة" : "Tap to choose photo")}</span>
+              <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
+            </label>
+            {previewUrl && <img src={previewUrl} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 10, marginTop: 8 }} />}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Btn ch={uploading ? "⏳" : `✓ ${isAr ? "حفظ" : "Save"}`} v="gold" onClick={addEntry} sx={{ flex: 1, padding: "11px", fontSize: 13 }} />
+            <Btn ch="✕" v="danger" onClick={() => { setShowAdd(false); setNewFile(null); setPreviewUrl(null); }} sx={{ padding: "11px 16px" }} />
+          </div>
+        </div>
+      )}
+
+      {/* Stats */}
+      {progress.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+          {[
+            { l: isAr ? "البداية" : "Start", v: `${startW}kg`, c: G.muted },
+            { l: isAr ? "الحالي" : "Current", v: `${currentW}kg`, c: G.gold },
+            { l: isAr ? "التغيير" : "Change", v: totalChange ? `${totalChange > 0 ? "+" : ""}${totalChange}kg` : "—", c: totalChange && parseFloat(totalChange) < 0 ? G.green : G.red },
+          ].map(x => (
+            <div key={x.l} className="card" style={{ padding: "10px 8px", textAlign: "center" }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: x.c }}>{x.v}</div>
+              <div style={{ fontSize: 9, color: G.muted, marginTop: 3 }}>{x.l}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Weight History */}
+      {progress.length > 0 && (
+        <div className="card" style={{ padding: 13, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 10 }}>{isAr ? "سجل الوزن" : "Weight History"}</div>
+          {[...progress].reverse().map((p, i) => {
+            const prev = [...progress].reverse()[i + 1];
+            const diff = prev ? (p.weight - prev.weight).toFixed(1) : null;
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 6px", borderBottom: i < progress.length - 1 ? `1px solid ${G.border}` : "none" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: G.grad, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, color: G.muted }}>{p.date}</div>
+                  <div style={{ fontSize: 17, fontWeight: 700 }}>{p.weight} <span style={{ fontSize: 10, color: G.muted }}>kg</span></div>
+                </div>
+                {diff !== null && <div style={{ fontSize: 12, fontWeight: 700, color: parseFloat(diff) <= 0 ? G.green : G.red }}>{parseFloat(diff) > 0 ? "+" : ""}{diff}kg</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Progress Photos */}
+      <div>
+        <div style={{ fontSize: 11, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 10 }}>{isAr ? "صور التقدم" : "Progress Photos"}</div>
+        {loadingPhotos ? (
+          <div style={{ textAlign: "center", padding: 20 }}><div className="sp" style={{ margin: "0 auto" }} /></div>
+        ) : photos.length === 0 ? (
+          <div className="card" style={{ padding: "24px 16px", textAlign: "center", color: G.dim }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>📸</div>
+            <div style={{ fontSize: 12 }}>{isAr ? "لا توجد صور بعد" : "No photos yet"}</div>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {photos.map(ph => (
+              <div key={ph.id} className="card" style={{ overflow: "hidden" }}>
+                <img src={ph.photo_url} alt="progress" style={{ width: "100%", height: 160, objectFit: "cover" }} />
+                <div style={{ padding: "8px 10px" }}>
+                  <div style={{ fontSize: 10, color: G.muted }}>{ph.taken_at}</div>
+                  {ph.weight && <div style={{ fontSize: 13, fontWeight: 700, color: G.gold }}>{ph.weight} kg</div>}
+                  {ph.notes && <div style={{ fontSize: 11, color: G.muted, marginTop: 2 }}>{ph.notes}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RegPage({ lang, setLang, onSubmit }) {
   const [f, setF] = useState({ name: "", email: "", phone: "", age: "", weight: "", height: "", gender: "male", goal: "Weight Loss", pal: "moderate" });
   const [country, setCountry] = useState("+974");
@@ -1461,8 +1946,6 @@ export default function App() {
     await dbDeleteClient(id);
     setClients(p => p.filter(x => x.id !== id));
   };
-  const waMsgUrl = (d) => { if (!d) return "#"; const msg = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${d.name}!\n\n📧 Email: ${d.email}\n🔑 ${isAr ? "كلمة المرور" : "Password"}: ${d.password}\n\n🌐 ${TRAINER.appUrl}\n— ${TRAINER.name}`; return `https://wa.me/${(d.phone || "").replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`; };
-
   const regLink = `${window.location.origin}/register`;
   const liveC = clients.find(c => c.id === curUser?.id) || curUser;
   const activeCount = clients.filter(c => c.status === "Active").length;
@@ -1597,12 +2080,7 @@ export default function App() {
             </div>
           )}
           {cTab === "progress" && (
-            <div className="fd">
-              <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, marginBottom: 14 }}>{t.progress}</div>
-              <div className="card" style={{ padding: 13 }}>
-                {liveC.progress.map((p, i) => { const diff = i > 0 ? (p.weight - liveC.progress[i - 1].weight).toFixed(1) : null; return (<div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", borderBottom: i < liveC.progress.length - 1 ? `1px solid ${G.border}` : "none" }}><div style={{ width: 7, height: 7, borderRadius: "50%", background: G.grad, flexShrink: 0 }} /><div style={{ flex: 1 }}><div style={{ fontSize: 10, color: G.muted }}>{p.date}</div><div style={{ fontSize: 17, fontWeight: 700 }}>{p.weight} <span style={{ fontSize: 10, color: G.muted }}>kg</span></div></div>{diff !== null && <div style={{ fontSize: 12, fontWeight: 700, color: parseFloat(diff) <= 0 ? G.green : G.red }}>{parseFloat(diff) > 0 ? "+" : ""}{diff} kg</div>}</div>); })}
-              </div>
-            </div>
+            <ProgressTab client={liveC} setClients={setClients} lang={lang} isAr={isAr} t={t} />
           )}
         </div>
       </div>
@@ -1683,13 +2161,22 @@ export default function App() {
                     <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) deleteClient(c.id); }} sx={{ padding: "6px", fontSize: 12 }} />
                   </div>
-                  {c.phone && (
-                    <a href={`https://wa.me/${c.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${c.name}!\n\n📧 Email: ${c.email}\n🔑 ${isAr ? "كلمة المرور" : "Password"}: ${c.password}\n\n🌐 ${TRAINER.appUrl}\n— ${TRAINER.name}`)}`}
-                      target="_blank" rel="noreferrer"
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "7px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 7, color: G.green, textDecoration: "none", fontSize: 11, fontWeight: 700 }}>
-                      💬 {t.shareLogin}
-                    </a>
-                  )}
+                  {c.phone && (() => {
+                    const msg = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${c.name}!\n\n${isAr ? "بيانات دخولك" : "Your login details"}:\n\n📧 *${isAr ? "البريد" : "Email"}:* ${c.email}\n🔑 *${isAr ? "كلمة المرور" : "Password"}:* ${c.password}\n\n🌐 *App:* ${TRAINER.appUrl}\n\n${isAr ? "افتح الرابط وأضفه للشاشة الرئيسية 📱" : "Open link & Add to Home Screen 📱"}\n\n— ${TRAINER.name}`;
+                    return (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                        <a href={`https://wa.me/${c.phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`}
+                          target="_blank" rel="noreferrer"
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 7, color: G.green, textDecoration: "none", fontSize: 11, fontWeight: 700 }}>
+                          💬 {t.shareLogin}
+                        </a>
+                        <button className="btn" onClick={() => navigator.clipboard.writeText(msg)}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700 }}>
+                          📋 {isAr ? "نسخ" : "Copy"}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -1785,21 +2272,31 @@ export default function App() {
             <div className="sf gd" style={{ fontSize: 19, fontWeight: 700 }}>{t.credentialsSent}</div>
             <div style={{ fontSize: 13, color: G.muted, marginTop: 5 }}>{t.shareDetails} {shareD?.name}</div>
           </div>
-          {shareD && (
-            <div style={{ background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 11, padding: 14, marginBottom: 16 }}>
-              {[{ l: isAr ? "الاسم" : "Name", v: shareD.name }, { l: isAr ? "البريد" : "Email", v: shareD.email }, { l: isAr ? "كلمة المرور" : "Password", v: shareD.password }, { l: "App", v: TRAINER.appUrl }].map(x => (
-                <div key={x.l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: `1px solid ${G.border}` }}>
-                  <span style={{ fontSize: 12, color: G.muted }}>{x.l}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, direction: "ltr" }}>{x.v}</span>
+          {shareD && (() => {
+            const credText = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${shareD.name}!\n\n${isAr ? "بيانات دخولك" : "Your login details"}:\n\n📧 *${isAr ? "البريد" : "Email"}:* ${shareD.email}\n🔑 *${isAr ? "كلمة المرور" : "Password"}:* ${shareD.password}\n\n🌐 *App:* ${TRAINER.appUrl}\n\n${isAr ? "افتح الرابط وأضفه للشاشة الرئيسية 📱" : "Open link & Add to Home Screen 📱"}\n\n— ${TRAINER.name}\n${isAr ? "مدرب شخصي معتمد" : "Certified Personal Trainer"}`;
+            return (
+              <>
+                <div style={{ background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 11, padding: 14, marginBottom: 12, fontFamily: "monospace", direction: "ltr" }}>
+                  <pre style={{ fontSize: 12, color: G.text, whiteSpace: "pre-wrap", lineHeight: 1.8 }}>{credText}</pre>
                 </div>
-              ))}
-            </div>
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {shareD?.phone && <a href={waMsgUrl(shareD)} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 11, color: G.green, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>💬 {t.sendWhatsapp}</a>}
-            <Btn ch={t.copyCredentials} v="ghost" full onClick={() => navigator.clipboard.writeText(`Email: ${shareD?.email}\nPassword: ${shareD?.password}\nApp: ${TRAINER.appUrl}`)} sx={{ padding: "11px", fontSize: 13 }} />
-            <Btn ch={t.close} v="danger" full onClick={() => setShowShare(false)} sx={{ padding: "11px", fontSize: 13 }} />
-          </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {shareD?.phone && (
+                    <a href={`https://wa.me/${shareD.phone.replace(/\D/g, "")}?text=${encodeURIComponent(credText)}`} target="_blank" rel="noreferrer"
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 11, color: G.green, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>
+                      💬 {t.sendWhatsapp}
+                    </a>
+                  )}
+                  <Btn ch={`📋 ${isAr ? "نسخ النص" : "Copy Message"}`} v="ghost" full
+                    onClick={() => { navigator.clipboard.writeText(credText); }}
+                    sx={{ padding: "11px", fontSize: 13 }} />
+                  <Btn ch={`📋 ${isAr ? "نسخ بيانات فقط" : "Copy Credentials Only"}`} v="ghost" full
+                    onClick={() => navigator.clipboard.writeText(`Email: ${shareD.email}\nPassword: ${shareD.password}\nApp: ${TRAINER.appUrl}`)}
+                    sx={{ padding: "11px", fontSize: 13 }} />
+                  <Btn ch={t.close} v="danger" full onClick={() => setShowShare(false)} sx={{ padding: "11px", fontSize: 13 }} />
+                </div>
+              </>
+            );
+          })()}
         </div>
       } />
     </div>
