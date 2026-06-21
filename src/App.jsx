@@ -1141,69 +1141,55 @@ function getMuscleTargets(name) {
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
   const muscles = getMuscleTargets(exercise.name);
-  const [showVideo, setShowVideo] = useState(false);
-  const videoId = getKnownVideoId(exercise.name);
   const ytSearchUrl = getYTSearchUrl(exercise.name);
-  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1` : null;
 
   return (
-    <div style={{ background: "#0e0c00", borderRadius: 12, overflow: "hidden", border: `1px solid #2a2200` }}>
-      <div style={{ background: "#111", position: "relative" }}>
-        {showVideo && embedUrl ? (
-          <div>
-            <iframe src={embedUrl} width="100%" height="160" frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen style={{ display: "block" }} />
-            <button className="btn" onClick={() => setShowVideo(false)}
-              style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.7)", color: "#fff", borderRadius: 20, padding: "3px 9px", fontSize: 11 }}>✕</button>
-          </div>
-        ) : (
-          <div style={{ padding: "12px 8px 8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-            {videoId ? (
-              <div style={{ position: "relative", width: "100%", cursor: "pointer", borderRadius: 8, overflow: "hidden" }}
-                onClick={() => setShowVideo(true)}>
-                <img src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`} alt={exercise.name}
-                  style={{ width: "100%", height: 118, objectFit: "cover", display: "block" }} />
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}>
-                  <div style={{ width: 46, height: 46, borderRadius: "50%", background: "#ff0000", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ width: 0, height: 0, borderTop: "11px solid transparent", borderBottom: "11px solid transparent", borderLeft: "17px solid white", marginLeft: 4 }} />
-                  </div>
-                </div>
-                <div style={{ position: "absolute", bottom: 6, left: 6, background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: 9, padding: "2px 7px", borderRadius: 4, fontWeight: 600 }}>
-                  ▶ {isAr ? "شاهد الآن" : "Watch Demo"}
-                </div>
-              </div>
-            ) : (
-              <a href={ytSearchUrl} target="_blank" rel="noreferrer"
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textDecoration: "none", padding: "16px 0", width: "100%" }}>
-                <div style={{ width: 52, height: 52, background: "#ff0000", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ width: 0, height: 0, borderTop: "12px solid transparent", borderBottom: "12px solid transparent", borderLeft: "20px solid white", marginLeft: 5 }} />
-                </div>
-                <div style={{ fontSize: 10, color: G.muted, textAlign: "center" }}>{isAr ? "بحث على يوتيوب" : "Search on YouTube"}</div>
-              </a>
-            )}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", marginTop: 7 }}>
-              {muscles.map(([m, type], i) => (
-                <span key={i} style={{ fontSize: 9, padding: "2px 7px", borderRadius: 20, background: type === "primary" ? "#ff2d2d25" : "#1a1800", color: type === "primary" ? "#ff6b6b" : G.muted, fontWeight: type === "primary" ? 700 : 400, border: `1px solid ${type === "primary" ? "#ff2d2d50" : "#2a2200"}` }}>{m}</span>
-              ))}
-            </div>
-          </div>
-        )}
+    <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
+      {/* Uniform animation area — same dark bg, same size for all */}
+      <div style={{ background: "#111", padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
+        <HumanAnim exerciseId={exercise.name} accentColor={color} size={118} />
+        {/* muscle tags */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", marginTop: 7 }}>
+          {muscles.map(([m, type], i) => (
+            <span key={i} style={{
+              fontSize: 9, padding: "2px 7px", borderRadius: 20,
+              background: type === "primary" ? "#ff2d2d25" : "#1a1800",
+              color: type === "primary" ? "#ff6b6b" : G.muted,
+              fontWeight: type === "primary" ? 700 : 400,
+              border: `1px solid ${type === "primary" ? "#ff2d2d50" : "#2a2200"}`
+            }}>{m}</span>
+          ))}
+        </div>
       </div>
+      {/* Info */}
       <div style={{ padding: "10px 12px 12px" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 7, textAlign: "center", lineHeight: 1.3 }}>{exercise.name}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5 }}>
-          {[{ l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: G.gold }, { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green }, { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber }].map(x => (
-            <div key={x.l} style={{ background: G.surf2, borderRadius: 6, padding: "5px 3px", textAlign: "center" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 7, textAlign: "center", lineHeight: 1.3 }}>
+          {exercise.name}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5, marginBottom: 8 }}>
+          {[
+            { l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: color },
+            { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green },
+            { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber },
+          ].map(x => (
+            <div key={x.l} style={{ background: G.surf, borderRadius: 6, padding: "5px 3px", textAlign: "center" }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: x.c }}>{x.v}</div>
               <div style={{ fontSize: 8, color: G.muted, marginTop: 1 }}>{x.l}</div>
             </div>
           ))}
         </div>
-        {exercise.notes && <div style={{ fontSize: 10, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>💡 {exercise.notes}</div>}
+        {exercise.notes && (
+          <div style={{ fontSize: 10, color: G.muted, marginBottom: 7, lineHeight: 1.5 }}>💡 {exercise.notes}</div>
+        )}
+        {/* YouTube link button only — no thumbnail */}
         <a href={ytSearchUrl} target="_blank" rel="noreferrer"
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 8, padding: "6px", background: "#ff000015", border: "1px solid #ff000030", borderRadius: 7, textDecoration: "none", color: "#ff6b6b", fontSize: 10, fontWeight: 600 }}>
-          🎬 {isAr ? "يوتيوب" : "YouTube Tutorial"}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            padding: "7px", background: "#ff000012", border: "1px solid #ff000028",
+            borderRadius: 7, textDecoration: "none", color: "#ff6b6b", fontSize: 10, fontWeight: 600 }}>
+          <div style={{ width: 16, height: 16, background: "#ff0000", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 0, height: 0, borderTop: "4px solid transparent", borderBottom: "4px solid transparent", borderLeft: "7px solid white", marginLeft: 1 }} />
+          </div>
+          {isAr ? "شاهد على يوتيوب" : "Watch Tutorial"}
         </a>
       </div>
     </div>
@@ -1955,11 +1941,54 @@ export default function App() {
                   <Btn ch="📄 PDF" v="ghost" onClick={() => generatePDF(liveC, lang)} sx={{ padding: "7px 12px", fontSize: 12 }} />
                 )}
               </div>
-              <div className="card" style={{ padding: 16, minHeight: 150 }}>
-                {(cTab === "workout" ? liveC.workoutPlan : liveC.nutritionPlan)
-                  ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{cTab === "workout" ? liveC.workoutPlan : liveC.nutritionPlan}</pre>
-                  : <div style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}><div style={{ fontSize: 28, marginBottom: 8 }}>{cTab === "workout" ? "⚡" : "🥗"}</div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
-              </div>
+              {cTab === "workout" ? (
+                (() => {
+                  const ws = WORKOUT_SYSTEMS.find(w => w.id === liveC.workoutSystemId);
+                  if (ws) {
+                    return (
+                      <div>
+                        {/* System header */}
+                        <div className="card" style={{ padding: "12px 14px", marginBottom: 14, border: `1px solid ${ws.color}30`, background: `${ws.color}08` }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: ws.color }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
+                          <div style={{ fontSize: 11, color: G.muted, marginTop: 3 }}>{isAr ? ws.descAr : ws.desc}</div>
+                        </div>
+                        {/* Days with exercise cards */}
+                        {ws.days.map((day, di) => (
+                          <div key={di} style={{ marginBottom: 20 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "7px 12px", background: `${ws.color}15`, borderRadius: 8 }}>
+                              📅 {day.name}
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                              {day.exercises.map((ex, ei) => (
+                                <ExerciseCard key={ei} exercise={ex} color={ws.color} lang={lang} />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else if (liveC.workoutPlan) {
+                    return (
+                      <div className="card" style={{ padding: 16 }}>
+                        <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.workoutPlan}</pre>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="card" style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}>
+                        <div style={{ fontSize: 28, marginBottom: 8 }}>⚡</div>
+                        <div style={{ color: G.muted }}>{t.trainerWillAdd}</div>
+                      </div>
+                    );
+                  }
+                })()
+              ) : (
+                <div className="card" style={{ padding: 16, minHeight: 150 }}>
+                  {liveC.nutritionPlan
+                    ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.nutritionPlan}</pre>
+                    : <div style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}><div style={{ fontSize: 28, marginBottom: 8 }}>🥗</div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
+                </div>
+              )}
             </div>
           )}
           {cTab === "progress" && (
