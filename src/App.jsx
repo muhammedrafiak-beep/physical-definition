@@ -1027,439 +1027,624 @@ function TDEECard({ client, t, lang }) {
 }
 
 
-// ── REALISTIC HUMAN WORKOUT ANIMATIONS ────────────────────────
-const SKIN_C = "#C68642";
-const SKIN_DARK = "#8B5A2B";
-const BONE_C = "#E8D5B7";
+// ── GYM-STYLE ANIMATIONS (Grey body + Red muscle highlight) ─────
+// Style: grey 3D-look body model, bright red glowing muscle activation
+// Matches gym-animations.com aesthetic
 
-function lerp(a, b, t) { return a + (b - a) * t; }
+const BODY_BASE = "#9aa0a6";      // grey body
+const BODY_MID  = "#78828a";      // darker grey for depth/shadow
+const BODY_LITE = "#c8ced2";      // lighter grey for highlights
+const BODY_EDGE = "#4a5258";      // edge/outline
+const MUSCLE_ON = "#ff2d2d";      // active muscle red (like gym-animations)
+const MUSCLE_HI = "#ff6b6b";      // lighter red highlight
+const BG_DOT    = "rgba(0,0,0,0.12)";
 
-function HumanAnim({ type, accentColor, size = 140 }) {
+function lerp(a, b, t) { return a + (b-a)*t; }
+
+function HumanAnim({ exerciseId, accentColor, size = 140 }) {
   const [frame, setFrame] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setFrame(f => (f + 1) % 200), 20);
+    const id = setInterval(() => setFrame(f => (f+1) % 240), 18);
     return () => clearInterval(id);
   }, []);
 
-  const phase = (frame / 200) * Math.PI * 2;
-  const e = (Math.sin(phase - Math.PI / 2) + 1) / 2; // smooth 0→1→0
-  const g = accentColor || "#d4af37";
+  const phase = (frame / 240) * Math.PI * 2;
+  const e  = (Math.sin(phase - Math.PI/2) + 1) / 2;   // 0→1→0 smooth
+  const e2 = (Math.sin(phase * 2 - Math.PI/2) + 1) / 2; // double speed for pulse
+  const muscleGlow = 0.25 + e * 0.75;  // muscle opacity pulses with movement
 
-  // SVG element builders
-  const E = (tag, attrs, ...children) => {
-    const ns = "http://www.w3.org/2000/svg";
-    return { tag, attrs, children };
-  };
-
-  // Build JSX-like SVG using React
-  const Poly = ({ pts, fill, stroke, opacity = 1, strokeWidth = 0.8 }) => (
-    <polygon points={pts.map(p => p.join(",")).join(" ")} fill={fill} stroke={stroke} strokeWidth={stroke ? strokeWidth : 0} opacity={opacity} />
+  // ── SVG helpers ──────────────────────────────────────────
+  const Poly = ({ pts, fill, stroke=BODY_EDGE, sw=0.7, opacity=1 }) => (
+    <polygon points={pts.map(p=>p.join(",")).join(" ")}
+      fill={fill} stroke={stroke} strokeWidth={sw} opacity={opacity} />
   );
-  const Ell = ({ cx, cy, rx, ry, fill, opacity = 1, stroke, sw = 0.6 }) => (
-    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={fill} stroke={stroke} strokeWidth={stroke ? sw : 0} opacity={opacity} />
+  const Ell = ({ cx, cy, rx, ry, fill, stroke, sw=0.5, opacity=1 }) => (
+    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={fill}
+      stroke={stroke||"none"} strokeWidth={sw} opacity={opacity} />
   );
-  const Circ = ({ cx, cy, r, fill, stroke, sw = 0.6, opacity = 1 }) => (
-    <circle cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth={stroke ? sw : 0} opacity={opacity} />
+  const Circ = ({ cx, cy, r, fill, stroke=BODY_EDGE, sw=0.6, opacity=1 }) => (
+    <circle cx={cx} cy={cy} r={r} fill={fill}
+      stroke={stroke} strokeWidth={sw} opacity={opacity} />
   );
-  const Head = ({ cx, cy }) => (
+  // Glowing muscle overlay
+  const MuscleGlow = ({ cx, cy, rx, ry, rotate=0, intensity=1 }) => (
     <g>
-      <Ell cx={cx} cy={cy} rx={10} ry={11} fill={SKIN_C} stroke={SKIN_DARK} sw={0.7} />
-      <Circ cx={cx - 3} cy={cy - 1} r={1.8} fill="#2a1a0a" />
-      <Circ cx={cx + 3} cy={cy - 1} r={1.8} fill="#2a1a0a" />
-      <path d={`M${cx - 2.5} ${cy + 3.5} Q${cx} ${cy + 6} ${cx + 2.5} ${cy + 3.5}`} stroke="#2a1a0a" strokeWidth="1" fill="none" />
-      <Ell cx={cx} cy={cy + 11} rx={5} ry={4} fill={SKIN_C} /> {/* neck */}
+      <Ell cx={cx} cy={cy} rx={rx*1.6} ry={ry*1.6}
+        fill={MUSCLE_ON} opacity={0.12 * intensity * muscleGlow}
+        stroke="none" />
+      <Ell cx={cx} cy={cy} rx={rx} ry={ry}
+        fill={MUSCLE_ON} opacity={0.55 * intensity * muscleGlow}
+        stroke="none" />
+      <Ell cx={cx} cy={cy} rx={rx*0.55} ry={ry*0.55}
+        fill={MUSCLE_HI} opacity={0.7 * intensity * muscleGlow}
+        stroke="none" />
     </g>
   );
-  const Joint = ({ cx, cy, r = 4 }) => (
-    <Circ cx={cx} cy={cy} r={r} fill={BONE_C} stroke={SKIN_DARK} sw={0.6} />
+  const MusclePolyGlow = ({ pts, intensity=1 }) => (
+    <polygon points={pts.map(p=>p.join(",")).join(" ")}
+      fill={MUSCLE_ON} opacity={0.5 * intensity * muscleGlow}
+      stroke={MUSCLE_HI} strokeWidth="0.5"
+      strokeOpacity={0.6 * intensity * muscleGlow} />
   );
 
+  // ── Head: grey with face detail ─────────────────────────
+  const Head = ({ cx, cy, r=10 }) => (
+    <g>
+      <Ell cx={cx} cy={cy} rx={r} ry={r*1.1} fill={BODY_BASE} stroke={BODY_EDGE} sw={0.7} />
+      <Ell cx={cx} cy={cy-2} rx={r*0.7} ry={r*0.6} fill={BODY_LITE} opacity={0.35} stroke="none" />
+      <Circ cx={cx-3.5} cy={cy-1} r={1.8} fill={BODY_EDGE} stroke="none" />
+      <Circ cx={cx+3.5} cy={cy-1} r={1.8} fill={BODY_EDGE} stroke="none" />
+      <path d={`M${cx-3} ${cy+4} Q${cx} ${cy+7} ${cx+3} ${cy+4}`}
+        stroke={BODY_EDGE} strokeWidth="1.2" fill="none" />
+      <Ell cx={cx} cy={cy+r*1.0} rx={5} ry={4} fill={BODY_BASE} stroke="none" />
+    </g>
+  );
+
+  // ── SQUAT ────────────────────────────────────────────────
   const renderSquat = () => {
-    const dip = e * 32;
-    const hipY = 72 + dip * 0.65;
-    const kneeY = 106 + dip * 0.28;
-    const footY = 142;
-    const kOut = e * 8;
+    const dip   = e * 34;
+    const hipY  = 74 + dip * 0.6;
+    const kneeY = 108 + dip * 0.28;
+    const kOut  = e * 9;
+    const footY = 144;
     return (
-      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
-        {/* shadow */}
-        <Ell cx={50} cy={152} rx={22 - dip * 0.18} ry={3.5} fill="#000" opacity={0.06 + e * 0.05} />
+      <svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+        <Ell cx={50} cy={154} rx={22-dip*0.15} ry={3.5} fill="#000" opacity={0.07+e*0.04} stroke="none"/>
+
         {/* feet */}
-        <Ell cx={34} cy={footY} rx={10} ry={4.5} fill={SKIN_DARK} />
-        <Ell cx={66} cy={footY} rx={10} ry={4.5} fill={SKIN_DARK} />
+        <Ell cx={34} cy={footY} rx={10} ry={4.5} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+        <Ell cx={66} cy={footY} rx={10} ry={4.5} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+
         {/* shins */}
-        <Poly pts={[[33,kneeY],[37,kneeY],[39,footY-2],[29,footY-2]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[63,kneeY],[67,kneeY],[71,footY-2],[61,footY-2]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* quad muscle glow */}
-        <Poly pts={[[39,hipY+10],[33-kOut,kneeY],[40-kOut,kneeY],[46,hipY+12]]} fill={g} opacity={0.15 + e * 0.55} />
-        <Poly pts={[[61,hipY+10],[67+kOut,kneeY],[60+kOut,kneeY],[54,hipY+12]]} fill={g} opacity={0.15 + e * 0.55} />
+        <Poly pts={[[31,kneeY],[37,kneeY],[39,footY-3],[29,footY-3]]} fill={BODY_BASE}/>
+        <Poly pts={[[63,kneeY],[69,kneeY],[71,footY-3],[61,footY-3]]} fill={BODY_BASE}/>
+
+        {/* QUAD MUSCLE GLOW */}
+        <MusclePolyGlow pts={[[38,hipY+10],[32-kOut,kneeY],[40-kOut,kneeY],[46,hipY+13]]} intensity={1}/>
+        <MusclePolyGlow pts={[[62,hipY+10],[68+kOut,kneeY],[60+kOut,kneeY],[54,hipY+13]]} intensity={1}/>
+
         {/* thighs */}
-        <Poly pts={[[40,hipY+10],[33-kOut,kneeY],[40-kOut,kneeY],[47,hipY+12]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[60,hipY+10],[67+kOut,kneeY],[60+kOut,kneeY],[53,hipY+12]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* glute glow */}
-        <Ell cx={50} cy={hipY + 13} rx={14} ry={9} fill={g} opacity={0.1 + e * 0.45} />
+        <Poly pts={[[39,hipY+10],[32-kOut,kneeY],[40-kOut,kneeY],[47,hipY+13]]} fill={BODY_BASE}/>
+        <Poly pts={[[61,hipY+10],[68+kOut,kneeY],[60+kOut,kneeY],[53,hipY+13]]} fill={BODY_BASE}/>
+        <Ell cx={37-kOut*0.5} cy={kneeY-12} rx={5} ry={10} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+        <Ell cx={63+kOut*0.5} cy={kneeY-12} rx={5} ry={10} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+
+        {/* GLUTE GLOW */}
+        <MuscleGlow cx={50} cy={hipY+14} rx={13} ry={9} intensity={0.8}/>
+
         {/* torso */}
-        <Poly pts={[[41,hipY],[43,hipY+12],[57,hipY+12],[59,hipY],[56,48],[44,48]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* spine line */}
-        <line x1="50" y1={hipY} x2="50" y2="56" stroke={SKIN_DARK} strokeWidth="0.6" opacity="0.4" />
+        <Poly pts={[[41,hipY],[43,hipY+13],[57,hipY+13],[59,hipY],[56,47],[44,47]]} fill={BODY_BASE}/>
+        <Ell cx={50} cy={62} rx={7} ry={12} fill={BODY_LITE} opacity={0.22} stroke="none"/>
+        <line x1="50" y1={hipY} x2="50" y2="56" stroke={BODY_EDGE} strokeWidth="0.6" opacity="0.4"/>
+
         {/* arms */}
-        <Poly pts={[[43,55],[34,78],[38,79],[46,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[57,55],[66,78],[62,79],[54,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[34,78],[27,96],[31,97],[38,79]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[66,78],[73,96],[69,97],[62,79]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* joint dots */}
-        <Joint cx={33-kOut} cy={kneeY} r={4} />
-        <Joint cx={67+kOut} cy={kneeY} r={4} />
-        <Joint cx={34} cy={78} r={3.5} />
-        <Joint cx={66} cy={78} r={3.5} />
-        <Head cx={50} cy={36} />
+        <Poly pts={[[43,54],[35,76],[39,77],[46,56]]} fill={BODY_BASE}/>
+        <Poly pts={[[57,54],[65,76],[61,77],[54,56]]} fill={BODY_BASE}/>
+        <Poly pts={[[35,76],[27,94],[31,95],[39,77]]} fill={BODY_BASE}/>
+        <Poly pts={[[65,76],[73,94],[69,95],[61,77]]} fill={BODY_BASE}/>
+
+        {/* knee caps */}
+        <Circ cx={34-kOut} cy={kneeY} r={4.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+        <Circ cx={66+kOut} cy={kneeY} r={4.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        <Head cx={50} cy={35}/>
       </svg>
     );
   };
 
+  // ── DEADLIFT ─────────────────────────────────────────────
   const renderDeadlift = () => {
-    const lift = e;
-    const barY = lerp(122, 80, lift);
-    const hipY = lerp(92, 64, lift * 0.75);
-    const hipAngle = (1 - lift) * 38;
-    const tx = 50 - hipAngle * 0.38;
-    const ty = hipY - 28 - hipAngle * 0.28;
+    const lift   = e;
+    const barY   = lerp(124, 82, lift);
+    const hipY   = lerp(94, 66, lift*0.72);
+    const hipAng = (1-lift)*36;
+    const tx     = 50 - hipAng*0.36;
+    const ty     = hipY - 28 - hipAng*0.26;
     return (
-      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+      <svg viewBox="0 0 100 160" width={size} height={size*1.14}>
         {/* barbell */}
-        <rect x="14" y={barY - 3.5} width="72" height="7" rx="3.5" fill="#555" />
-        <Ell cx={14} cy={barY} rx={6} ry={11} fill="#666" />
-        <Ell cx={86} cy={barY} rx={6} ry={11} fill="#666" />
-        <Ell cx={9} cy={barY} rx={6} ry={13} fill="#444" />
-        <Ell cx={91} cy={barY} rx={6} ry={13} fill="#444" />
-        {/* shadow */}
-        <Ell cx={50} cy={152} rx={22} ry={3.5} fill="#000" opacity="0.07" />
+        <rect x="12" y={barY-4} width="76" height="8" rx="4" fill={BODY_EDGE} opacity="0.85"/>
+        <Ell cx={12} cy={barY} rx={7} ry={12} fill={BODY_EDGE}/>
+        <Ell cx={88} cy={barY} rx={7} ry={12} fill={BODY_EDGE}/>
+        <Ell cx={7}  cy={barY} rx={7} ry={14} fill="#2a2a2a"/>
+        <Ell cx={93} cy={barY} rx={7} ry={14} fill="#2a2a2a"/>
+
+        <Ell cx={50} cy={154} rx={22} ry={3.5} fill="#000" opacity="0.07" stroke="none"/>
+
         {/* feet */}
-        <Ell cx={36} cy={144} rx={10} ry={4.5} fill={SKIN_DARK} />
-        <Ell cx={64} cy={144} rx={10} ry={4.5} fill={SKIN_DARK} />
+        <Ell cx={36} cy={146} rx={10} ry={4.5} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+        <Ell cx={64} cy={146} rx={10} ry={4.5} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+
         {/* legs */}
-        <Poly pts={[[34,hipY+4],[32,142],[40,142],[42,hipY+4]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[58,hipY+4],[60,142],[68,142],[66,hipY+4]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* hamstring + glute glow */}
-        <Ell cx={50} cy={hipY + 8} rx={14} ry={10} fill={g} opacity={0.12 + lift * 0.5} />
+        <Poly pts={[[33,hipY+5],[31,144],[41,144],[43,hipY+5]]} fill={BODY_BASE}/>
+        <Poly pts={[[57,hipY+5],[59,144],[69,144],[67,hipY+5]]} fill={BODY_BASE}/>
+        <Ell cx={37} cy={hipY+20} rx={5} ry={10} fill={BODY_LITE} opacity={0.18} stroke="none"/>
+        <Ell cx={63} cy={hipY+20} rx={5} ry={10} fill={BODY_LITE} opacity={0.18} stroke="none"/>
+
+        {/* HAMSTRING + GLUTE GLOW */}
+        <MuscleGlow cx={50} cy={hipY+10} rx={14} ry={11} intensity={1}/>
+        <MuscleGlow cx={37} cy={hipY+22} rx={5} ry={11} intensity={0.85}/>
+        <MuscleGlow cx={63} cy={hipY+22} rx={5} ry={11} intensity={0.85}/>
+
         {/* torso */}
-        <Poly pts={[[tx-10,ty],[tx+10,ty],[54,hipY+4],[46,hipY+4]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* back muscle glow */}
-        <Poly pts={[[tx-4,ty+6],[tx-2,hipY-2],[tx+2,hipY-2],[tx+4,ty+6]]} fill={g} opacity={0.18 + lift * 0.52} />
+        <Poly pts={[[tx-11,ty],[tx+11,ty],[55,hipY+5],[45,hipY+5]]} fill={BODY_BASE}/>
+        <Ell cx={tx} cy={ty+14} rx={8} ry={14} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+
+        {/* BACK MUSCLE GLOW */}
+        <MuscleGlow cx={tx} cy={ty+10} rx={7} ry={13} intensity={1}/>
+
         {/* arms */}
-        <Poly pts={[[tx-7,ty+9],[26,barY-2],[30,barY+3],[tx-2,ty+13]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[tx+7,ty+9],[74,barY-2],[70,barY+3],[tx+2,ty+13]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* hands */}
-        <Circ cx={28} cy={barY} r={5} fill={SKIN_DARK} />
-        <Circ cx={72} cy={barY} r={5} fill={SKIN_DARK} />
-        {/* joints */}
-        <Joint cx={36} cy={hipY + 4} r={4} />
-        <Joint cx={64} cy={hipY + 4} r={4} />
-        <Head cx={tx - 4} cy={ty - 11} />
+        <Poly pts={[[tx-7,ty+10],[24,barY-2],[28,barY+4],[tx-2,ty+14]]} fill={BODY_BASE}/>
+        <Poly pts={[[tx+7,ty+10],[76,barY-2],[72,barY+4],[tx+2,ty+14]]} fill={BODY_BASE}/>
+        <Circ cx={26} cy={barY+1} r={5.5} fill={BODY_MID}/>
+        <Circ cx={74} cy={barY+1} r={5.5} fill={BODY_MID}/>
+
+        {/* knee caps */}
+        <Circ cx={37} cy={hipY+5} r={4.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+        <Circ cx={63} cy={hipY+5} r={4.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        <Head cx={tx-4} cy={ty-12}/>
       </svg>
     );
   };
 
+  // ── PULL-UP ──────────────────────────────────────────────
   const renderPullup = () => {
-    const pull = e;
-    const bodyY = lerp(58, 34, pull);
-    const eFlare = pull * 22;
+    const pull    = e;
+    const bodyY   = lerp(60, 36, pull);
+    const eFlare  = pull * 22;
     return (
-      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+      <svg viewBox="0 0 100 160" width={size} height={size*1.14}>
         {/* bar */}
-        <rect x="8" y="10" width="84" height="10" rx="5" fill="#555" />
-        <rect x="13" y="10" width="8" height="22" rx="4" fill="#444" />
-        <rect x="79" y="10" width="8" height="22" rx="4" fill="#444" />
-        {/* shadow */}
-        <Ell cx={50} cy={155} rx={18} ry={3} fill="#000" opacity="0.05" />
+        <rect x="6" y="10" width="88" height="10" rx="5" fill={BODY_EDGE} opacity="0.88"/>
+        <rect x="12" y="10" width="8" height="22" rx="4" fill={BODY_EDGE} opacity="0.6"/>
+        <rect x="80" y="10" width="8" height="22" rx="4" fill={BODY_EDGE} opacity="0.6"/>
+
+        <Ell cx={50} cy={157} rx={18} ry={3} fill="#000" opacity="0.05" stroke="none"/>
+
         {/* hands */}
-        <Circ cx={28} cy={22} r={5.5} fill={SKIN_DARK} />
-        <Circ cx={72} cy={22} r={5.5} fill={SKIN_DARK} />
+        <Circ cx={26} cy={22} r={5.5} fill={BODY_MID}/>
+        <Circ cx={74} cy={22} r={5.5} fill={BODY_MID}/>
+
         {/* forearms */}
-        <Poly pts={[[28,22],[33-eFlare*0.28,bodyY-22],[37-eFlare*0.28,bodyY-19],[32,25]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[72,22],[67+eFlare*0.28,bodyY-22],[63+eFlare*0.28,bodyY-19],[68,25]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* bicep glow */}
-        <Ell cx={35-eFlare*0.2} cy={bodyY-10} rx={5} ry={9} fill={g} opacity={0.12 + pull * 0.58} />
-        <Ell cx={65+eFlare*0.2} cy={bodyY-10} rx={5} ry={9} fill={g} opacity={0.12 + pull * 0.58} />
+        <Poly pts={[[26,22],[31-eFlare*0.28,bodyY-24],[35-eFlare*0.28,bodyY-21],[30,25]]} fill={BODY_BASE}/>
+        <Poly pts={[[74,22],[69+eFlare*0.28,bodyY-24],[65+eFlare*0.28,bodyY-21],[70,25]]} fill={BODY_BASE}/>
+
+        {/* BICEP GLOW */}
+        <MuscleGlow cx={32-eFlare*0.18} cy={bodyY-12} rx={5} ry={9} intensity={1}/>
+        <MuscleGlow cx={68+eFlare*0.18} cy={bodyY-12} rx={5} ry={9} intensity={1}/>
+
         {/* upper arms */}
-        <Poly pts={[[33-eFlare*0.28,bodyY-22],[39,bodyY-11],[43,bodyY-8],[37-eFlare*0.28,bodyY-20]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[67+eFlare*0.28,bodyY-22],[61,bodyY-11],[57,bodyY-8],[63+eFlare*0.28,bodyY-20]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* lat glow */}
-        <Poly pts={[[40,bodyY-8],[38,bodyY+20],[62,bodyY+20],[60,bodyY-8]]} fill={g} opacity={0.1 + pull * 0.38} />
+        <Poly pts={[[31-eFlare*0.28,bodyY-24],[38,bodyY-10],[42,bodyY-7],[35-eFlare*0.28,bodyY-22]]} fill={BODY_BASE}/>
+        <Poly pts={[[69+eFlare*0.28,bodyY-24],[62,bodyY-10],[58,bodyY-7],[65+eFlare*0.28,bodyY-22]]} fill={BODY_BASE}/>
+
+        {/* LAT GLOW */}
+        <MusclePolyGlow pts={[[39,bodyY-7],[37,bodyY+22],[63,bodyY+22],[61,bodyY-7]]} intensity={1}/>
+
         {/* torso */}
-        <Poly pts={[[40,bodyY-8],[38,bodyY+20],[62,bodyY+20],[60,bodyY-8]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* core lines */}
-        <Ell cx={50} cy={bodyY+4} rx={4} ry={3} fill={SKIN_DARK} opacity="0.22" />
-        <Ell cx={50} cy={bodyY+12} rx={4} ry={3} fill={SKIN_DARK} opacity="0.22" />
+        <Poly pts={[[39,bodyY-7],[37,bodyY+22],[63,bodyY+22],[61,bodyY-7]]} fill={BODY_BASE}/>
+        <Ell cx={50} cy={bodyY+6} rx={9} ry={14} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+        <Ell cx={50} cy={bodyY+4} rx={4} ry={3.5} fill={BODY_EDGE} opacity="0.18"/>
+        <Ell cx={50} cy={bodyY+12} rx={4} ry={3.5} fill={BODY_EDGE} opacity="0.18"/>
+
         {/* legs */}
-        <Poly pts={[[43,bodyY+20],[41,bodyY+55],[47,bodyY+55],[47,bodyY+22]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[57,bodyY+20],[53,bodyY+55],[59,bodyY+55],[59,bodyY+22]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[41,bodyY+55],[39,bodyY+80],[45,bodyY+80],[47,bodyY+55]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[53,bodyY+55],[51,bodyY+80],[57,bodyY+80],[59,bodyY+55]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* joints */}
-        <Joint cx={33-eFlare*0.28} cy={bodyY-22} r={3.5} />
-        <Joint cx={67+eFlare*0.28} cy={bodyY-22} r={3.5} />
-        <Head cx={50} cy={bodyY - 20} />
+        <Poly pts={[[43,bodyY+22],[41,bodyY+56],[47,bodyY+56],[47,bodyY+24]]} fill={BODY_BASE}/>
+        <Poly pts={[[57,bodyY+22],[53,bodyY+56],[59,bodyY+56],[59,bodyY+24]]} fill={BODY_BASE}/>
+        <Poly pts={[[41,bodyY+56],[39,bodyY+82],[45,bodyY+82],[47,bodyY+56]]} fill={BODY_BASE}/>
+        <Poly pts={[[53,bodyY+56],[51,bodyY+82],[57,bodyY+82],[59,bodyY+56]]} fill={BODY_BASE}/>
+
+        {/* elbow joints */}
+        <Circ cx={31-eFlare*0.28} cy={bodyY-24} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+        <Circ cx={69+eFlare*0.28} cy={bodyY-24} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        <Head cx={50} cy={bodyY-22}/>
       </svg>
     );
   };
 
+  // ── PUSH-UP ──────────────────────────────────────────────
   const renderPushup = () => {
-    const lift = e;
-    const bY = 72 - lift * 20;
+    const lift   = e;
+    const bY     = 72 - lift * 20;
     const eFlare = lift * 28;
     return (
-      <svg viewBox="0 0 140 100" width={size * 1.2} height={size * 0.72}>
-        {/* shadow */}
-        <Ell cx={70} cy={94} rx={46 + lift * 8} ry={3.5} fill="#000" opacity={0.06 + lift * 0.04} />
+      <svg viewBox="0 0 148 105" width={size*1.22} height={size*0.75}>
+        <Ell cx={74} cy={100} rx={50+lift*8} ry={3.5} fill="#000" opacity={0.06+lift*0.04} stroke="none"/>
+
         {/* feet */}
-        <Ell cx={118} cy={84} rx={10} ry={4.5} fill={SKIN_DARK} />
+        <Ell cx={122} cy={86} rx={10} ry={4.5} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+
         {/* legs */}
-        <Poly pts={[[70,bY+15],[114,86],[122,84],[76,bY+13]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[72,bY+16],[118,88],[126,86],[78,bY+14]]} fill={BODY_BASE}/>
+        <Ell cx={97} cy={bY+20} rx={8} ry={14} fill={BODY_LITE} opacity={0.18} stroke="none"/>
+
         {/* torso */}
-        <Poly pts={[[32,bY+4],[70,bY+15],[76,bY+13],[36,bY+2]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* chest glow */}
-        <Ell cx={46} cy={bY+8} rx={10} ry={5} fill={g} opacity={0.12 + lift * 0.52} transform={`rotate(-8,46,${bY+8})`} />
+        <Poly pts={[[30,bY+4],[72,bY+16],[78,bY+14],[34,bY+2]]} fill={BODY_BASE}/>
+        <Ell cx={50} cy={bY+8} rx={16} ry={5} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+
+        {/* CHEST GLOW */}
+        <MuscleGlow cx={46} cy={bY+8} rx={12} ry={5} intensity={1}/>
+
         {/* upper arms */}
-        <Poly pts={[[36,bY+3],[25-eFlare*0.25,bY+16+eFlare*0.3],[29-eFlare*0.25,bY+18+eFlare*0.3],[40,bY+5]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[36,bY+3],[47+eFlare*0.25,bY+16+eFlare*0.3],[43+eFlare*0.25,bY+18+eFlare*0.3],[40,bY+5]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* tricep glow */}
-        <Ell cx={25-eFlare*0.15} cy={bY+14+eFlare*0.2} rx={4} ry={7} fill={g} opacity={0.1 + lift * 0.48} />
-        <Ell cx={47+eFlare*0.15} cy={bY+14+eFlare*0.2} rx={4} ry={7} fill={g} opacity={0.1 + lift * 0.48} />
+        <Poly pts={[[34,bY+3],[22-eFlare*0.24,bY+17+eFlare*0.28],[26-eFlare*0.24,bY+19+eFlare*0.28],[38,bY+5]]} fill={BODY_BASE}/>
+        <Poly pts={[[34,bY+3],[46+eFlare*0.24,bY+17+eFlare*0.28],[42+eFlare*0.24,bY+19+eFlare*0.28],[38,bY+5]]} fill={BODY_BASE}/>
+
+        {/* TRICEP GLOW */}
+        <MuscleGlow cx={22-eFlare*0.14} cy={bY+14+eFlare*0.18} rx={4.5} ry={7} intensity={0.9}/>
+        <MuscleGlow cx={46+eFlare*0.14} cy={bY+14+eFlare*0.18} rx={4.5} ry={7} intensity={0.9}/>
+
         {/* forearms */}
-        <Poly pts={[[25-eFlare*0.25,bY+16+eFlare*0.3],[18,82],[22,84],[29-eFlare*0.25,bY+18+eFlare*0.3]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[47+eFlare*0.25,bY+16+eFlare*0.3],[52,82],[56,84],[43+eFlare*0.25,bY+18+eFlare*0.3]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[22-eFlare*0.24,bY+17+eFlare*0.28],[14,84],[18,86],[26-eFlare*0.24,bY+19+eFlare*0.28]]} fill={BODY_BASE}/>
+        <Poly pts={[[46+eFlare*0.24,bY+17+eFlare*0.28],[52,84],[56,86],[42+eFlare*0.24,bY+19+eFlare*0.28]]} fill={BODY_BASE}/>
+
         {/* hands */}
-        <Circ cx={20} cy={83} r={5} fill={SKIN_DARK} />
-        <Circ cx={54} cy={83} r={5} fill={SKIN_DARK} />
-        {/* joints */}
-        <Joint cx={25-eFlare*0.25} cy={bY+17+eFlare*0.3} r={3.5} />
-        <Joint cx={47+eFlare*0.25} cy={bY+17+eFlare*0.3} r={3.5} />
-        <Head cx={22} cy={bY - 6} />
+        <Circ cx={16} cy={85} r={5} fill={BODY_MID}/>
+        <Circ cx={54} cy={85} r={5} fill={BODY_MID}/>
+
+        {/* elbow joints */}
+        <Circ cx={22-eFlare*0.24} cy={bY+18+eFlare*0.28} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+        <Circ cx={46+eFlare*0.24} cy={bY+18+eFlare*0.28} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        <Head cx={18} cy={bY-6}/>
       </svg>
     );
   };
 
+  // ── OVERHEAD PRESS ───────────────────────────────────────
   const renderPress = () => {
-    const pressUp = e;
-    const armY = lerp(70, 28, pressUp);
+    const up  = e;
+    const armY = lerp(72, 28, up);
     return (
-      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+      <svg viewBox="0 0 100 160" width={size} height={size*1.14}>
         {/* bar */}
-        <rect x="16" y={armY - 4} width="68" height="8" rx="4" fill="#555" />
-        <Ell cx={16} cy={armY} rx={6} ry={10} fill="#666" />
-        <Ell cx={84} cy={armY} rx={6} ry={10} fill="#666" />
-        <Ell cx={10} cy={armY} rx={6} ry={12} fill="#444" />
-        <Ell cx={90} cy={armY} rx={6} ry={12} fill="#444" />
-        {/* shadow */}
-        <Ell cx={50} cy={152} rx={18} ry={3} fill="#000" opacity="0.07" />
+        <rect x="14" y={armY-4} width="72" height="8" rx="4" fill={BODY_EDGE} opacity="0.85"/>
+        <Ell cx={14} cy={armY} rx={6.5} ry={11} fill={BODY_EDGE}/>
+        <Ell cx={86} cy={armY} rx={6.5} ry={11} fill={BODY_EDGE}/>
+        <Ell cx={8}  cy={armY} rx={6.5} ry={13} fill="#2a2a2a"/>
+        <Ell cx={92} cy={armY} rx={6.5} ry={13} fill="#2a2a2a"/>
+
+        <Ell cx={50} cy={154} rx={18} ry={3} fill="#000" opacity="0.07" stroke="none"/>
+
         {/* feet */}
-        <Ell cx={38} cy={146} rx={9} ry={4} fill={SKIN_DARK} />
-        <Ell cx={62} cy={146} rx={9} ry={4} fill={SKIN_DARK} />
+        <Ell cx={38} cy={148} rx={9} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+        <Ell cx={62} cy={148} rx={9} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+
         {/* legs */}
-        <Poly pts={[[40,100],[36,144],[44,144],[44,100]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[60,100],[56,144],[64,144],[64,100]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[39,102],[36,146],[44,146],[45,102]]} fill={BODY_BASE}/>
+        <Poly pts={[[61,102],[56,146],[64,146],[63,102]]} fill={BODY_BASE}/>
+
         {/* torso */}
-        <Poly pts={[[41,57],[39,100],[61,100],[59,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* deltoid glow */}
-        <Ell cx={36} cy={63} rx={9} ry={8} fill={g} opacity={0.15 + pressUp * 0.6} />
-        <Ell cx={64} cy={63} rx={9} ry={8} fill={g} opacity={0.15 + pressUp * 0.6} />
-        {/* tricep glow */}
-        <Ell cx={32} cy={lerp(72,48,pressUp)} rx={4.5} ry={9} fill={g} opacity={0.1 + pressUp * 0.5} />
-        <Ell cx={68} cy={lerp(72,48,pressUp)} rx={4.5} ry={9} fill={g} opacity={0.1 + pressUp * 0.5} />
+        <Poly pts={[[40,57],[38,102],[62,102],[60,57]]} fill={BODY_BASE}/>
+        <Ell cx={50} cy={74} rx={9} ry={16} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+
+        {/* DELTOID GLOW */}
+        <MuscleGlow cx={36} cy={64} rx={9} ry={8} intensity={1}/>
+        <MuscleGlow cx={64} cy={64} rx={9} ry={8} intensity={1}/>
+
+        {/* TRICEP GLOW */}
+        <MuscleGlow cx={30} cy={lerp(72,46,up)} rx={4.5} ry={9} intensity={0.9}/>
+        <MuscleGlow cx={70} cy={lerp(72,46,up)} rx={4.5} ry={9} intensity={0.9}/>
+
         {/* upper arms */}
-        <Poly pts={[[40,62],[28,lerp(76,44,pressUp)],[32,lerp(78,46,pressUp)],[44,64]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[60,62],[72,lerp(76,44,pressUp)],[68,lerp(78,46,pressUp)],[56,64]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[39,63],[27,lerp(78,46,up)],[31,lerp(80,48,up)],[43,65]]} fill={BODY_BASE}/>
+        <Poly pts={[[61,63],[73,lerp(78,46,up)],[69,lerp(80,48,up)],[57,65]]} fill={BODY_BASE}/>
+
         {/* forearms */}
-        <Poly pts={[[28,lerp(76,44,pressUp)],[20,armY+3],[24,armY+5],[32,lerp(78,46,pressUp)]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[72,lerp(76,44,pressUp)],[80,armY+3],[76,armY+5],[68,lerp(78,46,pressUp)]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* joints */}
-        <Joint cx={28} cy={lerp(76,44,pressUp)} r={3.5} />
-        <Joint cx={72} cy={lerp(76,44,pressUp)} r={3.5} />
-        <Head cx={50} cy={44} />
+        <Poly pts={[[27,lerp(78,46,up)],[18,armY+3],[22,armY+6],[31,lerp(80,48,up)]]} fill={BODY_BASE}/>
+        <Poly pts={[[73,lerp(78,46,up)],[82,armY+3],[78,armY+6],[69,lerp(80,48,up)]]} fill={BODY_BASE}/>
+
+        {/* elbow joints */}
+        <Circ cx={27} cy={lerp(78,46,up)} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+        <Circ cx={73} cy={lerp(78,46,up)} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        <Head cx={50} cy={44}/>
       </svg>
     );
   };
 
+  // ── BENT-OVER ROW ────────────────────────────────────────
   const renderRow = () => {
-    const pull = e;
-    const elbowBack = pull * 18;
+    const pull      = e;
+    const elbowBack = pull * 20;
     return (
-      <svg viewBox="0 0 140 110" width={size * 1.2} height={size * 0.79}>
+      <svg viewBox="0 0 148 112" width={size*1.22} height={size*0.8}>
         {/* bench */}
-        <rect x="60" y="82" width="72" height="10" rx="5" fill="#333" opacity="0.7" />
-        <rect x="62" y="92" width="8" height="16" rx="4" fill="#222" opacity="0.7" />
-        <rect x="116" y="92" width="8" height="16" rx="4" fill="#222" opacity="0.7" />
-        {/* shadow */}
-        <Ell cx={70} cy={106} rx={50} ry={3} fill="#000" opacity="0.06" />
-        {/* feet */}
-        <Ell cx={16} cy={100} rx={9} ry={4} fill={SKIN_DARK} />
-        <Ell cx={36} cy={100} rx={9} ry={4} fill={SKIN_DARK} />
-        {/* leg on ground */}
-        <Poly pts={[[14,72],[12,98],[20,98],[20,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[32,72],[30,98],[38,98],[38,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* knee on bench */}
-        <Ell cx={96} cy={82} rx={10} ry={7} fill={SKIN_C} stroke={SKIN_DARK} sw={0.7} />
-        {/* horizontal torso */}
-        <Poly pts={[[30,52],[96,72],[96,80],[30,62]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* back muscle glow */}
-        <Poly pts={[[34,54],[90,72],[90,76],[34,60]]} fill={g} opacity={0.12 + pull * 0.48} />
-        {/* support arm */}
-        <Poly pts={[[30,55],[26,76],[34,77],[34,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Circ cx={30} cy={78} r={5} fill={SKIN_DARK} />
-        {/* pulling arm - moves back */}
-        <Poly pts={[[50,58],[22+elbowBack,68],[26+elbowBack,72],[54,62]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[22+elbowBack,68],[28+elbowBack,50],[32+elbowBack,52],[26+elbowBack,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* bicep glow */}
-        <Ell cx={24+elbowBack} cy={61} rx={4} ry={8} fill={g} opacity={0.15 + pull * 0.55} />
-        {/* dumbbell */}
-        <Circ cx={30+elbowBack} cy={48} r={5} fill="#444" />
-        <rect x={26+elbowBack} y={45} width={10} height={6} rx={3} fill="#555" />
-        {/* joint dots */}
-        <Joint cx={22+elbowBack} cy={68} r={3.5} />
-        <Head cx={28} cy={40} />
-      </svg>
-    );
-  };
+        <rect x="62" y="84" width="76" height="10" rx="5" fill={BODY_EDGE} opacity="0.7"/>
+        <rect x="64" y="94" width="8" height="16" rx="4" fill="#333" opacity="0.7"/>
+        <rect x="122" y="94" width="8" height="16" rx="4" fill="#333" opacity="0.7"/>
 
-  const renderLunge = () => {
-    const step = e;
-    const frontKneeY = lerp(96, 118, step);
-    return (
-      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
-        {/* shadow */}
-        <Ell cx={50} cy={152} rx={22} ry={3.5} fill="#000" opacity="0.07" />
-        {/* back foot */}
-        <Ell cx={72} cy={144} rx={8} ry={4} fill={SKIN_DARK} />
-        {/* front foot */}
-        <Ell cx={30} cy={148} rx={9} ry={4} fill={SKIN_DARK} />
-        {/* back shin (on toes) */}
-        <Poly pts={[[68,110],[64,142],[72,142],[76,110]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* back thigh */}
-        <Poly pts={[[52,72],[64,110],[72,110],[60,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* front shin */}
-        <Poly pts={[[28,frontKneeY],[26,146],[34,146],[36,frontKneeY]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* front thigh - quad glow */}
-        <Poly pts={[[44,74],[28,frontKneeY],[36,frontKneeY],[52,76]]} fill={g} opacity={0.15 + step * 0.55} />
-        <Poly pts={[[44,74],[28,frontKneeY],[36,frontKneeY],[52,76]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* glute glow */}
-        <Ell cx={54} cy={76} rx={10} ry={7} fill={g} opacity={0.12 + step * 0.45} />
-        {/* torso */}
-        <Poly pts={[[43,44],[41,74],[57,74],[57,44]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* spine */}
-        <line x1="50" y1="52" x2="50" y2="74" stroke={SKIN_DARK} strokeWidth="0.6" opacity="0.4" />
-        {/* arms */}
-        <Poly pts={[[43,50],[36,70],[40,71],[46,52]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[57,50],[64,70],[60,71],[54,52]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* joints */}
-        <Joint cx={28} cy={frontKneeY} r={4} />
-        <Joint cx={68} cy={110} r={4} />
-        <Head cx={50} cy={32} />
-      </svg>
-    );
-  };
+        <Ell cx={74} cy={108} rx={52} ry={3} fill="#000" opacity="0.06" stroke="none"/>
 
-  const renderPlank = () => {
-    const breathe = Math.sin((frame / 200) * Math.PI * 4) * 1.2;
-    return (
-      <svg viewBox="0 0 160 80" width={size * 1.35} height={size * 0.57}>
-        {/* shadow */}
-        <Ell cx={82} cy={76} rx={64} ry={3} fill="#000" opacity="0.07" />
         {/* feet */}
-        <Ell cx={136} cy={68} rx={10} ry={4} fill={SKIN_DARK} />
+        <Ell cx={14} cy={102} rx={9} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+        <Ell cx={34} cy={102} rx={9} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+
         {/* legs */}
-        <Poly pts={[[80,50+breathe],[130,68],[136,66],[84,48+breathe]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[12,74],[10,100],[18,100],[18,74]]} fill={BODY_BASE}/>
+        <Poly pts={[[30,74],[28,100],[36,100],[36,74]]} fill={BODY_BASE}/>
+        <Ell cx={98} cy={84} rx={10} ry={7} fill={BODY_BASE} stroke={BODY_EDGE} sw={0.7}/>
+
         {/* torso */}
-        <Poly pts={[[36,43+breathe*0.6],[80,50+breathe],[84,48+breathe],[40,41+breathe*0.6]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* core glow */}
-        <Ell cx={58} cy={46+breathe*0.8} rx={14} ry={4.5} fill={g} opacity={0.12 + Math.abs(breathe) * 0.08} transform={`rotate(-8,58,${46+breathe*0.8})`} />
-        {/* upper arms */}
-        <Poly pts={[[40,42+breathe*0.6],[28,56],[32,58],[44,44+breathe*0.6]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[44,41+breathe*0.6],[56,55],[52,57],[40,43+breathe*0.6]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* forearms to elbows */}
-        <Poly pts={[[28,56],[20,67],[24,69],[32,58]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        <Poly pts={[[56,55],[62,67],[58,69],[52,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
-        {/* elbow pads */}
-        <Circ cx={22} cy={68} r={5.5} fill={SKIN_DARK} />
-        <Circ cx={60} cy={68} r={5.5} fill={SKIN_DARK} />
-        {/* joint dots */}
-        <Joint cx={28} cy={56} r={3.5} />
-        <Joint cx={56} cy={55} r={3.5} />
-        <Head cx={20} cy={32+breathe*0.4} />
+        <Poly pts={[[28,54],[96,74],[96,82],[28,64]]} fill={BODY_BASE}/>
+        <Ell cx={58} cy={60} rx={28} ry={5} fill={BODY_LITE} opacity={0.18} stroke="none"/>
+
+        {/* BACK MUSCLE GLOW */}
+        <MuscleGlow cx={58} cy={58} rx={22} ry={5} intensity={1}/>
+        <MuscleGlow cx={46} cy={56} rx={8} ry={4} intensity={0.9}/>
+        <MuscleGlow cx={72} cy={60} rx={8} ry={4} intensity={0.9}/>
+
+        {/* support arm */}
+        <Poly pts={[[28,57],[24,78],[32,79],[32,59]]} fill={BODY_BASE}/>
+        <Circ cx={28} cy={80} r={5} fill={BODY_MID}/>
+
+        {/* pulling arm */}
+        <Poly pts={[[50,60],[20+elbowBack,70],[24+elbowBack,74],[54,64]]} fill={BODY_BASE}/>
+        <Poly pts={[[20+elbowBack,70],[26+elbowBack,50],[30+elbowBack,52],[24+elbowBack,74]]} fill={BODY_BASE}/>
+
+        {/* BICEP GLOW on pulling arm */}
+        <MuscleGlow cx={22+elbowBack} cy={62} rx={4} ry={8} intensity={1}/>
+
+        {/* dumbbell */}
+        <Circ cx={28+elbowBack} cy={48} r={5.5} fill={BODY_EDGE}/>
+        <rect x={24+elbowBack} y={44} width={10} height={7} rx={3} fill="#555"/>
+
+        {/* elbow joint */}
+        <Circ cx={20+elbowBack} cy={70} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        <Head cx={26} cy={42}/>
       </svg>
     );
   };
 
-  const getAnimKey = (id) => {
-    const l = (id || "").toLowerCase();
-    if (l.includes("squat") || l.includes("goblet") || l.includes("leg press") || l.includes("lunge") && l.includes("wall")) return "squat";
-    if (l.includes("deadlift") || l.includes("rdl") || l.includes("sumo") || l.includes("hip thrust")) return "deadlift";
-    if (l.includes("pull") || l.includes("chin") || l.includes("lat")) return "pullup";
-    if (l.includes("push-up") || l.includes("pushup") || l.includes("push up") || l.includes("bench") || l.includes("dip") || l.includes("fly")) return "pushup";
-    if (l.includes("press") && (l.includes("shoulder") || l.includes("ohp") || l.includes("over") || l.includes("military") || l.includes("arnold"))) return "press";
-    if (l.includes("row") || l.includes("cable") || l.includes("seated")) return "row";
-    if (l.includes("lunge") || l.includes("step")) return "lunge";
-    if (l.includes("plank") || l.includes("bird") || l.includes("dead bug") || l.includes("hollow")) return "plank";
-    if (l.includes("curl") || l.includes("bicep")) return "pullup";
-    if (l.includes("extension") || l.includes("tricep")) return "press";
+  // ── LUNGE ────────────────────────────────────────────────
+  const renderLunge = () => {
+    const step     = e;
+    const frontKnY = lerp(98, 122, step);
+    return (
+      <svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+        <Ell cx={50} cy={154} rx={22} ry={3.5} fill="#000" opacity="0.07" stroke="none"/>
+
+        {/* back foot */}
+        <Ell cx={72} cy={146} rx={8} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+        {/* front foot */}
+        <Ell cx={30} cy={150} rx={9} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+
+        {/* back shin */}
+        <Poly pts={[[67,112],[63,144],[71,144],[75,112]]} fill={BODY_BASE}/>
+        {/* back thigh */}
+        <Poly pts={[[51,74],[63,112],[71,112],[59,74]]} fill={BODY_BASE}/>
+        {/* back knee */}
+        <Circ cx={67} cy={112} r={4.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        {/* front shin */}
+        <Poly pts={[[26,frontKnY],[24,148],[32,148],[34,frontKnY]]} fill={BODY_BASE}/>
+
+        {/* QUAD GLOW — front leg */}
+        <MusclePolyGlow pts={[[43,76],[26,frontKnY],[34,frontKnY],[51,78]]} intensity={1}/>
+        {/* front thigh */}
+        <Poly pts={[[43,76],[26,frontKnY],[34,frontKnY],[51,78]]} fill={BODY_BASE}/>
+
+        {/* GLUTE GLOW */}
+        <MuscleGlow cx={54} cy={78} rx={10} ry={7} intensity={0.9}/>
+
+        {/* front knee */}
+        <Circ cx={30} cy={frontKnY} r={4.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        {/* torso */}
+        <Poly pts={[[42,44],[40,76],[58,76],[58,44]]} fill={BODY_BASE}/>
+        <Ell cx={50} cy={58} rx={8} ry={14} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+        <line x1="50" y1="52" x2="50" y2="76" stroke={BODY_EDGE} strokeWidth="0.6" opacity="0.4"/>
+
+        {/* arms */}
+        <Poly pts={[[42,52],[35,72],[39,73],[45,54]]} fill={BODY_BASE}/>
+        <Poly pts={[[58,52],[65,72],[61,73],[55,54]]} fill={BODY_BASE}/>
+
+        <Head cx={50} cy={32}/>
+      </svg>
+    );
+  };
+
+  // ── PLANK ────────────────────────────────────────────────
+  const renderPlank = () => {
+    const breathe = Math.sin((frame/240)*Math.PI*4) * 1.4;
+    return (
+      <svg viewBox="0 0 168 84" width={size*1.38} height={size*0.6}>
+        <Ell cx={86} cy={80} rx={66} ry={3} fill="#000" opacity="0.07" stroke="none"/>
+
+        {/* feet */}
+        <Ell cx={140} cy={70} rx={10} ry={4.5} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+
+        {/* legs */}
+        <Poly pts={[[82,52+breathe],[134,70],[140,68],[86,50+breathe]]} fill={BODY_BASE}/>
+        <Ell cx={112} cy={57+breathe*0.8} rx={8} ry={14} fill={BODY_LITE} opacity={0.18} stroke="none"/>
+
+        {/* torso */}
+        <Poly pts={[[36,45+breathe*0.6],[82,52+breathe],[86,50+breathe],[40,43+breathe*0.6]]} fill={BODY_BASE}/>
+        <Ell cx={58} cy={47+breathe*0.7} rx={20} ry={4.5} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+
+        {/* CORE GLOW */}
+        <MuscleGlow cx={58} cy={46+breathe*0.8} rx={16} ry={4} intensity={1}/>
+
+        {/* upper arms */}
+        <Poly pts={[[38,44+breathe*0.6],[24,57],[28,59],[42,46+breathe*0.6]]} fill={BODY_BASE}/>
+        <Poly pts={[[44,43+breathe*0.6],[56,56],[52,58],[40,45+breathe*0.6]]} fill={BODY_BASE}/>
+
+        {/* forearms */}
+        <Poly pts={[[24,57],[16,68],[20,70],[28,59]]} fill={BODY_BASE}/>
+        <Poly pts={[[56,56],[62,68],[58,70],[52,58]]} fill={BODY_BASE}/>
+
+        {/* elbow pads */}
+        <Circ cx={18} cy={69} r={5.5} fill={BODY_MID}/>
+        <Circ cx={60} cy={69} r={5.5} fill={BODY_MID}/>
+
+        {/* elbow joints */}
+        <Circ cx={24} cy={57} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+        <Circ cx={56} cy={56} r={3.5} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+
+        <Head cx={16} cy={34+breathe*0.4}/>
+      </svg>
+    );
+  };
+
+  // ── CURL ────────────────────────────────────────────────
+  const renderCurl = () => {
+    const up = e;
+    const forearmAngle = lerp(140, 50, up);
+    const fRad = forearmAngle * Math.PI / 180;
+    const elbowX = 62, elbowY = 90;
+    const handX = elbowX + Math.cos(fRad) * 28;
+    const handY = elbowY + Math.sin(fRad) * 28;
+    return (
+      <svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+        <Ell cx={50} cy={154} rx={18} ry={3} fill="#000" opacity="0.07" stroke="none"/>
+        {/* feet */}
+        <Ell cx={38} cy={148} rx={9} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+        <Ell cx={62} cy={148} rx={9} ry={4} fill={BODY_MID} stroke={BODY_EDGE} sw={0.5}/>
+        {/* legs */}
+        <Poly pts={[[39,102],[36,146],[44,146],[45,102]]} fill={BODY_BASE}/>
+        <Poly pts={[[61,102],[56,146],[64,146],[63,102]]} fill={BODY_BASE}/>
+        {/* torso */}
+        <Poly pts={[[40,57],[38,102],[62,102],[60,57]]} fill={BODY_BASE}/>
+        <Ell cx={50} cy={74} rx={9} ry={16} fill={BODY_LITE} opacity={0.2} stroke="none"/>
+        {/* non-curling arm */}
+        <Poly pts={[[40,63],[32,88],[38,89],[44,65]]} fill={BODY_BASE}/>
+        <Poly pts={[[32,88],[30,110],[36,110],[38,89]]} fill={BODY_BASE}/>
+        <Circ cx={33} cy={111} r={4.5} fill={BODY_MID}/>
+        {/* BICEP GLOW */}
+        <MuscleGlow cx={elbowX-4} cy={elbowY-14} rx={5} ry={10} intensity={1}/>
+        {/* curling upper arm */}
+        <Poly pts={[[elbowX-6,64],[elbowX-8,elbowY],[elbowX,elbowY],[elbowX-2,66]]} fill={BODY_BASE}/>
+        {/* curling forearm */}
+        <Poly pts={[[elbowX-4,elbowY],[handX-4,handY],[handX+2,handY-6],[elbowX+4,elbowY]]} fill={BODY_BASE}/>
+        {/* dumbbell */}
+        <rect x={handX-8} y={handY-4} width={16} height={7} rx={3} fill="#555"/>
+        <Circ cx={handX-8} cy={handY} r={5} fill={BODY_EDGE}/>
+        <Circ cx={handX+8} cy={handY} r={5} fill={BODY_EDGE}/>
+        {/* elbow joint */}
+        <Circ cx={elbowX} cy={elbowY} r={4} fill={BODY_LITE} stroke={BODY_EDGE} sw={0.5}/>
+        <Head cx={50} cy={44}/>
+      </svg>
+    );
+  };
+
+  // ── dispatch ─────────────────────────────────────────────
+  const getKey = (id) => {
+    const l = (id||"").toLowerCase();
+    if (l.includes("squat")||l.includes("goblet")||l.includes("leg press")||l.includes("wall sit")) return "squat";
+    if (l.includes("deadlift")||l.includes("rdl")||l.includes("sumo")||l.includes("hip thrust")) return "deadlift";
+    if (l.includes("pull-up")||l.includes("pullup")||l.includes("pull up")||l.includes("chin")||l.includes("lat pulldown")||l.includes("face pull")) return "pullup";
+    if (l.includes("push-up")||l.includes("pushup")||l.includes("push up")||l.includes("bench")||l.includes("chest press")||l.includes("dip")||l.includes("fly")) return "pushup";
+    if ((l.includes("press")&&(l.includes("over")||l.includes("shoulder")||l.includes("military")||l.includes("arnold")))||(l.includes("ohp"))) return "press";
+    if (l.includes("row")||l.includes("cable pull")||l.includes("seated pull")) return "row";
+    if (l.includes("lunge")||l.includes("step-up")||l.includes("step up")) return "lunge";
+    if (l.includes("plank")||l.includes("bird dog")||l.includes("dead bug")||l.includes("hollow")||l.includes("ab wheel")) return "plank";
+    if (l.includes("curl")||l.includes("bicep")) return "curl";
+    if (l.includes("tricep")||l.includes("skull")||l.includes("pushdown")||l.includes("extension")) return "press";
+    if (l.includes("lateral raise")||l.includes("front raise")) return "press";
+    if (l.includes("calf")) return "squat";
     return "squat";
   };
 
-  const renders = { squat: renderSquat, deadlift: renderDeadlift, pullup: renderPullup, pushup: renderPushup, press: renderPress, row: renderRow, lunge: renderLunge, plank: renderPlank };
-  const key = getAnimKey(exerciseId || type || "squat");
-  const fn = renders[key] || renders.squat;
+  const renders = { squat:renderSquat, deadlift:renderDeadlift, pullup:renderPullup, pushup:renderPushup, press:renderPress, row:renderRow, lunge:renderLunge, plank:renderPlank, curl:renderCurl };
+  const key = getKey(exerciseId);
+  const fn  = renders[key] || renders.squat;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <div style={{ display:"flex", justifyContent:"center", alignItems:"center",
+      filter:`drop-shadow(0 4px 14px ${MUSCLE_ON}28)` }}>
       {fn()}
     </div>
   );
 }
 
-// Muscle tags per exercise type
-function getMuscleTargets(exerciseName) {
-  const l = (exerciseName || "").toLowerCase();
-  if (l.includes("squat") || l.includes("goblet")) return ["Quads 🔥", "Glutes", "Hamstrings"];
-  if (l.includes("deadlift") || l.includes("rdl")) return ["Back 🔥", "Glutes", "Hamstrings"];
-  if (l.includes("bench") || l.includes("push-up") || l.includes("pushup")) return ["Chest 🔥", "Triceps", "Shoulders"];
-  if (l.includes("pull") || l.includes("chin") || l.includes("lat")) return ["Lats 🔥", "Biceps", "Core"];
-  if (l.includes("row")) return ["Mid Back 🔥", "Biceps", "Rear Delt"];
-  if (l.includes("press") && l.includes("over")) return ["Delts 🔥", "Triceps", "Core"];
-  if (l.includes("arnold") || l.includes("shoulder")) return ["Delts 🔥", "Triceps"];
-  if (l.includes("lunge") || l.includes("step")) return ["Quads 🔥", "Glutes", "Balance"];
-  if (l.includes("plank") || l.includes("bird") || l.includes("dead bug")) return ["Core 🔥", "Stabilizers"];
-  if (l.includes("curl") || l.includes("bicep")) return ["Biceps 🔥", "Forearms"];
-  if (l.includes("tricep") || l.includes("extension") || l.includes("dip")) return ["Triceps 🔥", "Chest"];
-  if (l.includes("calf")) return ["Calves 🔥"];
-  if (l.includes("glute") || l.includes("hip thrust")) return ["Glutes 🔥", "Hamstrings"];
-  return ["Full Body 🔥"];
+// Muscle targets with emoji
+function getMuscleTargets(name) {
+  const l = (name||"").toLowerCase();
+  if (l.includes("squat")||l.includes("goblet")) return [["Quads","primary"],["Glutes","secondary"],["Hamstrings","secondary"]];
+  if (l.includes("deadlift")||l.includes("rdl")) return [["Lower Back","primary"],["Glutes","primary"],["Hamstrings","secondary"]];
+  if (l.includes("bench")||l.includes("push-up")||l.includes("pushup")||l.includes("chest")) return [["Chest","primary"],["Triceps","secondary"],["Shoulders","secondary"]];
+  if (l.includes("pull-up")||l.includes("pullup")||l.includes("chin")||l.includes("lat")) return [["Lats","primary"],["Biceps","secondary"],["Core","secondary"]];
+  if (l.includes("row")) return [["Mid Back","primary"],["Biceps","secondary"],["Rear Delt","secondary"]];
+  if (l.includes("press")&&(l.includes("over")||l.includes("shoulder")||l.includes("military")||l.includes("arnold"))) return [["Delts","primary"],["Triceps","secondary"],["Core","secondary"]];
+  if (l.includes("lunge")||l.includes("step")) return [["Quads","primary"],["Glutes","secondary"],["Balance","secondary"]];
+  if (l.includes("plank")||l.includes("bird")||l.includes("dead bug")) return [["Core","primary"],["Stabilizers","secondary"]];
+  if (l.includes("curl")||l.includes("bicep")) return [["Biceps","primary"],["Forearms","secondary"]];
+  if (l.includes("tricep")||l.includes("extension")||l.includes("pushdown")) return [["Triceps","primary"],["Chest","secondary"]];
+  if (l.includes("calf")) return [["Calves","primary"]];
+  if (l.includes("glute")||l.includes("hip thrust")) return [["Glutes","primary"],["Hamstrings","secondary"]];
+  if (l.includes("lateral raise")) return [["Side Delts","primary"],["Traps","secondary"]];
+  if (l.includes("face pull")) return [["Rear Delts","primary"],["Rotator Cuff","secondary"]];
+  return [["Full Body","primary"]];
 }
 
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
   const muscles = getMuscleTargets(exercise.name);
   return (
-    <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
-      <div style={{ background: `${color}0e`, padding: "16px 8px 8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <HumanAnim exerciseId={exercise.name} accentColor={color} size={130} />
+    <div style={{ background:"#0e0c00", borderRadius:12, overflow:"hidden",
+      border:`1px solid ${BODY_EDGE}40` }}>
+      {/* animation area — dark bg like gym-animations.com */}
+      <div style={{ background:"#111", padding:"14px 8px 8px",
+        display:"flex", flexDirection:"column", alignItems:"center" }}>
+        <HumanAnim exerciseId={exercise.name} accentColor={color} size={128}/>
         {/* muscle tags */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", marginTop: 8 }}>
-          {muscles.map((m, i) => (
-            <span key={i} style={{ fontSize: 9, padding: "2px 7px", borderRadius: 20, background: i === 0 ? `${color}30` : G.surf, color: i === 0 ? color : G.muted, fontWeight: i === 0 ? 700 : 400, border: `1px solid ${i === 0 ? color + "40" : G.border}` }}>{m}</span>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:4,
+          justifyContent:"center", marginTop:9 }}>
+          {muscles.map(([m, type], i) => (
+            <span key={i} style={{
+              fontSize:9, padding:"2px 8px", borderRadius:20,
+              background: type==="primary" ? `${MUSCLE_ON}25` : "#1a1800",
+              color: type==="primary" ? MUSCLE_HI : G.muted,
+              fontWeight: type==="primary" ? 700 : 400,
+              border:`1px solid ${type==="primary" ? MUSCLE_ON+"50" : "#2a2200"}`
+            }}>{m}</span>
           ))}
         </div>
       </div>
-      <div style={{ padding: "10px 12px 12px" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 7, textAlign: "center", lineHeight: 1.3 }}>{exercise.name}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5 }}>
-          {[{ l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: color }, { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green }, { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber }].map(x => (
-            <div key={x.l} style={{ background: G.surf, borderRadius: 6, padding: "5px 3px", textAlign: "center" }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: x.c }}>{x.v}</div>
-              <div style={{ fontSize: 8, color: G.muted, marginTop: 1 }}>{x.l}</div>
+      {/* info */}
+      <div style={{ padding:"10px 12px 12px" }}>
+        <div style={{ fontSize:12, fontWeight:700, color:G.text,
+          marginBottom:7, textAlign:"center", lineHeight:1.3 }}>
+          {exercise.name}
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:5 }}>
+          {[
+            { l: isAr?"مجموعات":"Sets", v:exercise.sets,  c:G.gold  },
+            { l: isAr?"تكرار":"Reps",   v:exercise.reps,  c:G.green },
+            { l: isAr?"راحة":"Rest",    v:exercise.rest,  c:G.amber },
+          ].map(x => (
+            <div key={x.l} style={{ background:G.surf2, borderRadius:6,
+              padding:"5px 3px", textAlign:"center" }}>
+              <div style={{ fontSize:11, fontWeight:800, color:x.c }}>{x.v}</div>
+              <div style={{ fontSize:8, color:G.muted, marginTop:1 }}>{x.l}</div>
             </div>
           ))}
         </div>
-        {exercise.notes && <div style={{ fontSize: 10, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>💡 {exercise.notes}</div>}
+        {exercise.notes && (
+          <div style={{ fontSize:10, color:G.muted, marginTop:6, lineHeight:1.5 }}>
+            💡 {exercise.notes}
+          </div>
+        )}
       </div>
     </div>
   );
