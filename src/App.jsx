@@ -1116,6 +1116,279 @@ function getYTSearchUrl(name) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(name + " exercise proper form tutorial")}`;
 }
 
+// ── GYM-ANIMATIONS STYLE — Grey 3D Body + Red Muscle Highlight ──
+const B  = "#9aa0a6";   // body grey
+const BD = "#6b7278";   // body dark shadow
+const BL = "#c8ced2";   // body light highlight
+const BE = "#3a4248";   // body edge/outline
+const MR = "#ff2020";   // muscle red active
+const MH = "#ff7070";   // muscle highlight
+
+function lerp(a,b,t){return a+(b-a)*t;}
+
+function HumanAnim({ exerciseId, accentColor, size=120 }) {
+  const [frame, setFrame] = useState(0);
+  useEffect(()=>{
+    const id = setInterval(()=>setFrame(f=>(f+1)%240),18);
+    return ()=>clearInterval(id);
+  },[]);
+
+  const phase=(frame/240)*Math.PI*2;
+  const e=(Math.sin(phase-Math.PI/2)+1)/2;
+  const mg=0.3+e*0.7; // muscle glow intensity
+
+  const P=({pts,f,s=BE,sw=0.7,o=1})=>(
+    <polygon points={pts.map(p=>p.join(",")).join(" ")} fill={f} stroke={s} strokeWidth={sw} opacity={o}/>
+  );
+  const E=({cx,cy,rx,ry,f,s="none",sw=0.5,o=1})=>(
+    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={f} stroke={s} strokeWidth={sw} opacity={o}/>
+  );
+  const C=({cx,cy,r,f,s=BE,sw=0.6,o=1})=>(
+    <circle cx={cx} cy={cy} r={r} fill={f} stroke={s} strokeWidth={sw} opacity={o}/>
+  );
+  const Glow=({cx,cy,rx,ry,i=1})=>(
+    <g>
+      <E cx={cx} cy={cy} rx={rx*1.8} ry={ry*1.8} f={MR} o={0.08*i*mg}/>
+      <E cx={cx} cy={cy} rx={rx} ry={ry} f={MR} o={0.55*i*mg}/>
+      <E cx={cx} cy={cy} rx={rx*0.5} ry={ry*0.5} f={MH} o={0.7*i*mg}/>
+    </g>
+  );
+  const GlowPoly=({pts,i=1})=>(
+    <polygon points={pts.map(p=>p.join(",")).join(" ")}
+      fill={MR} opacity={0.5*i*mg} stroke={MH} strokeWidth="0.5" strokeOpacity={0.6*i*mg}/>
+  );
+  const Head=({cx,cy})=>(
+    <g>
+      <E cx={cx} cy={cy} rx={10} ry={11} f={B} s={BE} sw={0.7}/>
+      <E cx={cx} cy={cy-2} rx={7} ry={5} f={BL} o={0.3}/>
+      <C cx={cx-3} cy={cy-1} r={2} f={BE} s="none"/>
+      <C cx={cx+3} cy={cy-1} r={2} f={BE} s="none"/>
+      <path d={`M${cx-3} ${cy+4} Q${cx} ${cy+7} ${cx+3} ${cy+4}`} stroke={BE} strokeWidth="1.2" fill="none"/>
+      <E cx={cx} cy={cy+11} rx={5} ry={4} f={B} s="none"/>
+    </g>
+  );
+
+  const getKey=(id)=>{
+    const l=(id||"").toLowerCase();
+    if(l.includes("squat")||l.includes("goblet")||l.includes("leg press")||l.includes("wall sit")) return "squat";
+    if(l.includes("deadlift")||l.includes("rdl")||l.includes("sumo")||l.includes("hip thrust")) return "deadlift";
+    if(l.includes("bench")||l.includes("push-up")||l.includes("pushup")||l.includes("chest")||l.includes("fly")||l.includes("incline")||l.includes("dip")) return "pushup";
+    if(l.includes("pull-up")||l.includes("pullup")||l.includes("chin")||l.includes("lat pulldown")) return "pullup";
+    if(l.includes("press")&&(l.includes("over")||l.includes("shoulder")||l.includes("military")||l.includes("arnold"))) return "press";
+    if(l.includes("row")||l.includes("cable row")||l.includes("seated row")) return "row";
+    if(l.includes("lunge")||l.includes("step-up")||l.includes("step up")) return "lunge";
+    if(l.includes("plank")||l.includes("bird dog")||l.includes("dead bug")||l.includes("ab wheel")) return "plank";
+    if(l.includes("curl")||l.includes("bicep")) return "curl";
+    if(l.includes("tricep")||l.includes("pushdown")||l.includes("skull")) return "press";
+    if(l.includes("lateral raise")||l.includes("front raise")) return "press";
+    return "squat";
+  };
+
+  const key=getKey(exerciseId);
+
+  // SQUAT
+  if(key==="squat"){
+    const dip=e*32; const hY=74+dip*0.6; const kY=108+dip*0.28; const kO=e*9; const fY=144;
+    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+      <E cx={50} cy={154} rx={22-dip*0.15} ry={3.5} f="#000" o={0.07}/>
+      <E cx={34} cy={fY} rx={10} ry={4.5} f={BD}/><E cx={66} cy={fY} rx={10} ry={4.5} f={BD}/>
+      <P pts={[[31,kY],[37,kY],[39,fY-3],[29,fY-3]]} f={B}/>
+      <P pts={[[63,kY],[69,kY],[71,fY-3],[61,fY-3]]} f={B}/>
+      <GlowPoly pts={[[38,hY+10],[32-kO,kY],[40-kO,kY],[46,hY+13]]} i={1}/>
+      <GlowPoly pts={[[62,hY+10],[68+kO,kY],[60+kO,kY],[54,hY+13]]} i={1}/>
+      <P pts={[[39,hY+10],[32-kO,kY],[40-kO,kY],[47,hY+13]]} f={B}/>
+      <P pts={[[61,hY+10],[68+kO,kY],[60+kO,kY],[53,hY+13]]} f={B}/>
+      <E cx={37-kO*0.5} cy={kY-12} rx={5} ry={10} f={BL} o={0.2}/>
+      <E cx={63+kO*0.5} cy={kY-12} rx={5} ry={10} f={BL} o={0.2}/>
+      <Glow cx={50} cy={hY+14} rx={13} ry={9} i={0.8}/>
+      <P pts={[[41,hY],[43,hY+13],[57,hY+13],[59,hY],[56,47],[44,47]]} f={B}/>
+      <E cx={50} cy={62} rx={7} ry={12} f={BL} o={0.22}/>
+      <P pts={[[43,54],[35,76],[39,77],[46,56]]} f={B}/><P pts={[[57,54],[65,76],[61,77],[54,56]]} f={B}/>
+      <P pts={[[35,76],[27,94],[31,95],[39,77]]} f={B}/><P pts={[[65,76],[73,94],[69,95],[61,77]]} f={B}/>
+      <C cx={34-kO} cy={kY} r={4.5} f={BL} s={BE} sw={0.5}/><C cx={66+kO} cy={kY} r={4.5} f={BL} s={BE} sw={0.5}/>
+      <Head cx={50} cy={35}/>
+    </svg>);
+  }
+
+  // DEADLIFT
+  if(key==="deadlift"){
+    const lift=e; const barY=lerp(124,80,lift); const hY=lerp(94,64,lift*0.72);
+    const hA=(1-lift)*36; const tx=50-hA*0.36; const ty=hY-28-hA*0.26;
+    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+      <rect x="12" y={barY-4} width="76" height="8" rx="4" fill={BE} opacity="0.85"/>
+      <E cx={12} cy={barY} rx={6} ry={11} f={BE}/><E cx={88} cy={barY} rx={6} ry={11} f={BE}/>
+      <E cx={7} cy={barY} rx={6} ry={13} f="#222"/><E cx={93} cy={barY} rx={6} ry={13} f="#222"/>
+      <E cx={50} cy={154} rx={22} ry={3.5} f="#000" o={0.07}/>
+      <E cx={36} cy={146} rx={10} ry={4.5} f={BD}/><E cx={64} cy={146} rx={10} ry={4.5} f={BD}/>
+      <P pts={[[33,hY+5],[31,144],[41,144],[43,hY+5]]} f={B}/><P pts={[[57,hY+5],[59,144],[69,144],[67,hY+5]]} f={B}/>
+      <Glow cx={50} cy={hY+10} rx={14} ry={11} i={1}/>
+      <Glow cx={37} cy={hY+22} rx={5} ry={11} i={0.85}/><Glow cx={63} cy={hY+22} rx={5} ry={11} i={0.85}/>
+      <P pts={[[tx-11,ty],[tx+11,ty],[55,hY+5],[45,hY+5]]} f={B}/>
+      <Glow cx={tx} cy={ty+10} rx={7} ry={13} i={1}/>
+      <P pts={[[tx-7,ty+10],[24,barY-2],[28,barY+4],[tx-2,ty+14]]} f={B}/>
+      <P pts={[[tx+7,ty+10],[76,barY-2],[72,barY+4],[tx+2,ty+14]]} f={B}/>
+      <C cx={26} cy={barY+1} r={5.5} f={BD}/><C cx={74} cy={barY+1} r={5.5} f={BD}/>
+      <C cx={37} cy={hY+5} r={4.5} f={BL} s={BE} sw={0.5}/><C cx={63} cy={hY+5} r={4.5} f={BL} s={BE} sw={0.5}/>
+      <Head cx={tx-4} cy={ty-12}/>
+    </svg>);
+  }
+
+  // PUSH-UP / BENCH
+  if(key==="pushup"){
+    const lift=e; const bY=72-lift*20; const eF=lift*28;
+    return(<svg viewBox="0 0 148 105" width={size*1.22} height={size*0.75}>
+      <E cx={74} cy={100} rx={50+lift*8} ry={3.5} f="#000" o={0.06}/>
+      <E cx={122} cy={86} rx={10} ry={4.5} f={BD}/>
+      <P pts={[[72,bY+16],[118,88],[126,86],[78,bY+14]]} f={B}/>
+      <Glow cx={46} cy={bY+8} rx={12} ry={5} i={1}/>
+      <P pts={[[30,bY+4],[72,bY+16],[78,bY+14],[34,bY+2]]} f={B}/>
+      <P pts={[[34,bY+3],[22-eF*0.24,bY+17+eF*0.28],[26-eF*0.24,bY+19+eF*0.28],[38,bY+5]]} f={B}/>
+      <P pts={[[34,bY+3],[46+eF*0.24,bY+17+eF*0.28],[42+eF*0.24,bY+19+eF*0.28],[38,bY+5]]} f={B}/>
+      <Glow cx={22-eF*0.14} cy={bY+14+eF*0.18} rx={4.5} ry={7} i={0.9}/>
+      <Glow cx={46+eF*0.14} cy={bY+14+eF*0.18} rx={4.5} ry={7} i={0.9}/>
+      <P pts={[[22-eF*0.24,bY+17+eF*0.28],[14,84],[18,86],[26-eF*0.24,bY+19+eF*0.28]]} f={B}/>
+      <P pts={[[46+eF*0.24,bY+17+eF*0.28],[52,84],[56,86],[42+eF*0.24,bY+19+eF*0.28]]} f={B}/>
+      <C cx={16} cy={85} r={5} f={BD}/><C cx={54} cy={85} r={5} f={BD}/>
+      <C cx={22-eF*0.24} cy={bY+18+eF*0.28} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <C cx={46+eF*0.24} cy={bY+18+eF*0.28} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <Head cx={18} cy={bY-6}/>
+    </svg>);
+  }
+
+  // PULL-UP
+  if(key==="pullup"){
+    const pull=e; const bY=lerp(60,36,pull); const eF=pull*22;
+    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+      <rect x="6" y="10" width="88" height="10" rx="5" fill={BE} opacity="0.88"/>
+      <rect x="12" y="10" width="8" height="22" rx="4" fill={BE} opacity="0.6"/>
+      <rect x="80" y="10" width="8" height="22" rx="4" fill={BE} opacity="0.6"/>
+      <E cx={50} cy={157} rx={18} ry={3} f="#000" o={0.05}/>
+      <C cx={26} cy={22} r={5.5} f={BD}/><C cx={74} cy={22} r={5.5} f={BD}/>
+      <P pts={[[26,22],[31-eF*0.28,bY-24],[35-eF*0.28,bY-21],[30,25]]} f={B}/>
+      <P pts={[[74,22],[69+eF*0.28,bY-24],[65+eF*0.28,bY-21],[70,25]]} f={B}/>
+      <Glow cx={32-eF*0.18} cy={bY-12} rx={5} ry={9} i={1}/>
+      <Glow cx={68+eF*0.18} cy={bY-12} rx={5} ry={9} i={1}/>
+      <P pts={[[31-eF*0.28,bY-24],[38,bY-10],[42,bY-7],[35-eF*0.28,bY-22]]} f={B}/>
+      <P pts={[[69+eF*0.28,bY-24],[62,bY-10],[58,bY-7],[65+eF*0.28,bY-22]]} f={B}/>
+      <GlowPoly pts={[[39,bY-7],[37,bY+22],[63,bY+22],[61,bY-7]]} i={1}/>
+      <P pts={[[39,bY-7],[37,bY+22],[63,bY+22],[61,bY-7]]} f={B}/>
+      <E cx={50} cy={bY+6} rx={9} ry={14} f={BL} o={0.2}/>
+      <P pts={[[43,bY+22],[41,bY+56],[47,bY+56],[47,bY+24]]} f={B}/>
+      <P pts={[[57,bY+22],[53,bY+56],[59,bY+56],[59,bY+24]]} f={B}/>
+      <P pts={[[41,bY+56],[39,bY+82],[45,bY+82],[47,bY+56]]} f={B}/>
+      <P pts={[[53,bY+56],[51,bY+82],[57,bY+82],[59,bY+56]]} f={B}/>
+      <C cx={31-eF*0.28} cy={bY-24} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <C cx={69+eF*0.28} cy={bY-24} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <Head cx={50} cy={bY-22}/>
+    </svg>);
+  }
+
+  // OVERHEAD PRESS
+  if(key==="press"){
+    const up=e; const aY=lerp(72,28,up);
+    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+      <rect x="14" y={aY-4} width="72" height="8" rx="4" fill={BE} opacity="0.85"/>
+      <E cx={14} cy={aY} rx={6.5} ry={11} f={BE}/><E cx={86} cy={aY} rx={6.5} ry={11} f={BE}/>
+      <E cx={8} cy={aY} rx={6.5} ry={13} f="#222"/><E cx={92} cy={aY} rx={6.5} ry={13} f="#222"/>
+      <E cx={50} cy={154} rx={18} ry={3} f="#000" o={0.07}/>
+      <E cx={38} cy={148} rx={9} ry={4} f={BD}/><E cx={62} cy={148} rx={9} ry={4} f={BD}/>
+      <P pts={[[39,102],[36,146],[44,146],[45,102]]} f={B}/><P pts={[[61,102],[56,146],[64,146],[63,102]]} f={B}/>
+      <P pts={[[40,57],[38,102],[62,102],[60,57]]} f={B}/>
+      <Glow cx={36} cy={64} rx={9} ry={8} i={1}/><Glow cx={64} cy={64} rx={9} ry={8} i={1}/>
+      <Glow cx={30} cy={lerp(72,48,up)} rx={4.5} ry={9} i={0.9}/>
+      <Glow cx={70} cy={lerp(72,48,up)} rx={4.5} ry={9} i={0.9}/>
+      <P pts={[[39,63],[27,lerp(78,46,up)],[31,lerp(80,48,up)],[43,65]]} f={B}/>
+      <P pts={[[61,63],[73,lerp(78,46,up)],[69,lerp(80,48,up)],[57,65]]} f={B}/>
+      <P pts={[[27,lerp(78,46,up)],[18,aY+3],[22,aY+6],[31,lerp(80,48,up)]]} f={B}/>
+      <P pts={[[73,lerp(78,46,up)],[82,aY+3],[78,aY+6],[69,lerp(80,48,up)]]} f={B}/>
+      <C cx={27} cy={lerp(78,46,up)} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <C cx={73} cy={lerp(78,46,up)} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <Head cx={50} cy={44}/>
+    </svg>);
+  }
+
+  // ROW
+  if(key==="row"){
+    const pull=e; const eB=pull*20;
+    return(<svg viewBox="0 0 148 112" width={size*1.22} height={size*0.8}>
+      <rect x="62" y="84" width="76" height="10" rx="5" fill={BE} opacity="0.7"/>
+      <rect x="64" y="94" width="8" height="16" rx="4" fill="#333" opacity="0.7"/>
+      <rect x="122" y="94" width="8" height="16" rx="4" fill="#333" opacity="0.7"/>
+      <E cx={74} cy={108} rx={52} ry={3} f="#000" o={0.06}/>
+      <E cx={14} cy={102} rx={9} ry={4} f={BD}/><E cx={34} cy={102} rx={9} ry={4} f={BD}/>
+      <P pts={[[12,74],[10,100],[18,100],[18,74]]} f={B}/><P pts={[[30,74],[28,100],[36,100],[36,74]]} f={B}/>
+      <E cx={98} cy={84} rx={10} ry={7} f={B} s={BE} sw={0.7}/>
+      <Glow cx={58} cy={58} rx={22} ry={5} i={1}/>
+      <P pts={[[28,54],[96,74],[96,82],[28,64]]} f={B}/>
+      <P pts={[[28,57],[24,78],[32,79],[32,59]]} f={B}/>
+      <C cx={28} cy={80} r={5} f={BD}/>
+      <P pts={[[50,60],[20+eB,70],[24+eB,74],[54,64]]} f={B}/>
+      <P pts={[[20+eB,70],[26+eB,50],[30+eB,52],[24+eB,74]]} f={B}/>
+      <Glow cx={22+eB} cy={62} rx={4} ry={8} i={1}/>
+      <C cx={28+eB} cy={48} r={5.5} f={BE}/>
+      <rect x={24+eB} y={44} width={10} height={7} rx={3} fill="#555"/>
+      <C cx={20+eB} cy={70} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <Head cx={26} cy={42}/>
+    </svg>);
+  }
+
+  // LUNGE
+  if(key==="lunge"){
+    const step=e; const fkY=lerp(98,122,step);
+    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+      <E cx={50} cy={154} rx={22} ry={3.5} f="#000" o={0.07}/>
+      <E cx={72} cy={146} rx={8} ry={4} f={BD}/><E cx={30} cy={150} rx={9} ry={4} f={BD}/>
+      <P pts={[[67,112],[63,144],[71,144],[75,112]]} f={B}/>
+      <P pts={[[51,74],[63,112],[71,112],[59,74]]} f={B}/>
+      <C cx={67} cy={112} r={4.5} f={BL} s={BE} sw={0.5}/>
+      <P pts={[[26,fkY],[24,148],[32,148],[34,fkY]]} f={B}/>
+      <GlowPoly pts={[[43,76],[26,fkY],[34,fkY],[51,78]]} i={1}/>
+      <P pts={[[43,76],[26,fkY],[34,fkY],[51,78]]} f={B}/>
+      <Glow cx={54} cy={78} rx={10} ry={7} i={0.9}/>
+      <C cx={30} cy={fkY} r={4.5} f={BL} s={BE} sw={0.5}/>
+      <P pts={[[42,44],[40,76],[58,76],[58,44]]} f={B}/>
+      <P pts={[[42,52],[35,72],[39,73],[45,54]]} f={B}/><P pts={[[58,52],[65,72],[61,73],[55,54]]} f={B}/>
+      <Head cx={50} cy={32}/>
+    </svg>);
+  }
+
+  // PLANK
+  if(key==="plank"){
+    const br=Math.sin((frame/240)*Math.PI*4)*1.4;
+    return(<svg viewBox="0 0 168 84" width={size*1.38} height={size*0.6}>
+      <E cx={86} cy={80} rx={66} ry={3} f="#000" o={0.07}/>
+      <E cx={140} cy={70} rx={10} ry={4.5} f={BD}/>
+      <P pts={[[82,52+br],[134,70],[140,68],[86,50+br]]} f={B}/>
+      <Glow cx={58} cy={46+br*0.8} rx={16} ry={4} i={1}/>
+      <P pts={[[36,45+br*0.6],[82,52+br],[86,50+br],[40,43+br*0.6]]} f={B}/>
+      <P pts={[[38,44+br*0.6],[24,57],[28,59],[42,46+br*0.6]]} f={B}/>
+      <P pts={[[44,43+br*0.6],[56,56],[52,58],[40,45+br*0.6]]} f={B}/>
+      <P pts={[[24,57],[16,68],[20,70],[28,59]]} f={B}/><P pts={[[56,56],[62,68],[58,70],[52,58]]} f={B}/>
+      <C cx={18} cy={69} r={5.5} f={BD}/><C cx={60} cy={69} r={5.5} f={BD}/>
+      <C cx={24} cy={57} r={3.5} f={BL} s={BE} sw={0.5}/><C cx={56} cy={56} r={3.5} f={BL} s={BE} sw={0.5}/>
+      <Head cx={16} cy={34+br*0.4}/>
+    </svg>);
+  }
+
+  // CURL (default fallback)
+  const up=e; const aY=lerp(72,28,up);
+  return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
+    <E cx={50} cy={154} rx={18} ry={3} f="#000" o={0.07}/>
+    <E cx={38} cy={148} rx={9} ry={4} f={BD}/><E cx={62} cy={148} rx={9} ry={4} f={BD}/>
+    <P pts={[[39,102],[36,146],[44,146],[45,102]]} f={B}/><P pts={[[61,102],[56,146],[64,146],[63,102]]} f={B}/>
+    <P pts={[[40,57],[38,102],[62,102],[60,57]]} f={B}/>
+    <Glow cx={36} cy={64} rx={9} ry={8} i={1}/><Glow cx={64} cy={64} rx={9} ry={8} i={1}/>
+    <P pts={[[39,63],[27,lerp(78,46,up)],[31,lerp(80,48,up)],[43,65]]} f={B}/>
+    <P pts={[[61,63],[73,lerp(78,46,up)],[69,lerp(80,48,up)],[57,65]]} f={B}/>
+    <Glow cx={27} cy={lerp(72,56,up)} rx={4.5} ry={8} i={1}/>
+    <P pts={[[27,lerp(78,46,up)],[22,aY+10],[26,aY+14],[31,lerp(80,48,up)]]} f={B}/>
+    <C cx={24} cy={aY+12} r={5} f={BD}/>
+    <rect x={16} y={aY+8} width={18} height={7} rx={3} fill="#555"/>
+    <C cx={27} cy={lerp(78,46,up)} r={3.5} f={BL} s={BE} sw={0.5}/>
+    <Head cx={50} cy={44}/>
+  </svg>);
+}
+
 function getMuscleTargets(name) {
   const l = (name || "").toLowerCase();
   if (l.includes("squat") || l.includes("goblet") || l.includes("hack")) return [["Quads", "primary"], ["Glutes", "secondary"], ["Hamstrings", "secondary"]];
