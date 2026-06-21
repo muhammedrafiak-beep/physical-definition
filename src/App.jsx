@@ -1026,302 +1026,440 @@ function TDEECard({ client, t, lang }) {
   );
 }
 
-// ── 3D CINEMATIC WORKOUT ANIMATIONS ──────────────────────────
-function WorkoutAnim3D({ exerciseId, color = "#d4af37", size = 160 }) {
+
+// ── REALISTIC HUMAN WORKOUT ANIMATIONS ────────────────────────
+const SKIN_C = "#C68642";
+const SKIN_DARK = "#8B5A2B";
+const BONE_C = "#E8D5B7";
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function HumanAnim({ type, accentColor, size = 140 }) {
   const [frame, setFrame] = useState(0);
   useEffect(() => {
-    const i = setInterval(() => setFrame(f => (f + 1) % 120), 30);
-    return () => clearInterval(i);
+    const id = setInterval(() => setFrame(f => (f + 1) % 200), 20);
+    return () => clearInterval(id);
   }, []);
 
-  const t = (frame / 120) * Math.PI * 2;
-  const ease = (Math.sin(t - Math.PI / 2) + 1) / 2;
-  const s = Math.sin(t);
+  const phase = (frame / 200) * Math.PI * 2;
+  const e = (Math.sin(phase - Math.PI / 2) + 1) / 2; // smooth 0→1→0
+  const g = accentColor || "#d4af37";
 
-  const skin = color;
-  const dark = `${color}cc`;
-  const hi = `${color}33`;
-  const muscleActive = `${color}88`;
+  // SVG element builders
+  const E = (tag, attrs, ...children) => {
+    const ns = "http://www.w3.org/2000/svg";
+    return { tag, attrs, children };
+  };
 
-  // Shared body part renderers
-  const Head = ({ cx, cy, r = 9 }) => (
+  // Build JSX-like SVG using React
+  const Poly = ({ pts, fill, stroke, opacity = 1, strokeWidth = 0.8 }) => (
+    <polygon points={pts.map(p => p.join(",")).join(" ")} fill={fill} stroke={stroke} strokeWidth={stroke ? strokeWidth : 0} opacity={opacity} />
+  );
+  const Ell = ({ cx, cy, rx, ry, fill, opacity = 1, stroke, sw = 0.6 }) => (
+    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={fill} stroke={stroke} strokeWidth={stroke ? sw : 0} opacity={opacity} />
+  );
+  const Circ = ({ cx, cy, r, fill, stroke, sw = 0.6, opacity = 1 }) => (
+    <circle cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth={stroke ? sw : 0} opacity={opacity} />
+  );
+  const Head = ({ cx, cy }) => (
     <g>
-      <circle cx={cx} cy={cy} r={r} fill={skin} />
-      <circle cx={cx} cy={cy} r={r * 0.85} fill="none" stroke={dark} strokeWidth="0.8" opacity="0.3" />
-      <circle cx={cx - 3} cy={cy - 2} r={1.8} fill="#060400" opacity="0.6" />
-      <circle cx={cx + 3} cy={cy - 2} r={1.8} fill="#060400" opacity="0.6" />
-      <path d={`M${cx - 2.5} ${cy + 3} Q${cx} ${cy + 5.5} ${cx + 2.5} ${cy + 3}`} stroke="#060400" strokeWidth="1.2" fill="none" opacity="0.4" />
+      <Ell cx={cx} cy={cy} rx={10} ry={11} fill={SKIN_C} stroke={SKIN_DARK} sw={0.7} />
+      <Circ cx={cx - 3} cy={cy - 1} r={1.8} fill="#2a1a0a" />
+      <Circ cx={cx + 3} cy={cy - 1} r={1.8} fill="#2a1a0a" />
+      <path d={`M${cx - 2.5} ${cy + 3.5} Q${cx} ${cy + 6} ${cx + 2.5} ${cy + 3.5}`} stroke="#2a1a0a" strokeWidth="1" fill="none" />
+      <Ell cx={cx} cy={cy + 11} rx={5} ry={4} fill={SKIN_C} /> {/* neck */}
     </g>
   );
-
-  const Torso = ({ x1, y1, x2, y2, w = 11 }) => {
-    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
-    const nx = (-dy / len) * w, ny = (dx / len) * w;
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    return (
-      <g>
-        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.65},${y2 - ny * 0.65} ${x2 + nx * 0.65},${y2 + ny * 0.65}`} fill={skin} />
-        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.65},${y2 - ny * 0.65} ${x2 + nx * 0.65},${y2 + ny * 0.65}`} fill="none" stroke={dark} strokeWidth="0.6" opacity="0.25" />
-        <ellipse cx={mx} cy={my} rx={w * 0.45} ry={len * 0.2} transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI} ${mx} ${my})`} fill={muscleActive} opacity="0.4" />
-      </g>
-    );
-  };
-
-  const Limb = ({ x1, y1, x2, y2, w = 6, glow = false }) => {
-    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
-    const nx = (-dy / len) * w, ny = (dx / len) * w;
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    return (
-      <g>
-        <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.5},${y2 - ny * 0.5} ${x2 + nx * 0.5},${y2 + ny * 0.5}`} fill={skin} />
-        {glow && <polygon points={`${x1 + nx},${y1 + ny} ${x1 - nx},${y1 - ny} ${x2 - nx * 0.5},${y2 - ny * 0.5} ${x2 + nx * 0.5},${y2 + ny * 0.5}`} fill={color} opacity={0.1 + ease * 0.25} />}
-        <ellipse cx={mx} cy={my} rx={w * 0.45} ry={len * 0.22} transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI} ${mx} ${my})`} fill={muscleActive} opacity="0.35" />
-        <circle cx={x2} cy={y2} r={w * 0.55} fill={dark} opacity="0.6" />
-      </g>
-    );
-  };
-
-  const Shadow = ({ cx, rx = 20, opacity = 0.08 }) => (
-    <ellipse cx={cx} cy="108" rx={rx} ry="4" fill={color} opacity={opacity} />
+  const Joint = ({ cx, cy, r = 4 }) => (
+    <Circ cx={cx} cy={cy} r={r} fill={BONE_C} stroke={SKIN_DARK} sw={0.6} />
   );
 
-  const animations = {
-    squat: () => {
-      const dip = ease * 24;
-      const kOut = ease * 9;
-      const hY = 38 + dip;
-      const kY = 66 + dip * 0.35;
-      return (
-        <svg viewBox="0 0 120 118" width={size} height={size * 0.98}>
-          <Shadow cx="60" rx={20 + dip * 0.4} opacity={0.06 + ease * 0.06} />
-          <rect x="38" y="104" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <rect x="68" y="104" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <Limb x1={45} y1={kY} x2={45} y2={106} w={5.5} />
-          <Limb x1={75} y1={kY} x2={75} y2={106} w={5.5} />
-          <Limb x1={57} y1={hY + 10} x2={45 - kOut} y2={kY} w={8} glow />
-          <Limb x1={63} y1={hY + 10} x2={75 + kOut} y2={kY} w={8} glow />
-          <Torso x1={60} y1={hY - 14} x2={60} y2={hY + 10} w={11} />
-          <Limb x1={53} y1={hY - 5} x2={36} y2={hY + 8 - dip * 0.3} w={4.5} />
-          <Limb x1={67} y1={hY - 5} x2={84} y2={hY + 8 - dip * 0.3} w={4.5} />
-          <Head cx={60} cy={hY - 24} />
-          <ellipse cx={46} cy={kY - 10} rx="5" ry="9" fill={color} opacity={0.1 + ease * 0.22} transform={`rotate(-15 46 ${kY - 10})`} />
-          <ellipse cx={74} cy={kY - 10} rx="5" ry="9" fill={color} opacity={0.1 + ease * 0.22} transform={`rotate(15 74 ${kY - 10})`} />
-        </svg>
-      );
-    },
-
-    pushup: () => {
-      const lift = ease * 18;
-      const bY = 62 - lift;
-      const eFlare = ease * 32;
-      return (
-        <svg viewBox="0 0 170 100" width={size * 1.06} height={size * 0.625}>
-          <Shadow cx="85" rx={35 + lift} opacity={0.07 + ease * 0.04} />
-          <rect x="120" y="79" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <Limb x1={80} y1={bY + 14} x2={120} y2={82} w={8} />
-          <Torso x1={44} y1={bY + 4} x2={80} y2={bY + 14} w={10} />
-          <Limb x1={52} y1={bY + 4} x2={44 - eFlare * 0.28} y2={bY + 16 + eFlare * 0.4} w={5.5} glow />
-          <Limb x1={52} y1={bY + 4} x2={62 + eFlare * 0.28} y2={bY + 16 + eFlare * 0.4} w={5.5} glow />
-          <Limb x1={44 - eFlare * 0.28} y1={bY + 16 + eFlare * 0.4} x2={34} y2={80} w={4.5} />
-          <Limb x1={62 + eFlare * 0.28} y1={bY + 16 + eFlare * 0.4} x2={70} y2={80} w={4.5} />
-          <circle cx="34" cy="80" r="5" fill={dark} opacity="0.8" />
-          <circle cx="70" cy="80" r="5" fill={dark} opacity="0.8" />
-          <Head cx={34} cy={bY - 6} />
-          <ellipse cx="52" cy={bY + 8} rx="8" ry="4.5" fill={color} opacity={0.1 + ease * 0.25} transform={`rotate(-8 52 ${bY + 8})`} />
-        </svg>
-      );
-    },
-
-    deadlift: () => {
-      const liftH = ease * 28;
-      const hipA = (1 - ease) * 30;
-      const hY = 72 - liftH * 0.5;
-      const barY = 88 - liftH;
-      const shX = 60 - hipA * 0.4;
-      const shY = hY - 26 - hipA * 0.3;
-      return (
-        <svg viewBox="0 0 160 112" width={size} height={size * 0.7}>
-          <Shadow cx="80" rx="24" opacity="0.07" />
-          <rect x="26" y={barY - 4} width="108" height="9" rx="4.5" fill={dark} opacity="0.85" />
-          <rect x="22" y={barY - 11} width="14" height="22" rx="7" fill={dark} opacity="0.7" />
-          <rect x="124" y={barY - 11} width="14" height="22" rx="7" fill={dark} opacity="0.7" />
-          <rect x="14" y={barY - 16} width="14" height="32" rx="7" fill={dark} opacity="0.45" />
-          <rect x="132" y={barY - 16} width="14" height="32" rx="7" fill={dark} opacity="0.45" />
-          <rect x="52" y="92" width="13" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <rect x="75" y="92" width="13" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <Limb x1={58} y1={hY + 4} x2={58} y2={94} w={7.5} />
-          <Limb x1={82} y1={hY + 4} x2={82} y2={94} w={7.5} />
-          <Torso x1={shX} y1={shY} x2={70} y2={hY + 4} w={10} />
-          <Limb x1={shX - 2} y1={shY + 7} x2={50} y2={barY + 3} w={5.5} glow />
-          <Limb x1={shX + 10} y1={shY + 7} x2={90} y2={barY + 3} w={5.5} glow />
-          <circle cx="50" cy={barY + 3} r="5.5" fill={dark} opacity="0.85" />
-          <circle cx="90" cy={barY + 3} r="5.5" fill={dark} opacity="0.85" />
-          <Head cx={shX - 4} cy={shY - 11} />
-          <ellipse cx={shX + 4} cy={shY + 16} rx="6" ry="11" fill={color} opacity={0.08 + ease * 0.22} transform={`rotate(${-hipA * 0.5} ${shX + 4} ${shY + 16})`} />
-        </svg>
-      );
-    },
-
-    pullup: () => {
-      const pullH = ease * 22;
-      const bY = 34 + pullH;
-      const elbowFlare = ease * 20;
-      return (
-        <svg viewBox="0 0 120 135" width={size} height={size * 1.125}>
-          <rect x="10" y="8" width="100" height="11" rx="5.5" fill={dark} opacity="0.85" />
-          <rect x="16" y="8" width="9" height="26" rx="4.5" fill={dark} opacity="0.5" />
-          <rect x="95" y="8" width="9" height="26" rx="4.5" fill={dark} opacity="0.5" />
-          <Shadow cx="60" rx="20" opacity="0.05" />
-          <circle cx="32" cy="24" r="5.5" fill={dark} opacity="0.85" />
-          <circle cx="88" cy="24" r="5.5" fill={dark} opacity="0.85" />
-          <Limb x1={32} y1={24} x2={42 - elbowFlare} y2={bY - 20 + 8} w={4.5} />
-          <Limb x1={88} y1={24} x2={78 + elbowFlare} y2={bY - 20 + 8} w={4.5} />
-          <Limb x1={42 - elbowFlare} y1={bY - 20 + 8} x2={50} y2={bY - 14} w={6.5} glow />
-          <Limb x1={78 + elbowFlare} y1={bY - 20 + 8} x2={70} y2={bY - 14} w={6.5} glow />
-          <Torso x1={60} y1={bY - 14} x2={60} y2={bY + 12} w={11} />
-          <Limb x1={56} y1={bY + 12} x2={52} y2={bY + 40} w={7.5} />
-          <Limb x1={64} y1={bY + 12} x2={68} y2={bY + 40} w={7.5} />
-          <Limb x1={52} y1={bY + 40} x2={54} y2={bY + 58} w={5.5} />
-          <Limb x1={68} y1={bY + 40} x2={66} y2={bY + 58} w={5.5} />
-          <Head cx={60} cy={bY - 24} />
-          <ellipse cx={43 - elbowFlare * 0.5} cy={bY - 10} rx="4" ry="7" fill={color} opacity={0.08 + ease * 0.28} />
-          <ellipse cx={77 + elbowFlare * 0.5} cy={bY - 10} rx="4" ry="7" fill={color} opacity={0.08 + ease * 0.28} />
-        </svg>
-      );
-    },
-
-    plank: () => {
-      const breathe = s * 1.4;
-      const glow = (Math.sin(t * 2) + 1) / 2;
-      return (
-        <svg viewBox="0 0 188 92" width={size * 1.175} height={size * 0.575}>
-          <Shadow cx="98" rx="74" opacity="0.06" />
-          <rect x="140" y="73" width="16" height="8" rx="4" fill={dark} opacity="0.85" />
-          <Limb x1={82} y1={56 + breathe} x2={140} y2={76} w={10} />
-          <Torso x1={42} y1={49 + breathe * 0.6} x2={82} y2={56 + breathe} w={12} />
-          <ellipse cx="62" cy={52 + breathe * 0.7} rx="12" ry="5.5" fill={color} opacity={0.05 + glow * 0.14} transform={`rotate(-8 62 ${52 + breathe * 0.7})`} />
-          <Limb x1={50} y1={49 + breathe * 0.6} x2={34} y2={64} w={6.5} />
-          <Limb x1={50} y1={49 + breathe * 0.6} x2={64} y2={62} w={6.5} />
-          <Limb x1={34} y1={64} x2={26} y2={76} w={5.5} />
-          <Limb x1={64} y1={62} x2={72} y2={76} w={5.5} />
-          <circle cx="26" cy="76" r="6" fill={dark} opacity="0.8" />
-          <circle cx="72" cy="76" r="6" fill={dark} opacity="0.8" />
-          <Head cx={28} cy={41 + breathe * 0.4} />
-          <ellipse cx="84" cy={55 + breathe * 0.9} rx="8" ry="5.5" fill={color} opacity={0.07 + glow * 0.11} />
-        </svg>
-      );
-    },
-
-    row: () => {
-      const pull = ease * 16;
-      const lean = 15;
-      return (
-        <svg viewBox="0 0 160 100" width={size} height={size * 0.625}>
-          <Shadow cx="80" rx="28" opacity="0.07" />
-          <rect x="20" y="85" width="16" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <rect x="110" y="85" width="16" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <Limb x1={55} y1={52} x2={28} y2={87} w={7} />
-          <Limb x1={72} y1={52} x2={118} y2={87} w={7} />
-          <Torso x1={38} y1={44} x2={72} y2={52} w={10} />
-          <Limb x1={46} y1={46} x2={46 + pull} y2={55} w={5.5} glow />
-          <Limb x1={46 + pull} y1={55} x2={80 + pull * 0.5} y2={48} w={4.5} />
-          <circle cx={80 + pull * 0.5} cy="48" r="5" fill={dark} opacity="0.8" />
-          <Head cx={36} cy={35} />
-          <ellipse cx="50" cy="47" rx="7" ry="4" fill={color} opacity={0.1 + ease * 0.25} transform="rotate(-15 50 47)" />
-        </svg>
-      );
-    },
-
-    press: () => {
-      const pressH = ease * 20;
-      const armY = 40 - pressH;
-      return (
-        <svg viewBox="0 0 120 140" width={size * 0.75} height={size * 1.1}>
-          <Shadow cx="60" rx="18" opacity="0.07" />
-          <rect x="46" y="128" width="12" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <rect x="62" y="128" width="12" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <Limb x1={52} y1={96} x2={52} y2={130} w={6} />
-          <Limb x1={68} y1={96} x2={68} y2={130} w={6} />
-          <Torso x1={60} y1={58} x2={60} y2={96} w={11} />
-          <Limb x1={53} y1={65} x2={36} y2={armY + 30} w={5.5} glow />
-          <Limb x1={67} y1={65} x2={84} y2={armY + 30} w={5.5} glow />
-          <Limb x1={36} y1={armY + 30} x2={30} y2={armY + 10} w={4.5} />
-          <Limb x1={84} y1={armY + 30} x2={90} y2={armY + 10} w={4.5} />
-          <rect x="24" y={armY + 5} width="72" height="8" rx="4" fill={dark} opacity="0.8" />
-          <rect x="18" y={armY - 4} width="14" height="22" rx="7" fill={dark} opacity="0.65" />
-          <rect x="88" y={armY - 4} width="14" height="22" rx="7" fill={dark} opacity="0.65" />
-          <Head cx={60} cy={48} />
-          <ellipse cx="35" cy={armY + 22} rx="4" ry="7" fill={color} opacity={0.1 + ease * 0.24} />
-          <ellipse cx="85" cy={armY + 22} rx="4" ry="7" fill={color} opacity={0.1 + ease * 0.24} />
-        </svg>
-      );
-    },
-
-    lunge: () => {
-      const step = ease * 22;
-      const hY = 44 + step * 0.3;
-      return (
-        <svg viewBox="0 0 120 125" width={size * 0.75} height={size * 1.04}>
-          <Shadow cx="60" rx="22" opacity="0.07" />
-          <rect x="26" y="110" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <rect x="76" y="110" width="14" height="7" rx="3.5" fill={dark} opacity="0.8" />
-          <Limb x1={58} y1={hY + 10} x2={33} y2={112} w={7.5} glow />
-          <Limb x1={33} y1={88} x2={33} y2={112} w={6} />
-          <Limb x1={62} y1={hY + 10} x2={83} y2={80 + step * 0.3} w={7.5} glow />
-          <Limb x1={83} y1={80 + step * 0.3} x2={83} y2={112} w={6} />
-          <Torso x1={60} y1={hY - 14} x2={60} y2={hY + 10} w={11} />
-          <Limb x1={53} y1={hY} x2={42} y2={hY + 12} w={4.5} />
-          <Limb x1={67} y1={hY} x2={78} y2={hY + 12} w={4.5} />
-          <Head cx={60} cy={hY - 24} />
-          <ellipse cx="36" cy="88" rx="5" ry="9" fill={color} opacity={0.1 + ease * 0.2} />
-        </svg>
-      );
-    },
+  const renderSquat = () => {
+    const dip = e * 32;
+    const hipY = 72 + dip * 0.65;
+    const kneeY = 106 + dip * 0.28;
+    const footY = 142;
+    const kOut = e * 8;
+    return (
+      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+        {/* shadow */}
+        <Ell cx={50} cy={152} rx={22 - dip * 0.18} ry={3.5} fill="#000" opacity={0.06 + e * 0.05} />
+        {/* feet */}
+        <Ell cx={34} cy={footY} rx={10} ry={4.5} fill={SKIN_DARK} />
+        <Ell cx={66} cy={footY} rx={10} ry={4.5} fill={SKIN_DARK} />
+        {/* shins */}
+        <Poly pts={[[33,kneeY],[37,kneeY],[39,footY-2],[29,footY-2]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[63,kneeY],[67,kneeY],[71,footY-2],[61,footY-2]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* quad muscle glow */}
+        <Poly pts={[[39,hipY+10],[33-kOut,kneeY],[40-kOut,kneeY],[46,hipY+12]]} fill={g} opacity={0.15 + e * 0.55} />
+        <Poly pts={[[61,hipY+10],[67+kOut,kneeY],[60+kOut,kneeY],[54,hipY+12]]} fill={g} opacity={0.15 + e * 0.55} />
+        {/* thighs */}
+        <Poly pts={[[40,hipY+10],[33-kOut,kneeY],[40-kOut,kneeY],[47,hipY+12]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[60,hipY+10],[67+kOut,kneeY],[60+kOut,kneeY],[53,hipY+12]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* glute glow */}
+        <Ell cx={50} cy={hipY + 13} rx={14} ry={9} fill={g} opacity={0.1 + e * 0.45} />
+        {/* torso */}
+        <Poly pts={[[41,hipY],[43,hipY+12],[57,hipY+12],[59,hipY],[56,48],[44,48]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* spine line */}
+        <line x1="50" y1={hipY} x2="50" y2="56" stroke={SKIN_DARK} strokeWidth="0.6" opacity="0.4" />
+        {/* arms */}
+        <Poly pts={[[43,55],[34,78],[38,79],[46,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[57,55],[66,78],[62,79],[54,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[34,78],[27,96],[31,97],[38,79]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[66,78],[73,96],[69,97],[62,79]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* joint dots */}
+        <Joint cx={33-kOut} cy={kneeY} r={4} />
+        <Joint cx={67+kOut} cy={kneeY} r={4} />
+        <Joint cx={34} cy={78} r={3.5} />
+        <Joint cx={66} cy={78} r={3.5} />
+        <Head cx={50} cy={36} />
+      </svg>
+    );
   };
 
-  // Map common exercise names to animation keys
+  const renderDeadlift = () => {
+    const lift = e;
+    const barY = lerp(122, 80, lift);
+    const hipY = lerp(92, 64, lift * 0.75);
+    const hipAngle = (1 - lift) * 38;
+    const tx = 50 - hipAngle * 0.38;
+    const ty = hipY - 28 - hipAngle * 0.28;
+    return (
+      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+        {/* barbell */}
+        <rect x="14" y={barY - 3.5} width="72" height="7" rx="3.5" fill="#555" />
+        <Ell cx={14} cy={barY} rx={6} ry={11} fill="#666" />
+        <Ell cx={86} cy={barY} rx={6} ry={11} fill="#666" />
+        <Ell cx={9} cy={barY} rx={6} ry={13} fill="#444" />
+        <Ell cx={91} cy={barY} rx={6} ry={13} fill="#444" />
+        {/* shadow */}
+        <Ell cx={50} cy={152} rx={22} ry={3.5} fill="#000" opacity="0.07" />
+        {/* feet */}
+        <Ell cx={36} cy={144} rx={10} ry={4.5} fill={SKIN_DARK} />
+        <Ell cx={64} cy={144} rx={10} ry={4.5} fill={SKIN_DARK} />
+        {/* legs */}
+        <Poly pts={[[34,hipY+4],[32,142],[40,142],[42,hipY+4]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[58,hipY+4],[60,142],[68,142],[66,hipY+4]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* hamstring + glute glow */}
+        <Ell cx={50} cy={hipY + 8} rx={14} ry={10} fill={g} opacity={0.12 + lift * 0.5} />
+        {/* torso */}
+        <Poly pts={[[tx-10,ty],[tx+10,ty],[54,hipY+4],[46,hipY+4]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* back muscle glow */}
+        <Poly pts={[[tx-4,ty+6],[tx-2,hipY-2],[tx+2,hipY-2],[tx+4,ty+6]]} fill={g} opacity={0.18 + lift * 0.52} />
+        {/* arms */}
+        <Poly pts={[[tx-7,ty+9],[26,barY-2],[30,barY+3],[tx-2,ty+13]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[tx+7,ty+9],[74,barY-2],[70,barY+3],[tx+2,ty+13]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* hands */}
+        <Circ cx={28} cy={barY} r={5} fill={SKIN_DARK} />
+        <Circ cx={72} cy={barY} r={5} fill={SKIN_DARK} />
+        {/* joints */}
+        <Joint cx={36} cy={hipY + 4} r={4} />
+        <Joint cx={64} cy={hipY + 4} r={4} />
+        <Head cx={tx - 4} cy={ty - 11} />
+      </svg>
+    );
+  };
+
+  const renderPullup = () => {
+    const pull = e;
+    const bodyY = lerp(58, 34, pull);
+    const eFlare = pull * 22;
+    return (
+      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+        {/* bar */}
+        <rect x="8" y="10" width="84" height="10" rx="5" fill="#555" />
+        <rect x="13" y="10" width="8" height="22" rx="4" fill="#444" />
+        <rect x="79" y="10" width="8" height="22" rx="4" fill="#444" />
+        {/* shadow */}
+        <Ell cx={50} cy={155} rx={18} ry={3} fill="#000" opacity="0.05" />
+        {/* hands */}
+        <Circ cx={28} cy={22} r={5.5} fill={SKIN_DARK} />
+        <Circ cx={72} cy={22} r={5.5} fill={SKIN_DARK} />
+        {/* forearms */}
+        <Poly pts={[[28,22],[33-eFlare*0.28,bodyY-22],[37-eFlare*0.28,bodyY-19],[32,25]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[72,22],[67+eFlare*0.28,bodyY-22],[63+eFlare*0.28,bodyY-19],[68,25]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* bicep glow */}
+        <Ell cx={35-eFlare*0.2} cy={bodyY-10} rx={5} ry={9} fill={g} opacity={0.12 + pull * 0.58} />
+        <Ell cx={65+eFlare*0.2} cy={bodyY-10} rx={5} ry={9} fill={g} opacity={0.12 + pull * 0.58} />
+        {/* upper arms */}
+        <Poly pts={[[33-eFlare*0.28,bodyY-22],[39,bodyY-11],[43,bodyY-8],[37-eFlare*0.28,bodyY-20]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[67+eFlare*0.28,bodyY-22],[61,bodyY-11],[57,bodyY-8],[63+eFlare*0.28,bodyY-20]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* lat glow */}
+        <Poly pts={[[40,bodyY-8],[38,bodyY+20],[62,bodyY+20],[60,bodyY-8]]} fill={g} opacity={0.1 + pull * 0.38} />
+        {/* torso */}
+        <Poly pts={[[40,bodyY-8],[38,bodyY+20],[62,bodyY+20],[60,bodyY-8]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* core lines */}
+        <Ell cx={50} cy={bodyY+4} rx={4} ry={3} fill={SKIN_DARK} opacity="0.22" />
+        <Ell cx={50} cy={bodyY+12} rx={4} ry={3} fill={SKIN_DARK} opacity="0.22" />
+        {/* legs */}
+        <Poly pts={[[43,bodyY+20],[41,bodyY+55],[47,bodyY+55],[47,bodyY+22]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[57,bodyY+20],[53,bodyY+55],[59,bodyY+55],[59,bodyY+22]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[41,bodyY+55],[39,bodyY+80],[45,bodyY+80],[47,bodyY+55]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[53,bodyY+55],[51,bodyY+80],[57,bodyY+80],[59,bodyY+55]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* joints */}
+        <Joint cx={33-eFlare*0.28} cy={bodyY-22} r={3.5} />
+        <Joint cx={67+eFlare*0.28} cy={bodyY-22} r={3.5} />
+        <Head cx={50} cy={bodyY - 20} />
+      </svg>
+    );
+  };
+
+  const renderPushup = () => {
+    const lift = e;
+    const bY = 72 - lift * 20;
+    const eFlare = lift * 28;
+    return (
+      <svg viewBox="0 0 140 100" width={size * 1.2} height={size * 0.72}>
+        {/* shadow */}
+        <Ell cx={70} cy={94} rx={46 + lift * 8} ry={3.5} fill="#000" opacity={0.06 + lift * 0.04} />
+        {/* feet */}
+        <Ell cx={118} cy={84} rx={10} ry={4.5} fill={SKIN_DARK} />
+        {/* legs */}
+        <Poly pts={[[70,bY+15],[114,86],[122,84],[76,bY+13]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* torso */}
+        <Poly pts={[[32,bY+4],[70,bY+15],[76,bY+13],[36,bY+2]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* chest glow */}
+        <Ell cx={46} cy={bY+8} rx={10} ry={5} fill={g} opacity={0.12 + lift * 0.52} transform={`rotate(-8,46,${bY+8})`} />
+        {/* upper arms */}
+        <Poly pts={[[36,bY+3],[25-eFlare*0.25,bY+16+eFlare*0.3],[29-eFlare*0.25,bY+18+eFlare*0.3],[40,bY+5]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[36,bY+3],[47+eFlare*0.25,bY+16+eFlare*0.3],[43+eFlare*0.25,bY+18+eFlare*0.3],[40,bY+5]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* tricep glow */}
+        <Ell cx={25-eFlare*0.15} cy={bY+14+eFlare*0.2} rx={4} ry={7} fill={g} opacity={0.1 + lift * 0.48} />
+        <Ell cx={47+eFlare*0.15} cy={bY+14+eFlare*0.2} rx={4} ry={7} fill={g} opacity={0.1 + lift * 0.48} />
+        {/* forearms */}
+        <Poly pts={[[25-eFlare*0.25,bY+16+eFlare*0.3],[18,82],[22,84],[29-eFlare*0.25,bY+18+eFlare*0.3]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[47+eFlare*0.25,bY+16+eFlare*0.3],[52,82],[56,84],[43+eFlare*0.25,bY+18+eFlare*0.3]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* hands */}
+        <Circ cx={20} cy={83} r={5} fill={SKIN_DARK} />
+        <Circ cx={54} cy={83} r={5} fill={SKIN_DARK} />
+        {/* joints */}
+        <Joint cx={25-eFlare*0.25} cy={bY+17+eFlare*0.3} r={3.5} />
+        <Joint cx={47+eFlare*0.25} cy={bY+17+eFlare*0.3} r={3.5} />
+        <Head cx={22} cy={bY - 6} />
+      </svg>
+    );
+  };
+
+  const renderPress = () => {
+    const pressUp = e;
+    const armY = lerp(70, 28, pressUp);
+    return (
+      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+        {/* bar */}
+        <rect x="16" y={armY - 4} width="68" height="8" rx="4" fill="#555" />
+        <Ell cx={16} cy={armY} rx={6} ry={10} fill="#666" />
+        <Ell cx={84} cy={armY} rx={6} ry={10} fill="#666" />
+        <Ell cx={10} cy={armY} rx={6} ry={12} fill="#444" />
+        <Ell cx={90} cy={armY} rx={6} ry={12} fill="#444" />
+        {/* shadow */}
+        <Ell cx={50} cy={152} rx={18} ry={3} fill="#000" opacity="0.07" />
+        {/* feet */}
+        <Ell cx={38} cy={146} rx={9} ry={4} fill={SKIN_DARK} />
+        <Ell cx={62} cy={146} rx={9} ry={4} fill={SKIN_DARK} />
+        {/* legs */}
+        <Poly pts={[[40,100],[36,144],[44,144],[44,100]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[60,100],[56,144],[64,144],[64,100]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* torso */}
+        <Poly pts={[[41,57],[39,100],[61,100],[59,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* deltoid glow */}
+        <Ell cx={36} cy={63} rx={9} ry={8} fill={g} opacity={0.15 + pressUp * 0.6} />
+        <Ell cx={64} cy={63} rx={9} ry={8} fill={g} opacity={0.15 + pressUp * 0.6} />
+        {/* tricep glow */}
+        <Ell cx={32} cy={lerp(72,48,pressUp)} rx={4.5} ry={9} fill={g} opacity={0.1 + pressUp * 0.5} />
+        <Ell cx={68} cy={lerp(72,48,pressUp)} rx={4.5} ry={9} fill={g} opacity={0.1 + pressUp * 0.5} />
+        {/* upper arms */}
+        <Poly pts={[[40,62],[28,lerp(76,44,pressUp)],[32,lerp(78,46,pressUp)],[44,64]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[60,62],[72,lerp(76,44,pressUp)],[68,lerp(78,46,pressUp)],[56,64]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* forearms */}
+        <Poly pts={[[28,lerp(76,44,pressUp)],[20,armY+3],[24,armY+5],[32,lerp(78,46,pressUp)]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[72,lerp(76,44,pressUp)],[80,armY+3],[76,armY+5],[68,lerp(78,46,pressUp)]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* joints */}
+        <Joint cx={28} cy={lerp(76,44,pressUp)} r={3.5} />
+        <Joint cx={72} cy={lerp(76,44,pressUp)} r={3.5} />
+        <Head cx={50} cy={44} />
+      </svg>
+    );
+  };
+
+  const renderRow = () => {
+    const pull = e;
+    const elbowBack = pull * 18;
+    return (
+      <svg viewBox="0 0 140 110" width={size * 1.2} height={size * 0.79}>
+        {/* bench */}
+        <rect x="60" y="82" width="72" height="10" rx="5" fill="#333" opacity="0.7" />
+        <rect x="62" y="92" width="8" height="16" rx="4" fill="#222" opacity="0.7" />
+        <rect x="116" y="92" width="8" height="16" rx="4" fill="#222" opacity="0.7" />
+        {/* shadow */}
+        <Ell cx={70} cy={106} rx={50} ry={3} fill="#000" opacity="0.06" />
+        {/* feet */}
+        <Ell cx={16} cy={100} rx={9} ry={4} fill={SKIN_DARK} />
+        <Ell cx={36} cy={100} rx={9} ry={4} fill={SKIN_DARK} />
+        {/* leg on ground */}
+        <Poly pts={[[14,72],[12,98],[20,98],[20,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[32,72],[30,98],[38,98],[38,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* knee on bench */}
+        <Ell cx={96} cy={82} rx={10} ry={7} fill={SKIN_C} stroke={SKIN_DARK} sw={0.7} />
+        {/* horizontal torso */}
+        <Poly pts={[[30,52],[96,72],[96,80],[30,62]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* back muscle glow */}
+        <Poly pts={[[34,54],[90,72],[90,76],[34,60]]} fill={g} opacity={0.12 + pull * 0.48} />
+        {/* support arm */}
+        <Poly pts={[[30,55],[26,76],[34,77],[34,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Circ cx={30} cy={78} r={5} fill={SKIN_DARK} />
+        {/* pulling arm - moves back */}
+        <Poly pts={[[50,58],[22+elbowBack,68],[26+elbowBack,72],[54,62]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[22+elbowBack,68],[28+elbowBack,50],[32+elbowBack,52],[26+elbowBack,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* bicep glow */}
+        <Ell cx={24+elbowBack} cy={61} rx={4} ry={8} fill={g} opacity={0.15 + pull * 0.55} />
+        {/* dumbbell */}
+        <Circ cx={30+elbowBack} cy={48} r={5} fill="#444" />
+        <rect x={26+elbowBack} y={45} width={10} height={6} rx={3} fill="#555" />
+        {/* joint dots */}
+        <Joint cx={22+elbowBack} cy={68} r={3.5} />
+        <Head cx={28} cy={40} />
+      </svg>
+    );
+  };
+
+  const renderLunge = () => {
+    const step = e;
+    const frontKneeY = lerp(96, 118, step);
+    return (
+      <svg viewBox="0 0 100 158" width={size} height={size * 1.13}>
+        {/* shadow */}
+        <Ell cx={50} cy={152} rx={22} ry={3.5} fill="#000" opacity="0.07" />
+        {/* back foot */}
+        <Ell cx={72} cy={144} rx={8} ry={4} fill={SKIN_DARK} />
+        {/* front foot */}
+        <Ell cx={30} cy={148} rx={9} ry={4} fill={SKIN_DARK} />
+        {/* back shin (on toes) */}
+        <Poly pts={[[68,110],[64,142],[72,142],[76,110]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* back thigh */}
+        <Poly pts={[[52,72],[64,110],[72,110],[60,72]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* front shin */}
+        <Poly pts={[[28,frontKneeY],[26,146],[34,146],[36,frontKneeY]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* front thigh - quad glow */}
+        <Poly pts={[[44,74],[28,frontKneeY],[36,frontKneeY],[52,76]]} fill={g} opacity={0.15 + step * 0.55} />
+        <Poly pts={[[44,74],[28,frontKneeY],[36,frontKneeY],[52,76]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* glute glow */}
+        <Ell cx={54} cy={76} rx={10} ry={7} fill={g} opacity={0.12 + step * 0.45} />
+        {/* torso */}
+        <Poly pts={[[43,44],[41,74],[57,74],[57,44]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* spine */}
+        <line x1="50" y1="52" x2="50" y2="74" stroke={SKIN_DARK} strokeWidth="0.6" opacity="0.4" />
+        {/* arms */}
+        <Poly pts={[[43,50],[36,70],[40,71],[46,52]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[57,50],[64,70],[60,71],[54,52]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* joints */}
+        <Joint cx={28} cy={frontKneeY} r={4} />
+        <Joint cx={68} cy={110} r={4} />
+        <Head cx={50} cy={32} />
+      </svg>
+    );
+  };
+
+  const renderPlank = () => {
+    const breathe = Math.sin((frame / 200) * Math.PI * 4) * 1.2;
+    return (
+      <svg viewBox="0 0 160 80" width={size * 1.35} height={size * 0.57}>
+        {/* shadow */}
+        <Ell cx={82} cy={76} rx={64} ry={3} fill="#000" opacity="0.07" />
+        {/* feet */}
+        <Ell cx={136} cy={68} rx={10} ry={4} fill={SKIN_DARK} />
+        {/* legs */}
+        <Poly pts={[[80,50+breathe],[130,68],[136,66],[84,48+breathe]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* torso */}
+        <Poly pts={[[36,43+breathe*0.6],[80,50+breathe],[84,48+breathe],[40,41+breathe*0.6]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* core glow */}
+        <Ell cx={58} cy={46+breathe*0.8} rx={14} ry={4.5} fill={g} opacity={0.12 + Math.abs(breathe) * 0.08} transform={`rotate(-8,58,${46+breathe*0.8})`} />
+        {/* upper arms */}
+        <Poly pts={[[40,42+breathe*0.6],[28,56],[32,58],[44,44+breathe*0.6]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[44,41+breathe*0.6],[56,55],[52,57],[40,43+breathe*0.6]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* forearms to elbows */}
+        <Poly pts={[[28,56],[20,67],[24,69],[32,58]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        <Poly pts={[[56,55],[62,67],[58,69],[52,57]]} fill={SKIN_C} stroke={SKIN_DARK} />
+        {/* elbow pads */}
+        <Circ cx={22} cy={68} r={5.5} fill={SKIN_DARK} />
+        <Circ cx={60} cy={68} r={5.5} fill={SKIN_DARK} />
+        {/* joint dots */}
+        <Joint cx={28} cy={56} r={3.5} />
+        <Joint cx={56} cy={55} r={3.5} />
+        <Head cx={20} cy={32+breathe*0.4} />
+      </svg>
+    );
+  };
+
   const getAnimKey = (id) => {
-    const lower = (id || "").toLowerCase();
-    if (lower.includes("squat") || lower.includes("goblet") || lower.includes("hack")) return "squat";
-    if (lower.includes("push") || lower.includes("bench") || lower.includes("chest") || lower.includes("dip")) return "pushup";
-    if (lower.includes("deadlift") || lower.includes("rdl") || lower.includes("sumo")) return "deadlift";
-    if (lower.includes("pull") || lower.includes("chin") || lower.includes("lat")) return "pullup";
-    if (lower.includes("plank") || lower.includes("bird") || lower.includes("crawl")) return "plank";
-    if (lower.includes("row") || lower.includes("cable") || lower.includes("back")) return "row";
-    if (lower.includes("press") || lower.includes("ohp") || lower.includes("shoulder") || lower.includes("military")) return "press";
-    if (lower.includes("lunge") || lower.includes("step")) return "lunge";
-    return "squat"; // default
+    const l = (id || "").toLowerCase();
+    if (l.includes("squat") || l.includes("goblet") || l.includes("leg press") || l.includes("lunge") && l.includes("wall")) return "squat";
+    if (l.includes("deadlift") || l.includes("rdl") || l.includes("sumo") || l.includes("hip thrust")) return "deadlift";
+    if (l.includes("pull") || l.includes("chin") || l.includes("lat")) return "pullup";
+    if (l.includes("push-up") || l.includes("pushup") || l.includes("push up") || l.includes("bench") || l.includes("dip") || l.includes("fly")) return "pushup";
+    if (l.includes("press") && (l.includes("shoulder") || l.includes("ohp") || l.includes("over") || l.includes("military") || l.includes("arnold"))) return "press";
+    if (l.includes("row") || l.includes("cable") || l.includes("seated")) return "row";
+    if (l.includes("lunge") || l.includes("step")) return "lunge";
+    if (l.includes("plank") || l.includes("bird") || l.includes("dead bug") || l.includes("hollow")) return "plank";
+    if (l.includes("curl") || l.includes("bicep")) return "pullup";
+    if (l.includes("extension") || l.includes("tricep")) return "press";
+    return "squat";
   };
 
-  const key = getAnimKey(exerciseId);
-  const fn = animations[key] || animations.squat;
+  const renders = { squat: renderSquat, deadlift: renderDeadlift, pullup: renderPullup, pushup: renderPushup, press: renderPress, row: renderRow, lunge: renderLunge, plank: renderPlank };
+  const key = getAnimKey(exerciseId || type || "squat");
+  const fn = renders[key] || renders.squat;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", filter: `drop-shadow(0 6px 18px ${color}50)`, perspective: "400px" }}>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
       {fn()}
     </div>
   );
 }
 
-// Exercise info card with animation
-function ExerciseCard({ exercise, color = "#d4af37", lang }) {
+// Muscle tags per exercise type
+function getMuscleTargets(exerciseName) {
+  const l = (exerciseName || "").toLowerCase();
+  if (l.includes("squat") || l.includes("goblet")) return ["Quads 🔥", "Glutes", "Hamstrings"];
+  if (l.includes("deadlift") || l.includes("rdl")) return ["Back 🔥", "Glutes", "Hamstrings"];
+  if (l.includes("bench") || l.includes("push-up") || l.includes("pushup")) return ["Chest 🔥", "Triceps", "Shoulders"];
+  if (l.includes("pull") || l.includes("chin") || l.includes("lat")) return ["Lats 🔥", "Biceps", "Core"];
+  if (l.includes("row")) return ["Mid Back 🔥", "Biceps", "Rear Delt"];
+  if (l.includes("press") && l.includes("over")) return ["Delts 🔥", "Triceps", "Core"];
+  if (l.includes("arnold") || l.includes("shoulder")) return ["Delts 🔥", "Triceps"];
+  if (l.includes("lunge") || l.includes("step")) return ["Quads 🔥", "Glutes", "Balance"];
+  if (l.includes("plank") || l.includes("bird") || l.includes("dead bug")) return ["Core 🔥", "Stabilizers"];
+  if (l.includes("curl") || l.includes("bicep")) return ["Biceps 🔥", "Forearms"];
+  if (l.includes("tricep") || l.includes("extension") || l.includes("dip")) return ["Triceps 🔥", "Chest"];
+  if (l.includes("calf")) return ["Calves 🔥"];
+  if (l.includes("glute") || l.includes("hip thrust")) return ["Glutes 🔥", "Hamstrings"];
+  return ["Full Body 🔥"];
+}
+
+function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
+  const muscles = getMuscleTargets(exercise.name);
   return (
-    <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}25` }}>
-      <div style={{ background: `linear-gradient(135deg, ${color}18, ${color}08)`, padding: "20px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <WorkoutAnim3D exerciseId={exercise.name} color={color} size={140} />
-        <div style={{ fontSize: 14, fontWeight: 700, color: G.text, marginTop: 12, textAlign: "center" }}>{exercise.name}</div>
+    <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
+      <div style={{ background: `${color}0e`, padding: "16px 8px 8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <HumanAnim exerciseId={exercise.name} accentColor={color} size={130} />
+        {/* muscle tags */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", marginTop: 8 }}>
+          {muscles.map((m, i) => (
+            <span key={i} style={{ fontSize: 9, padding: "2px 7px", borderRadius: 20, background: i === 0 ? `${color}30` : G.surf, color: i === 0 ? color : G.muted, fontWeight: i === 0 ? 700 : 400, border: `1px solid ${i === 0 ? color + "40" : G.border}` }}>{m}</span>
+          ))}
+        </div>
       </div>
-      <div style={{ padding: "10px 14px 14px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: exercise.notes ? 8 : 0 }}>
+      <div style={{ padding: "10px 12px 12px" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 7, textAlign: "center", lineHeight: 1.3 }}>{exercise.name}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5 }}>
           {[{ l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: color }, { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green }, { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber }].map(x => (
-            <div key={x.l} style={{ background: G.surf, borderRadius: 7, padding: "6px 4px", textAlign: "center" }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: x.c }}>{x.v}</div>
-              <div style={{ fontSize: 9, color: G.muted, marginTop: 1 }}>{x.l}</div>
+            <div key={x.l} style={{ background: G.surf, borderRadius: 6, padding: "5px 3px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: x.c }}>{x.v}</div>
+              <div style={{ fontSize: 8, color: G.muted, marginTop: 1 }}>{x.l}</div>
             </div>
           ))}
         </div>
-        {exercise.notes && <div style={{ fontSize: 11, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>💡 {exercise.notes}</div>}
+        {exercise.notes && <div style={{ fontSize: 10, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>💡 {exercise.notes}</div>}
       </div>
     </div>
   );
