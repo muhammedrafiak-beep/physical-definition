@@ -1051,18 +1051,57 @@ function TDEECard({ client, t, lang }) {
 
 // ── YOUTUBE EXERCISE VIDEOS ─────────────────────────────────────
 const KNOWN_VIDEOS = {
-  "squat": "ultWZbUMPL8", "deadlift": "op9kVnSso6Q", "bench press": "SCVCLChPQMs",
-  "pull-up": "eGo4IYlbE5g", "push-up": "_l3ySVKYVJ8", "overhead press": "2yjwXTZQDDI",
-  "barbell row": "FWJR5Ve8bnQ", "lunge": "3XDriUn0udo", "plank": "pSHjTRCQxIw",
-  "bicep curl": "ykJmrZ5v0Oo", "barbell curl": "ykJmrZ5v0Oo", "lat pulldown": "CAwf7n6Luuc",
-  "leg press": "IZxyjW7MPJQ", "hip thrust": "xDmFkJxPzeM", "romanian deadlift": "JCXUYuzwNrM",
-  "face pull": "rep-qVOkqgk", "lateral raise": "3VcKaXpzqRo", "arnold press": "6Z15_WdXmVw",
-  "dumbbell row": "FWJR5Ve8bnQ", "tricep": "2-LAMcpzODU", "calf raise": "gwLzBJYoWlI",
-  "leg curl": "1Tq3QdYUuHs", "leg extension": "YyvSfVjQeL0", "cable fly": "Iwe6AmxVf7o",
-  "incline": "8iPEnn-ltC8", "dip": "yew6QMKbcCc", "chin": "eGo4IYlbE5g",
-  "t-bar row": "j3Igk5nyZE4", "hack squat": "EdtPMEvbKQ0", "goblet squat": "MeIiIdhvXT4",
-  "burpee": "auBLPXO8Fww", "mountain climber": "nmwgirgXLYM", "jumping jack": "c4DAnQ6DtF8",
-  "plank shoulder": "pSHjTRCQxIw", "bird dog": "wiFNA3sqjCA", "glute bridge": "8bbE64NuDTU",
+  // Verified fresh IDs — professional form tutorials
+  "squat": "IArAo9mRQf8",           // How to Squat PROPERLY 2026
+  "barbell squat": "kRX2NfqM90g",   // How To Squat With A Barbell Properly
+  "goblet squat": "MeIiIdhvXT4",
+  "hack squat": "EdtPMEvbKQ0",
+  "deadlift": "VL5Ab0T07e4",        // Build A Bigger Deadlift - Jeff Nippard
+  "romanian deadlift": "JCXUYuzwNrM",
+  "sumo deadlift": "VL5Ab0T07e4",
+  "bench press": "nLBcn41VwXM",     // Compilation: proper bench form
+  "incline": "8iPEnn-ltC8",
+  "push-up": "IODxDxX7oi4",
+  "pushup": "IODxDxX7oi4",
+  "pull-up": "NOrzocw9UkQ",         // Proper pull-up technique
+  "pullup": "NOrzocw9UkQ",
+  "chin": "NOrzocw9UkQ",
+  "lat pulldown": "CAwf7n6Luuc",
+  "overhead press": "DQGHPLs9N6Y",  // Big 5 lifts tutorial
+  "ohp": "DQGHPLs9N6Y",
+  "arnold press": "6Z15_WdXmVw",
+  "barbell row": "nLBcn41VwXM",
+  "dumbbell row": "FWJR5Ve8bnQ",
+  "t-bar row": "j3Igk5nyZE4",
+  "lunge": "3XDriUn0udo",
+  "plank": "pSHjTRCQxIw",
+  "bird dog": "wiFNA3sqjCA",
+  "dead bug": "wiFNA3sqjCA",
+  "bicep curl": "ykJmrZ5v0Oo",
+  "barbell curl": "ykJmrZ5v0Oo",
+  "tricep pushdown": "2-LAMcpzODU",
+  "skull crusher": "2-LAMcpzODU",
+  "tricep dip": "yew6QMKbcCc",
+  "dip": "yew6QMKbcCc",
+  "leg press": "IZxyjW7MPJQ",
+  "leg curl": "1Tq3QdYUuHs",
+  "leg extension": "YyvSfVjQeL0",
+  "hip thrust": "xDmFkJxPzeM",
+  "glute bridge": "8bbE64NuDTU",
+  "calf raise": "gwLzBJYoWlI",
+  "face pull": "rep-qVOkqgk",
+  "lateral raise": "3VcKaXpzqRo",
+  "cable fly": "Iwe6AmxVf7o",
+  "burpee": "auBLPXO8Fww",
+  "mountain climber": "nmwgirgXLYM",
+  "jumping jack": "c4DAnQ6DtF8",
+  "ab wheel": "uJtBjkIHNkA",
+  "russian twist": "wkD8rjkodUI",
+  "step-up": "dQqApCGd5Ss",
+  "box jump": "52r_Ul5k03g",
+  "kettle": "HS42OQFgkj4",
+  "thruster": "HS42OQFgkj4",
+  "battle rope": "8FNMJEMXnXE",
 };
 
 function getKnownVideoId(name) {
