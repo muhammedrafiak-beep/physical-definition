@@ -1048,152 +1048,124 @@ function TDEECard({ client, t, lang }) {
 
 
 
-// ── EXERCISEDB API — REAL HUMAN GIF ANIMATIONS ─────────────────
-const RAPIDAPI_KEY = import.meta.env.VITE_RAPIDAPI_KEY;
 
-// Cache to avoid repeated API calls
-const gifCache = {};
+// ── YOUTUBE EXERCISE VIDEOS ─────────────────────────────────────
+const KNOWN_VIDEOS = {
+  "squat": "ultWZbUMPL8", "deadlift": "op9kVnSso6Q", "bench press": "SCVCLChPQMs",
+  "pull-up": "eGo4IYlbE5g", "push-up": "_l3ySVKYVJ8", "overhead press": "2yjwXTZQDDI",
+  "barbell row": "FWJR5Ve8bnQ", "lunge": "3XDriUn0udo", "plank": "pSHjTRCQxIw",
+  "bicep curl": "ykJmrZ5v0Oo", "barbell curl": "ykJmrZ5v0Oo", "lat pulldown": "CAwf7n6Luuc",
+  "leg press": "IZxyjW7MPJQ", "hip thrust": "xDmFkJxPzeM", "romanian deadlift": "JCXUYuzwNrM",
+  "face pull": "rep-qVOkqgk", "lateral raise": "3VcKaXpzqRo", "arnold press": "6Z15_WdXmVw",
+  "dumbbell row": "FWJR5Ve8bnQ", "tricep": "2-LAMcpzODU", "calf raise": "gwLzBJYoWlI",
+  "leg curl": "1Tq3QdYUuHs", "leg extension": "YyvSfVjQeL0", "cable fly": "Iwe6AmxVf7o",
+  "incline": "8iPEnn-ltC8", "dip": "yew6QMKbcCc", "chin": "eGo4IYlbE5g",
+  "t-bar row": "j3Igk5nyZE4", "hack squat": "EdtPMEvbKQ0", "goblet squat": "MeIiIdhvXT4",
+  "burpee": "auBLPXO8Fww", "mountain climber": "nmwgirgXLYM", "jumping jack": "c4DAnQ6DtF8",
+  "plank shoulder": "pSHjTRCQxIw", "bird dog": "wiFNA3sqjCA", "glute bridge": "8bbE64NuDTU",
+};
 
-async function fetchExerciseGif(exerciseName) {
-  if (gifCache[exerciseName]) return gifCache[exerciseName];
-  if (!RAPIDAPI_KEY) return null;
-  try {
-    // Search by name
-    const query = encodeURIComponent(exerciseName.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim());
-    const res = await fetch(
-      `https://exercisedb.p.rapidapi.com/exercises/name/${query}?limit=1&offset=0`,
-      {
-        headers: {
-          "x-rapidapi-key": RAPIDAPI_KEY,
-          "x-rapidapi-host": "exercisedb.p.rapidapi.com",
-        },
-      }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    const gif = data?.[0]?.gifUrl || null;
-    if (gif) gifCache[exerciseName] = gif;
-    return gif;
-  } catch {
-    return null;
+function getKnownVideoId(name) {
+  const l = name.toLowerCase();
+  for (const [key, id] of Object.entries(KNOWN_VIDEOS)) {
+    if (l.includes(key)) return id;
   }
+  return null;
 }
 
-// Fallback muscle targets
+function getYTSearchUrl(name) {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(name + " exercise proper form tutorial")}`;
+}
+
 function getMuscleTargets(name) {
   const l = (name || "").toLowerCase();
-  if (l.includes("squat") || l.includes("goblet")) return [["Quads", "primary"], ["Glutes", "secondary"], ["Hamstrings", "secondary"]];
+  if (l.includes("squat") || l.includes("goblet") || l.includes("hack")) return [["Quads", "primary"], ["Glutes", "secondary"], ["Hamstrings", "secondary"]];
   if (l.includes("deadlift") || l.includes("rdl")) return [["Lower Back", "primary"], ["Glutes", "primary"], ["Hamstrings", "secondary"]];
-  if (l.includes("bench") || l.includes("push-up") || l.includes("pushup") || l.includes("chest")) return [["Chest", "primary"], ["Triceps", "secondary"], ["Shoulders", "secondary"]];
+  if (l.includes("bench") || l.includes("push-up") || l.includes("pushup") || l.includes("chest") || l.includes("fly") || l.includes("incline")) return [["Chest", "primary"], ["Triceps", "secondary"], ["Shoulders", "secondary"]];
   if (l.includes("pull-up") || l.includes("pullup") || l.includes("chin") || l.includes("lat")) return [["Lats", "primary"], ["Biceps", "secondary"], ["Core", "secondary"]];
   if (l.includes("row")) return [["Mid Back", "primary"], ["Biceps", "secondary"], ["Rear Delt", "secondary"]];
   if (l.includes("press") && (l.includes("over") || l.includes("shoulder") || l.includes("military") || l.includes("arnold"))) return [["Delts", "primary"], ["Triceps", "secondary"], ["Core", "secondary"]];
   if (l.includes("lunge") || l.includes("step")) return [["Quads", "primary"], ["Glutes", "secondary"], ["Balance", "secondary"]];
-  if (l.includes("plank") || l.includes("bird") || l.includes("dead bug")) return [["Core", "primary"], ["Stabilizers", "secondary"]];
+  if (l.includes("plank") || l.includes("bird") || l.includes("dead bug") || l.includes("ab wheel")) return [["Core", "primary"], ["Stabilizers", "secondary"]];
   if (l.includes("curl") || l.includes("bicep")) return [["Biceps", "primary"], ["Forearms", "secondary"]];
-  if (l.includes("tricep") || l.includes("extension") || l.includes("pushdown")) return [["Triceps", "primary"], ["Chest", "secondary"]];
+  if (l.includes("tricep") || l.includes("extension") || l.includes("pushdown") || l.includes("skull") || l.includes("dip")) return [["Triceps", "primary"], ["Chest", "secondary"]];
   if (l.includes("calf")) return [["Calves", "primary"]];
   if (l.includes("glute") || l.includes("hip thrust")) return [["Glutes", "primary"], ["Hamstrings", "secondary"]];
   if (l.includes("lateral raise")) return [["Side Delts", "primary"], ["Traps", "secondary"]];
+  if (l.includes("face pull")) return [["Rear Delts", "primary"], ["Rotator Cuff", "secondary"]];
+  if (l.includes("leg press")) return [["Quads", "primary"], ["Glutes", "secondary"]];
+  if (l.includes("leg curl")) return [["Hamstrings", "primary"]];
+  if (l.includes("leg extension")) return [["Quads", "primary"]];
   return [["Full Body", "primary"]];
-}
-
-// Fallback SVG animation (simple but clean)
-function FallbackAnim({ exerciseName, color = "#d4af37" }) {
-  const [frame, setFrame] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setFrame(f => (f + 1) % 60), 30);
-    return () => clearInterval(id);
-  }, []);
-  const e = (Math.sin((frame / 60) * Math.PI * 2 - Math.PI / 2) + 1) / 2;
-  const y = e * 18;
-  return (
-    <svg viewBox="0 0 80 100" width="80" height="100">
-      {/* simple stick figure */}
-      <circle cx="40" cy={20 + y * 0.1} r="9" fill={color} opacity="0.9" />
-      <line x1="40" y1={29 + y * 0.1} x2="40" y2={58 + y * 0.2} stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="40" y1={38 + y * 0.15} x2={26 - y * 0.3} y2={50 + y * 0.1} stroke={color} strokeWidth="3" strokeLinecap="round" />
-      <line x1="40" y1={38 + y * 0.15} x2={54 + y * 0.3} y2={50 + y * 0.1} stroke={color} strokeWidth="3" strokeLinecap="round" />
-      <line x1="40" y1={58 + y * 0.2} x2={32 - y * 0.2} y2={80} stroke={color} strokeWidth="3" strokeLinecap="round" />
-      <line x1="40" y1={58 + y * 0.2} x2={48 + y * 0.2} y2={80} stroke={color} strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
 }
 
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
   const muscles = getMuscleTargets(exercise.name);
-  const [gifUrl, setGifUrl] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(false);
-    fetchExerciseGif(exercise.name).then(url => {
-      if (cancelled) return;
-      if (url) { setGifUrl(url); }
-      else { setError(true); }
-      setLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, [exercise.name]);
+  const [showVideo, setShowVideo] = useState(false);
+  const videoId = getKnownVideoId(exercise.name);
+  const ytSearchUrl = getYTSearchUrl(exercise.name);
+  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1` : null;
 
   return (
     <div style={{ background: "#0e0c00", borderRadius: 12, overflow: "hidden", border: `1px solid #2a2200` }}>
-      {/* animation area */}
-      <div style={{ background: "#111", minHeight: 140, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "12px 8px 8px", position: "relative" }}>
-        {loading ? (
+      <div style={{ background: "#111", position: "relative" }}>
+        {showVideo && embedUrl ? (
           <div>
-            <div className="sp" style={{ margin: "0 auto 8px" }} />
-            <div style={{ fontSize: 10, color: G.muted, textAlign: "center" }}>Loading...</div>
+            <iframe src={embedUrl} width="100%" height="160" frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen style={{ display: "block" }} />
+            <button className="btn" onClick={() => setShowVideo(false)}
+              style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.7)", color: "#fff", borderRadius: 20, padding: "3px 9px", fontSize: 11 }}>✕</button>
           </div>
-        ) : gifUrl ? (
-          <img
-            src={gifUrl}
-            alt={exercise.name}
-            style={{ width: 130, height: 130, objectFit: "contain", borderRadius: 8 }}
-            loading="lazy"
-          />
         ) : (
-          <FallbackAnim exerciseName={exercise.name} color={color} />
+          <div style={{ padding: "12px 8px 8px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            {videoId ? (
+              <div style={{ position: "relative", width: "100%", cursor: "pointer", borderRadius: 8, overflow: "hidden" }}
+                onClick={() => setShowVideo(true)}>
+                <img src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`} alt={exercise.name}
+                  style={{ width: "100%", height: 118, objectFit: "cover", display: "block" }} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}>
+                  <div style={{ width: 46, height: 46, borderRadius: "50%", background: "#ff0000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 0, height: 0, borderTop: "11px solid transparent", borderBottom: "11px solid transparent", borderLeft: "17px solid white", marginLeft: 4 }} />
+                  </div>
+                </div>
+                <div style={{ position: "absolute", bottom: 6, left: 6, background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: 9, padding: "2px 7px", borderRadius: 4, fontWeight: 600 }}>
+                  ▶ {isAr ? "شاهد الآن" : "Watch Demo"}
+                </div>
+              </div>
+            ) : (
+              <a href={ytSearchUrl} target="_blank" rel="noreferrer"
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textDecoration: "none", padding: "16px 0", width: "100%" }}>
+                <div style={{ width: 52, height: 52, background: "#ff0000", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 0, height: 0, borderTop: "12px solid transparent", borderBottom: "12px solid transparent", borderLeft: "20px solid white", marginLeft: 5 }} />
+                </div>
+                <div style={{ fontSize: 10, color: G.muted, textAlign: "center" }}>{isAr ? "بحث على يوتيوب" : "Search on YouTube"}</div>
+              </a>
+            )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", marginTop: 7 }}>
+              {muscles.map(([m, type], i) => (
+                <span key={i} style={{ fontSize: 9, padding: "2px 7px", borderRadius: 20, background: type === "primary" ? "#ff2d2d25" : "#1a1800", color: type === "primary" ? "#ff6b6b" : G.muted, fontWeight: type === "primary" ? 700 : 400, border: `1px solid ${type === "primary" ? "#ff2d2d50" : "#2a2200"}` }}>{m}</span>
+              ))}
+            </div>
+          </div>
         )}
-        {/* muscle tags */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", marginTop: 8 }}>
-          {muscles.map(([m, type], i) => (
-            <span key={i} style={{
-              fontSize: 9, padding: "2px 8px", borderRadius: 20,
-              background: type === "primary" ? "#ff2d2d25" : "#1a1800",
-              color: type === "primary" ? "#ff6b6b" : G.muted,
-              fontWeight: type === "primary" ? 700 : 400,
-              border: `1px solid ${type === "primary" ? "#ff2d2d50" : "#2a2200"}`
-            }}>{m}</span>
-          ))}
-        </div>
       </div>
-      {/* info */}
       <div style={{ padding: "10px 12px 12px" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 7, textAlign: "center", lineHeight: 1.3 }}>
-          {exercise.name}
-        </div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 7, textAlign: "center", lineHeight: 1.3 }}>{exercise.name}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5 }}>
-          {[
-            { l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: G.gold },
-            { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green },
-            { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber },
-          ].map(x => (
+          {[{ l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: G.gold }, { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green }, { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber }].map(x => (
             <div key={x.l} style={{ background: G.surf2, borderRadius: 6, padding: "5px 3px", textAlign: "center" }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: x.c }}>{x.v}</div>
               <div style={{ fontSize: 8, color: G.muted, marginTop: 1 }}>{x.l}</div>
             </div>
           ))}
         </div>
-        {exercise.notes && (
-          <div style={{ fontSize: 10, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>
-            💡 {exercise.notes}
-          </div>
-        )}
+        {exercise.notes && <div style={{ fontSize: 10, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>💡 {exercise.notes}</div>}
+        <a href={ytSearchUrl} target="_blank" rel="noreferrer"
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 8, padding: "6px", background: "#ff000015", border: "1px solid #ff000030", borderRadius: 7, textDecoration: "none", color: "#ff6b6b", fontSize: 10, fontWeight: 600 }}>
+          🎬 {isAr ? "يوتيوب" : "YouTube Tutorial"}
+        </a>
       </div>
     </div>
   );
