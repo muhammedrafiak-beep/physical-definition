@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
+import { ExerciseIllustration } from "./ExerciseIllustration";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -1420,7 +1421,7 @@ function ExerciseCard({ exercise, color, lang }) {
     <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
       {/* Uniform animation area — same dark bg, same size for all */}
       <div style={{ background: "#111", padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
-        <HumanAnim exerciseId={exercise.name} accentColor={color} size={118} />
+        <ExerciseIllustration exerciseId={exercise.name} size={118} />
         {/* muscle tags */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", marginTop: 7 }}>
           {muscles.map(([m, type], i) => (
@@ -2487,3 +2488,4 @@ export default function App() {
     </div>
   );
 }
+
