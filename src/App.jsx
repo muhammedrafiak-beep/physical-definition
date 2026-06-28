@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from "react";
+import { ExerciseIllustration } from "./ExerciseIllustration";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -809,7 +810,10 @@ function generatePDF(client, lang) {
   const mealPlan = mealPlanRaw ? scaleMealPlan(mealPlanRaw, target) : null;
 
   // Build exercise GIF URLs for PDF using ExerciseDB cache
-  const getGifForPDF = (exName) => `<div style="width:80px;height:80px;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;">🏋️</div>`;
+  const getGifForPDF = (exName) => {
+    const cached = gifCache[exName];
+    return cached ? `<img src="${cached}" alt="${exName}" style="width:80px;height:80px;object-fit:contain;border-radius:8px;background:#f5f5f5;" onerror="this.style.display='none'" />` : `<div style="width:80px;height:80px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
+  };
 
   const workoutHTML = workoutSystem ? `
     <div class="section">
@@ -941,25 +945,13 @@ function generatePDF(client, lang) {
     <div style="font-size:11px;color:#ccc;margin-top:6px">${TRAINER.appUrl}</div>
   </div>
 </div>
-<div style="text-align:center;margin:20px 0;padding:16px;background:#f8f8f8;border-radius:8px;">
-    <button onclick="window.print()" style="background:#080600;color:#d4af37;border:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px;">🖨️ Print / Save as PDF</button>
-    <p style="color:#999;font-size:12px;margin-top:8px;">Or press Ctrl+P to print</p>
-  </div>
-<script>setTimeout(()=>{window.print();},800);</script>
+<script>window.onload=()=>{window.print();}</script>
 </body>
 </html>`;
 
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
-  // Use download link instead of window.open to avoid popup blockers
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${client.name.replace(/\s+/g, "_")}_Training_Plan.html`;
-  a.target = "_blank";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  window.open(url, "_blank");
 }
 
 // ── THEME ──────────────────────────────────────────────────
@@ -1429,7 +1421,7 @@ function ExerciseCard({ exercise, color, lang }) {
     <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
       {/* Uniform animation area — same dark bg, same size for all */}
       <div style={{ background: "#111", padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
-        <HumanAnim exerciseId={exercise.name} accentColor={color} size={118} />
+        <ExerciseIllustration exerciseId={exercise.name} size={118} />
         {/* muscle tags */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", marginTop: 7 }}>
           {muscles.map(([m, type], i) => (
@@ -2496,3 +2488,4 @@ export default function App() {
     </div>
   );
 }
+
