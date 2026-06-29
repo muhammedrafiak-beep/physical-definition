@@ -810,10 +810,21 @@ function generatePDF(client, lang) {
   const mealPlan = mealPlanRaw ? scaleMealPlan(mealPlanRaw, target) : null;
 
   // Build exercise GIF URLs for PDF using ExerciseDB cache
-  const gifCache = {};
+  const BASE_IMG = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos";
   const getGifForPDF = (exName) => {
-    const cached = gifCache[exName];
-    return cached ? `<img src="${cached}" alt="${exName}" style="width:80px;height:80px;object-fit:contain;border-radius:8px;background:#f5f5f5;" onerror="this.style.display='none'" />` : `<div style="width:80px;height:80px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
+    const l = (exName || "").toLowerCase();
+    let url = null;
+    if(l.includes("bench press")||l.includes("incline")||l.includes("chest press")) url = BASE_IMG+"/Barbel_Bench_Press.png";
+    else if(l.includes("overhead press")||l.includes("shoulder press")||l.includes("military press")||l.includes("arnold")) url = BASE_IMG+"/Barbel_Shoulder_Overhead_Press.png";
+    else if(l.includes("squat")||l.includes("goblet")||l.includes("hack")||l.includes("leg press")||l.includes("wall sit")) url = BASE_IMG+"/Barbel_Squat.png";
+    else if(l.includes("deadlift")||l.includes("rdl")||l.includes("romanian")||l.includes("sumo")||l.includes("stiff")) url = BASE_IMG+"/Dead_Lift.png";
+    else if(l.includes("pull-up")||l.includes("pullup")||l.includes("chin")||l.includes("lat pulldown")||l.includes("pull up")) url = BASE_IMG+"/Pull_Upp.png";
+    else if(l.includes("row")||l.includes("t-bar")||l.includes("cable row")||l.includes("seated row")) url = BASE_IMG+"/Barbel_Row.jpeg";
+    else if(l.includes("curl")||l.includes("bicep")||l.includes("hammer")||l.includes("preacher")) url = BASE_IMG+"/Barbel_Biceps_Curl.png";
+    else if(l.includes("lateral raise")||l.includes("front raise")||l.includes("side delt")) url = BASE_IMG+"/Side_Lateral_Raise.jpeg";
+    else if(l.includes("tricep")||l.includes("pushdown")||l.includes("skull")||l.includes("extension")||l.includes("dip")) url = BASE_IMG+"/Rope_Pulli_Push_Down.png";
+    else if(l.includes("lunge")||l.includes("step-up")||l.includes("step up")||l.includes("split squat")) url = BASE_IMG+"/Lunges.png";
+    return url ? `<img src="${url}" alt="${exName}" style="width:160px;height:100px;object-fit:contain;border-radius:8px;background:#fff;" />` : `<div style="width:160px;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
   };
 
   const workoutHTML = workoutSystem ? `
