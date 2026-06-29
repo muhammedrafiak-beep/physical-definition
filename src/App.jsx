@@ -810,6 +810,7 @@ function generatePDF(client, lang) {
   const mealPlan = mealPlanRaw ? scaleMealPlan(mealPlanRaw, target) : null;
 
   // Build exercise GIF URLs for PDF using ExerciseDB cache
+  const gifCache = {};
   const getGifForPDF = (exName) => {
     const cached = gifCache[exName];
     return cached ? `<img src="${cached}" alt="${exName}" style="width:80px;height:80px;object-fit:contain;border-radius:8px;background:#f5f5f5;" onerror="this.style.display='none'" />` : `<div style="width:80px;height:80px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
@@ -2488,4 +2489,5 @@ export default function App() {
     </div>
   );
 }
+
 
