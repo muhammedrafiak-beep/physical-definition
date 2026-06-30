@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -10,9 +10,8 @@ const DEFAULT_VIDEO = "workout_all.mp4";
 
 function getVideoForExercise(exName) {
   const l = (exName || "").toLowerCase();
-  // Add specific mappings here as more videos are created, e.g.:
-  // if (l.includes("bench press")) return "bench_press.mp4";
-  return DEFAULT_VIDEO;
+  if (l.includes("pull-up") || l.includes("pullup") || l.includes("pull up") || l.includes("chin")) return "workout_all.mp4";
+  return null;
 }
 
 function parseRestSeconds(restStr) {
@@ -245,7 +244,8 @@ export function WorkoutPlayer({
     );
   }
 
-  const videoSrc = `${VIDEO_BASE}/${getVideoForExercise(current.exercise.name)}`;
+  const videoFile = getVideoForExercise(current.exercise.name);
+  const videoSrc = videoFile ? `${VIDEO_BASE}/${videoFile}` : null;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
 
   return (
@@ -268,7 +268,7 @@ export function WorkoutPlayer({
         </div>
 
         <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", background: "#000", marginTop: 14 }}>
-          {phase === "exercise" && (
+          {phase === "exercise" && videoSrc && (
             <>
               <video
                 ref={videoRef}
@@ -287,6 +287,12 @@ export function WorkoutPlayer({
                 </div>
               )}
             </>
+          )}
+          {phase === "exercise" && !videoSrc && (
+            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#1a1a1a" }}>
+              <div style={{ fontSize: 40, marginBottom: 8, animation: "pulse 1.5s infinite" }}>🏋️</div>
+              <div style={{ fontSize: 12, color: "#777", fontWeight: 600 }}>Video coming soon</div>
+            </div>
           )}
           {phase === "rest" && (
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111" }}>
@@ -343,3 +349,5 @@ const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none"
 function closeBtnStyle(accent) {
   return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
+
+
