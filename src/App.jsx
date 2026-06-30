@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
+import { WorkoutPlayer } from "./WorkoutPlayer";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -1611,6 +1612,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
   const [draft, setDraft] = useState("");
   const [showMeal, setShowMeal] = useState(false);
   const [showWO, setShowWO] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
   const t = T[lang]; const isAr = lang === "ar";
   const sc = clients.find(c => c.id === selC?.id);
 
@@ -1686,6 +1688,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>⚡ {isAr ? "خطة التمرين" : "Workout Plan"}</div>
                 {ws && <div style={{ fontSize: 11, color: ws.color, marginTop: 2 }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>}
+                {ws && <button onClick={() => setShowPlayer(true)} style={{ marginTop: 8, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>}
               </div>
               {!editing ? (
                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
@@ -1722,6 +1725,10 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
               </div>
             )}
           </div>
+
+          {showPlayer && ws && (
+            <WorkoutPlayer workoutSystem={ws} onClose={() => setShowPlayer(false)} accentColor={G.gold} />
+          )}
 
           {/* NUTRITION */}
           <div className="card" style={{ padding: 18, marginBottom: 12 }}>
@@ -2500,6 +2507,9 @@ export default function App() {
     </div>
   );
 }
+
+
+
 
 
 
