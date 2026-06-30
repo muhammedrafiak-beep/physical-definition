@@ -2002,6 +2002,7 @@ export default function App() {
   const [lErr, setLErr] = useState("");
   const [aTab, setATab] = useState("dashboard");
   const [cTab, setCTab] = useState("profile");
+  const [showClientPlayer, setShowClientPlayer] = useState(false);
   const [selC, setSelC] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -2244,6 +2245,7 @@ export default function App() {
                         <div className="card" style={{ padding: "12px 14px", marginBottom: 14, border: `1px solid ${ws.color}30`, background: `${ws.color}08` }}>
                           <div style={{ fontSize: 15, fontWeight: 700, color: ws.color }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
                           <div style={{ fontSize: 11, color: G.muted, marginTop: 3 }}>{isAr ? ws.descAr : ws.desc}</div>
+                          <button onClick={() => setShowClientPlayer(true)} style={{ marginTop: 10, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "9px 18px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>
                         </div>
                         {/* Days with exercise cards */}
                         {ws.days.map((day, di) => (
@@ -2258,6 +2260,9 @@ export default function App() {
                             </div>
                           </div>
                         ))}
+                        {showClientPlayer && (
+                          <WorkoutPlayer workoutSystem={ws} onClose={() => setShowClientPlayer(false)} accentColor={G.gold} />
+                        )}
                       </div>
                     );
                   } else if (liveC.workoutPlan) {
@@ -2507,6 +2512,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
