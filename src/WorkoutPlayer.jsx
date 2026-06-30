@@ -31,6 +31,25 @@ function parseSets(setsVal) {
   return isNaN(n) || n < 1 ? 1 : n;
 }
 
+// Detect duration-based exercises like "30 sec hold", "45s", "1 min" in the reps field
+function parseExerciseDurationSeconds(repsVal) {
+  if (!repsVal) return null;
+  const s = String(repsVal).toLowerCase();
+  if (!/(sec|min|hold|\bs\b)/.test(s)) return null;
+  const minMatch = s.match(/(\d+)\s*min/);
+  if (minMatch) return parseInt(minMatch[1], 10) * 60;
+  const secMatch = s.match(/(\d+)\s*(sec|s)\b/);
+  if (secMatch) return parseInt(secMatch[1], 10);
+  const num = parseInt(s, 10);
+  return isNaN(num) ? null : num;
+}
+
+function fmtClock(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 // Flatten workout system days (or a single day) into ordered list of {dayName, exercise}
 function flattenWorkout(workoutSystem, dayFilter) {
   if (!workoutSystem || !workoutSystem.days) return [];
@@ -66,21 +85,53 @@ export function WorkoutPlayer({
   const [setIdx, setSetIdx] = useState(1);
   const [phase, setPhase] = useState("exercise"); // "exercise" | "rest" | "done"
   const [restRemaining, setRestRemaining] = useState(0);
+  const [exerciseRemaining, setExerciseRemaining] = useState(null); // for duration-based exercises
+  const [elapsed, setElapsed] = useState(0); // overall stopwatch, seconds
   const [saving, setSaving] = useState(false);
   const videoRef = useRef(null);
   const timerRef = useRef(null);
+  const stopwatchRef = useRef(null);
 
   const current = queue[exIdx];
   const totalSets = current ? parseSets(current.exercise.sets) : 1;
   const restSeconds = current ? parseRestSeconds(current.exercise.rest) : 60;
+  const exDurationSeconds = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
 
+  // Overall stopwatch — runs continuously while player is open
+  useEffect(() => {
+    stopwatchRef.current = setInterval(() => {
+      setElapsed((e) => e + 1);
+    }, 1000);
+    return () => clearInterval(stopwatchRef.current);
+  }, []);
+
+  // Reset/start video + duration timer when moving to a new exercise/set
   useEffect(() => {
     if (phase === "exercise" && videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
+    if (phase === "exercise" && exDurationSeconds) {
+      setExerciseRemaining(exDurationSeconds);
+    } else {
+      setExerciseRemaining(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exIdx, setIdx, phase]);
 
+  // Exercise duration countdown — auto-completes the set when it hits zero
+  useEffect(() => {
+    if (phase !== "exercise" || exerciseRemaining === null) return;
+    if (exerciseRemaining <= 0) {
+      handleSetDone();
+      return;
+    }
+    const t = setTimeout(() => setExerciseRemaining((r) => r - 1), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, exerciseRemaining]);
+
+  // Rest countdown
   useEffect(() => {
     if (phase !== "rest") return;
     if (restRemaining <= 0) {
@@ -95,7 +146,7 @@ export function WorkoutPlayer({
   const logWorkout = useCallback(async (exercisesCompleted) => {
     if (!client) return;
     setSaving(true);
-    const durationMinutes = (Date.now() - startTimeRef.current) / 60000;
+    const durationMinutes = elapsed / 60;
     const calories = estimateCalories(durationMinutes, client.weight || 75);
     try {
       await supabase.from("workout_logs").insert([{
@@ -112,7 +163,7 @@ export function WorkoutPlayer({
       console.error("Failed to log workout:", e);
     }
     setSaving(false);
-  }, [client, dayName, workoutSystem, queue.length]);
+  }, [client, dayName, workoutSystem, queue.length, elapsed]);
 
   const advanceAfterRest = useCallback(() => {
     if (setIdx < totalSets) {
@@ -178,14 +229,14 @@ export function WorkoutPlayer({
   }
 
   if (phase === "done") {
-    const durationMinutes = (Date.now() - startTimeRef.current) / 60000;
+    const durationMinutes = elapsed / 60;
     const calories = estimateCalories(durationMinutes, client?.weight || 75);
     return (
       <div style={overlayStyle}>
         <div style={cardStyle}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
           <h2 style={{ color: "#fff", margin: "0 0 8px" }}>Workout Complete!</h2>
-          <p style={{ color: "#aaa", marginBottom: 4 }}>{queue.length} exercises &middot; {Math.round(durationMinutes)} min</p>
+          <p style={{ color: "#aaa", marginBottom: 4 }}>{queue.length} exercises &middot; {fmtClock(elapsed)} min</p>
           <p style={{ color: accentColor, fontWeight: 700, marginBottom: 20 }}>≈ {calories} kcal burned</p>
           {saving && <p style={{ color: "#666", fontSize: 12, marginBottom: 10 }}>Saving...</p>}
           <button onClick={onClose} style={closeBtnStyle(accentColor)}>Finish</button>
@@ -204,7 +255,12 @@ export function WorkoutPlayer({
           <span style={{ color: "#999", fontSize: 13, fontWeight: 600 }}>
             {current.dayName} &middot; Exercise {exIdx + 1}/{queue.length}
           </span>
-          <button onClick={handleEndEarly} style={iconBtnStyle}>✕</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ color: accentColor, fontSize: 13, fontWeight: 700, fontFamily: "monospace" }}>
+              ⏱ {fmtClock(elapsed)}
+            </span>
+            <button onClick={handleEndEarly} style={iconBtnStyle}>✕</button>
+          </div>
         </div>
 
         <div style={{ height: 4, background: "#2a2a2a", margin: "0 18px", borderRadius: 2 }}>
@@ -213,12 +269,24 @@ export function WorkoutPlayer({
 
         <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", background: "#000", marginTop: 14 }}>
           {phase === "exercise" && (
-            <video
-              ref={videoRef}
-              src={videoSrc}
-              style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
-              loop muted playsInline autoPlay
-            />
+            <>
+              <video
+                ref={videoRef}
+                src={videoSrc}
+                style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+                loop muted playsInline autoPlay
+              />
+              {exerciseRemaining !== null && (
+                <div style={{
+                  position: "absolute", top: 10, right: 10,
+                  background: "rgba(0,0,0,0.75)", color: accentColor,
+                  fontFamily: "monospace", fontWeight: 800, fontSize: 22,
+                  padding: "6px 14px", borderRadius: 8,
+                }}>
+                  {exerciseRemaining}s
+                </div>
+              )}
+            </>
           )}
           {phase === "rest" && (
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111" }}>
@@ -239,7 +307,9 @@ export function WorkoutPlayer({
 
         <div style={{ padding: "0 18px 20px", display: "flex", gap: 10 }}>
           {phase === "exercise" ? (
-            <button onClick={handleSetDone} style={primaryBtnStyle(accentColor)}>✓ Set {setIdx} Done</button>
+            <button onClick={handleSetDone} style={primaryBtnStyle(accentColor)}>
+              {exerciseRemaining !== null ? "✓ Finish Early" : `✓ Set ${setIdx} Done`}
+            </button>
           ) : (
             <button onClick={handleSkipRest} style={primaryBtnStyle(accentColor)}>⏭ Skip Rest</button>
           )}
