@@ -1727,7 +1727,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
           </div>
 
           {showPlayer && ws && (
-            <WorkoutPlayer workoutSystem={ws} onClose={() => setShowPlayer(false)} accentColor={G.gold} />
+            <WorkoutPlayer workoutSystem={ws} client={sc} onClose={() => setShowPlayer(false)} accentColor={G.gold} />
           )}
 
           {/* NUTRITION */}
@@ -2003,6 +2003,7 @@ export default function App() {
   const [aTab, setATab] = useState("dashboard");
   const [cTab, setCTab] = useState("profile");
   const [showClientPlayer, setShowClientPlayer] = useState(false);
+  const [activeDay, setActiveDay] = useState(null);
   const [selC, setSelC] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -2250,8 +2251,9 @@ export default function App() {
                         {/* Days with exercise cards */}
                         {ws.days.map((day, di) => (
                           <div key={di} style={{ marginBottom: 20 }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "7px 12px", background: `${ws.color}15`, borderRadius: 8 }}>
-                              📅 {day.name}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "7px 12px", background: `${ws.color}15`, borderRadius: 8 }}>
+                              <span>📅 {day.name}</span>
+                              <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} style={{ background: ws.color, color: "#000", border: "none", borderRadius: 6, padding: "5px 12px", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>▶ Start</button>
                             </div>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                               {day.exercises.map((ex, ei) => (
@@ -2261,7 +2263,7 @@ export default function App() {
                           </div>
                         ))}
                         {showClientPlayer && (
-                          <WorkoutPlayer workoutSystem={ws} onClose={() => setShowClientPlayer(false)} accentColor={G.gold} />
+                          <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={liveC} onClose={() => { setShowClientPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
                         )}
                       </div>
                     );
@@ -2512,6 +2514,8 @@ export default function App() {
     </div>
   );
 }
+
+
 
 
 
