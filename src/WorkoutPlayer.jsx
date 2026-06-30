@@ -52,30 +52,30 @@ function fmtClock(totalSeconds) {
 
 // Flatten workout system days (or a single day) into ordered list of {dayName, exercise}
 const WARMUP_EXERCISES = [
-  { name: "Light Jog in Place", sets: 1, reps: "2 min", rest: "10s" },
-  { name: "Jumping Jacks", sets: 1, reps: "60 sec", rest: "10s" },
-  { name: "Neck Rotations", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Shoulder Rotations", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Elbow Circles", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Wrist Circles", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Torso Rotations", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Hip Circles", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Knee Circles", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Ankle Rotations", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Leg Swings", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Arm Swings", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Bodyweight Squat", sets: 1, reps: "10", rest: "20s" },
-  { name: "Hip Flexor Stretch", sets: 1, reps: "30 sec", rest: "10s" },
+  { name: "Light Jog in Place", sets: 1, reps: "2 min", rest: "0s" },
+  { name: "Jumping Jacks", sets: 1, reps: "60 sec", rest: "0s" },
+  { name: "Neck Rotations", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Shoulder Rotations", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Elbow Circles", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Wrist Circles", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Torso Rotations", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Hip Circles", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Knee Circles", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Ankle Rotations", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Leg Swings", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Arm Swings", sets: 1, reps: "30 sec", rest: "0s" },
+  { name: "Bodyweight Squat", sets: 1, reps: "10", rest: "15s" },
+  { name: "Hip Flexor Stretch", sets: 1, reps: "30 sec", rest: "0s" },
 ];
 const COOLDOWN_EXERCISES = [
-  { name: "Light Walk in Place", sets: 1, reps: "60 sec", rest: "10s" },
+  { name: "Light Walk in Place", sets: 1, reps: "60 sec", rest: "0s" },
   { name: "Standing Quad Stretch", sets: 1, reps: "30 sec", rest: "10s" },
   { name: "Hamstring Stretch", sets: 1, reps: "30 sec", rest: "10s" },
   { name: "Hip Flexor Stretch", sets: 1, reps: "30 sec", rest: "10s" },
   { name: "Chest Stretch", sets: 1, reps: "30 sec", rest: "10s" },
   { name: "Shoulder Stretch", sets: 1, reps: "30 sec", rest: "10s" },
-  { name: "Childs Pose", sets: 1, reps: "60 sec", rest: "10s" },
-  { name: "Deep Breathing", sets: 1, reps: "60 sec", rest: "10s" },
+  { name: "Childs Pose", sets: 1, reps: "60 sec", rest: "0s" },
+  { name: "Deep Breathing", sets: 1, reps: "60 sec", rest: "0s" },
 ];
 
 function flattenWorkout(workoutSystem, dayFilter) {
@@ -378,6 +378,7 @@ const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none"
 function closeBtnStyle(accent) {
   return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
+
 
 
 
