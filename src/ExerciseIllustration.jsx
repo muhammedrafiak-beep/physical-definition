@@ -4,7 +4,7 @@
     const l = (id || "").toLowerCase();
     if(l.includes("bench press")||l.includes("incline")||l.includes("chest press")) return `${BASE}/Barbel_Bench_Press.png`;
     if(l.includes("overhead press")||l.includes("military press")||l.includes("ohp")||l.includes("shoulder press")||l.includes("arnold")) return `${BASE}/Barbel_Shoulder_Overhead_Press.png`;
-    if(l.includes("squat")||l.includes("goblet")||l.includes("hack")||l.includes("leg press")||l.includes("wall sit")) return `${BASE}/Barbel_Squat.png`;
+    if(l.includes("squat")||l.includes("goblet")||l.includes("hack")||l.includes("leg press machine")||l.includes("wall sit")) return `${BASE}/Barbel_Squat.png`;
     if(l.includes("deadlift")||l.includes("rdl")||l.includes("romanian")||l.includes("sumo")||l.includes("stiff")) return `${BASE}/Dead_Lift.png`;
     if(l.includes("pull-up")||l.includes("pullup")||l.includes("chin")||l.includes("lat pulldown")||l.includes("pull up")) return `${BASE}/Pull_Upp.png`;
     if(l.includes("row")||l.includes("t-bar")||l.includes("cable row")||l.includes("seated row")) return `${BASE}/Barbel_Row.jpeg`;
@@ -34,4 +34,5 @@
     </div>
   );
 }
+
 
