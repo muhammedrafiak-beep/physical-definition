@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
+import { ExerciseIllustration } from "./ExerciseIllustration";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -318,9 +319,8 @@ export function WorkoutPlayer({
             </>
           )}
           {phase === "exercise" && !videoSrc && (
-            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#1a1a1a" }}>
-              <div style={{ fontSize: 40, marginBottom: 8, animation: "pulse 1.5s infinite" }}>🏋️</div>
-              <div style={{ fontSize: 12, color: "#777", fontWeight: 600 }}>Video coming soon</div>
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1a1a1a", padding: 8 }}>
+              <ExerciseIllustration exerciseId={current.exercise.name} size={180} />
             </div>
           )}
           {phase === "rest" && (
@@ -378,6 +378,7 @@ const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none"
 function closeBtnStyle(accent) {
   return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
+
 
 
 
