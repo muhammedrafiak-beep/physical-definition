@@ -832,6 +832,22 @@ function generatePDF(client, lang) {
     <div class="section">
       <div class="section-title" style="color:${workoutSystem.color}">⚡ ${isAr ? workoutSystem.nameAr : workoutSystem.name}</div>
       <p style="color:#666;font-size:13px;margin-bottom:16px">${isAr ? workoutSystem.descAr : workoutSystem.desc}</p>
+      <div class="day-block">
+        <div class="day-title" style="color:#f59e0b">🔥 Warm-up</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
+          ${[{name:"Light Jog in Place",sets:1,reps:"2 min",rest:"10s"},{name:"Jumping Jacks",sets:1,reps:"60 sec",rest:"10s"},{name:"Neck Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Shoulder Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Elbow Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Wrist Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Torso Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Hip Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Knee Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Ankle Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Leg Swings",sets:1,reps:"30 sec",rest:"10s"},{name:"Arm Swings",sets:1,reps:"30 sec",rest:"10s"},{name:"Bodyweight Squat",sets:1,reps:"10",rest:"20s"},{name:"Hip Flexor Stretch",sets:1,reps:"30 sec",rest:"10s"}].map(ex => `
+            <div style="background:#fff8e7;border-radius:8px;overflow:hidden;border:1px solid #f59e0b30;">
+              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#fef3c7;">
+                ${getGifForPDF(ex.name)}
+              </div>
+              <div style="padding:8px;">
+                <div style="font-weight:700;font-size:11px;color:#111;margin-bottom:4px;">${ex.name}</div>
+                <span style="background:#f59e0b20;color:#f59e0b;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
       ${workoutSystem.days.map(day => `
         <div class="day-block">
           <div class="day-title">${day.name}</div>
@@ -855,6 +871,22 @@ function generatePDF(client, lang) {
           </div>
         </div>
       `).join("")}
+      <div class="day-block">
+        <div class="day-title" style="color:#22c55e">🧘 Cool-down & Stretching</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
+          ${[{name:"Light Walk in Place",sets:1,reps:"60 sec",rest:"10s"},{name:"Standing Quad Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Hamstring Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Hip Flexor Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Chest Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Shoulder Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Childs Pose",sets:1,reps:"60 sec",rest:"10s"},{name:"Deep Breathing",sets:1,reps:"60 sec",rest:"10s"}].map(ex => `
+            <div style="background:#f0fdf4;border-radius:8px;overflow:hidden;border:1px solid #22c55e30;">
+              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#dcfce7;">
+                ${getGifForPDF(ex.name)}
+              </div>
+              <div style="padding:8px;">
+                <div style="font-weight:700;font-size:11px;color:#111;margin-bottom:4px;">${ex.name}</div>
+                <span style="background:#22c55e20;color:#22c55e;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
     </div>
   ` : client.workoutPlan ? `
     <div class="section">
@@ -2514,6 +2546,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
