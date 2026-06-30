@@ -15,7 +15,14 @@
     return null;
   };
   const img = getImg(exerciseId);
-  if(!img) return null;
+  if(!img) return (
+    <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+      <div style={{ width: "100%", maxWidth: size * 2.2, height: 100, background: "#222", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+        <div style={{ fontSize: 28 }}>🏋️</div>
+        <div style={{ fontSize: 10, color: "#888", fontWeight: 600 }}>No photo yet</div>
+      </div>
+    </div>
+  );
   return (
     <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
       <img
@@ -27,3 +34,4 @@
     </div>
   );
 }
+
