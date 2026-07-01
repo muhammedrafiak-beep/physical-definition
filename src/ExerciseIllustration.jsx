@@ -2,6 +2,8 @@
   const BASE = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos";
   const getImg = (id) => {
     const l = (id || "").toLowerCase();
+    if(l.includes("incline push")||l.includes("incline push-up")) return `${BASE}/Incline_Push_Ups.jpeg`;
+    if(l.includes("push-up")||l.includes("pushup")||l.includes("push up")) return `${BASE}/Push_Ups.jpeg`;
     if(l.includes("incline dumbbell")||l.includes("incline press")) return `${BASE}/Incline_Dumbbell_Press.jpeg`;
     if(l.includes("bench press")||l.includes("chest press")) return `${BASE}/Bench_Press.jpeg`;
     if(l.includes("overhead press")||l.includes("military press")||l.includes("ohp")||l.includes("shoulder press")||l.includes("arnold")) return `${BASE}/Overhead_Press.jpeg`;
@@ -14,12 +16,26 @@
     if(l.includes("lateral raise")||l.includes("front raise")||l.includes("side delt")) return `${BASE}/Lateral_Raise.jpeg`;
     if(l.includes("face pull")) return `${BASE}/Face_Pull.jpeg`;
     if(l.includes("overhead tricep")||l.includes("overhead extension")) return `${BASE}/Overhead_Tricep_Extension.jpeg`;
-    if(l.includes("tricep pushdown")||l.includes("rope pushdown")||l.includes("cable pushdown")||l.includes("skull crusher")||l.includes("tricep dip")) return `${BASE}/Tricep_Pushdown.jpeg`;
+    if(l.includes("tricep dip")||l.includes("chair dip")) return `${BASE}/Tricep_Dips.jpeg`;
+    if(l.includes("tricep pushdown")||l.includes("rope pushdown")||l.includes("cable pushdown")||l.includes("skull crusher")) return `${BASE}/Tricep_Pushdown.jpeg`;
     if(l.includes("leg press")) return `${BASE}/Leg_Press.jpeg`;
-    if(l.includes("leg extension")) return `${BASE}/Leg_Extension.jpeg`;
+    if(l.includes("leg extension")||l.includes("band seated leg")) return `${BASE}/Leg_Extension.jpeg`;
     if(l.includes("leg curl")) return `${BASE}/Leg_Curl.jpeg`;
     if(l.includes("calf raise")||l.includes("calf")) return `${BASE}/Calf_Raise.jpeg`;
-    if(l.includes("lunge")||l.includes("step-up")||l.includes("split squat")) return `${BASE}/Lunge.jpeg`;
+    if(l.includes("lunge")||l.includes("reverse lunge")||l.includes("step-up")||l.includes("split squat")) return `${BASE}/Lunge.jpeg`;
+    if(l.includes("superman")) return `${BASE}/Superman_Hold.jpeg`;
+    if(l.includes("plank shoulder")||l.includes("shoulder tap")) return `${BASE}/Plank_Shoulder_Taps.jpeg`;
+    if(l.includes("plank")) return `${BASE}/Plank.jpeg`;
+    if(l.includes("glute bridge")||l.includes("glute bridges")||l.includes("hip thrust")) return `${BASE}/Glute_Bridges.jpeg`;
+    if(l.includes("wall sit")) return `${BASE}/Wall_Sit.jpeg`;
+    if(l.includes("burpee")) return `${BASE}/Burpees.jpeg`;
+    if(l.includes("mountain climber")) return `${BASE}/Mountain_Climbers.jpeg`;
+    if(l.includes("bicycle crunch")) return `${BASE}/Bicycle_Crunches.jpeg`;
+    if(l.includes("straight leg raise")) return `${BASE}/Straight_Leg_Raises.jpeg`;
+    if(l.includes("foam roller quad")||l.includes("foam roller it")||l.includes("it band")) return `${BASE}/Foam_Roller_Quad.jpeg`;
+    if(l.includes("clamshell")) return `${BASE}/Clamshells.jpeg`;
+    if(l.includes("stationary bike")||l.includes("pool walking")) return `${BASE}/Stationary_Bike.jpeg`;
+    if(l.includes("pilates ring")||l.includes("inner thigh squeeze")) return `${BASE}/Pilates_Ring_Squeeze.jpeg`;
     if(l.includes("light jog")||l.includes("jog in place")) return `${BASE}/Light_Jog.jpeg`;
     if(l.includes("jumping jack")) return `${BASE}/Jumping_Jacks.jpeg`;
     if(l.includes("neck rotation")) return `${BASE}/Neck_Rotations.jpeg`;
@@ -40,8 +56,7 @@
     if(l.includes("shoulder stretch")) return `${BASE}/Shoulder_Stretch.jpeg`;
     if(l.includes("child")) return `${BASE}/Childs_Pose.jpeg`;
     if(l.includes("deep breath")) return `${BASE}/Deep_Breathing.jpeg`;
-    if(l.includes("high knee")) return `${BASE}/Light_Jog.jpeg`;
-    if(l.includes("bodyweight squat")) return `${BASE}/Barbell_Squat.jpeg`;
+    if(l.includes("high knee")||l.includes("bodyweight squat")) return `${BASE}/Barbell_Squat.jpeg`;
     return null;
   };
   const img = getImg(exerciseId);
