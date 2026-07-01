@@ -128,6 +128,8 @@ export function WorkoutPlayer({
   const [phase, setPhase] = useState("exercise"); // "exercise" | "rest" | "done"
   const [restRemaining, setRestRemaining] = useState(0);
   const [exerciseRemaining, setExerciseRemaining] = useState(null); // for duration-based exercises
+  const [setStarted, setSetStarted] = useState(false);
+  const [motivation, setMotivation] = useState(null);
   const [elapsed, setElapsed] = useState(0); // overall stopwatch, seconds
   const [saving, setSaving] = useState(false);
   const videoRef = useRef(null);
@@ -153,13 +155,16 @@ export function WorkoutPlayer({
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
+    setSetStarted(false);
+    setExerciseRemaining(null);
+  }, [exIdx, setIdx, phase]);
+
+  // Start timer when user presses Start
+  useEffect(() => {
+    if (!setStarted || phase !== "exercise") return;
     const dur = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
-    if (phase === "exercise" && dur) {
-      setExerciseRemaining(dur);
-    } else {
-      setExerciseRemaining(null);
-    }
-  }, [exIdx, setIdx, phase, current]);
+    if (dur) setExerciseRemaining(dur);
+  }, [setStarted]);
 
   // Exercise duration countdown — auto-completes the set when it hits zero
   useEffect(() => {
@@ -224,16 +229,20 @@ export function WorkoutPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setIdx, totalSets, exIdx, queue.length, logWorkout]);
 
+  const MOTIVATIONS = ["💪 Great Set!", "🔥 Keep Going!", "⚡ Crushing It!", "🎯 Perfect Form!", "🏆 Beast Mode!"];
   const handleSetDone = () => {
     if (videoRef.current) videoRef.current.pause();
+    setSetStarted(false);
+    const msg = MOTIVATIONS[Math.floor(Math.random() * MOTIVATIONS.length)];
+    setMotivation(msg);
+    setTimeout(() => setMotivation(null), 1500);
     const isLastSetOfLastExercise = setIdx >= totalSets && exIdx >= queue.length - 1;
     if (isLastSetOfLastExercise) {
       logWorkout(queue.length);
-      setPhase("done");
+      setTimeout(() => setPhase("done"), 1500);
       return;
     }
-    setRestRemaining(restSeconds);
-    setPhase("rest");
+    setTimeout(() => { setRestRemaining(restSeconds); setPhase("rest"); }, 1500);
   };
 
   const handleSkipRest = () => {
@@ -322,9 +331,11 @@ export function WorkoutPlayer({
               {exerciseRemaining !== null && (
                 <div style={{
                   position: "absolute", top: 10, right: 10,
-                  background: "rgba(0,0,0,0.75)", color: accentColor,
+                  background: exerciseRemaining <= 5 ? "rgba(220,38,38,0.9)" : exerciseRemaining <= 10 ? "rgba(234,88,12,0.85)" : "rgba(0,0,0,0.75)",
+                  color: exerciseRemaining <= 10 ? "#fff" : accentColor,
                   fontFamily: "monospace", fontWeight: 800, fontSize: 22,
                   padding: "6px 14px", borderRadius: 8,
+                  animation: exerciseRemaining <= 5 ? "pulse 0.5s infinite" : "none",
                 }}>
                   {exerciseRemaining}s
                 </div>
@@ -337,9 +348,11 @@ export function WorkoutPlayer({
               {exerciseRemaining !== null && (
                 <div style={{
                   position: "absolute", top: 10, right: 10,
-                  background: "rgba(0,0,0,0.75)", color: accentColor,
+                  background: exerciseRemaining <= 5 ? "rgba(220,38,38,0.9)" : exerciseRemaining <= 10 ? "rgba(234,88,12,0.85)" : "rgba(0,0,0,0.75)",
+                  color: exerciseRemaining <= 10 ? "#fff" : accentColor,
                   fontFamily: "monospace", fontWeight: 800, fontSize: 22,
                   padding: "6px 14px", borderRadius: 8,
+                  animation: exerciseRemaining <= 5 ? "pulse 0.5s infinite" : "none",
                 }}>
                   {exerciseRemaining}s
                 </div>
@@ -363,15 +376,26 @@ export function WorkoutPlayer({
           </div>
         </div>
 
-        <div style={{ padding: "0 18px 20px", display: "flex", gap: 10 }}>
+        {motivation && (
+          <div style={{ margin: "0 18px 8px", background: "#22c55e", color: "#fff", borderRadius: 10, padding: "12px", textAlign: "center", fontSize: 18, fontWeight: 800 }}>
+            {motivation}
+          </div>
+        )}
+        <div style={{ padding: "0 18px 20px", display: "flex", gap: 10, flexWrap: "wrap" }}>
           {phase === "exercise" ? (
-            <button onClick={handleSetDone} style={primaryBtnStyle(accentColor)}>
-              {exerciseRemaining !== null ? "✓ Finish Early" : `✓ Set ${setIdx} Done`}
-            </button>
+            !setStarted ? (
+              <button onClick={() => setSetStarted(true)} style={{ ...primaryBtnStyle(accentColor), fontSize: 16 }}>
+                ▶ Start Set {setIdx}
+              </button>
+            ) : (
+              <button onClick={handleSetDone} style={primaryBtnStyle(accentColor)}>
+                {exerciseRemaining !== null ? "✓ Finish Early" : `✓ Set ${setIdx} Done`}
+              </button>
+            )
           ) : (
             <button onClick={handleSkipRest} style={primaryBtnStyle(accentColor)}>⏭ Skip Rest</button>
           )}
-          <button onClick={handleSkipExercise} style={secondaryBtnStyle}>Skip Exercise</button>
+          <button onClick={handleSkipExercise} style={secondaryBtnStyle}>Skip</button>
         </div>
       </div>
     </div>
@@ -401,6 +425,8 @@ const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none"
 function closeBtnStyle(accent) {
   return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
+
+
 
 
 
