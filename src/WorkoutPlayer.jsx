@@ -332,8 +332,18 @@ export function WorkoutPlayer({
             </>
           )}
           {phase === "exercise" && !videoSrc && (
-            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1a1a1a", padding: 8 }}>
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1a1a1a", padding: 8, position: "relative" }}>
               <ExerciseIllustration exerciseId={current.exercise.name} size={180} />
+              {exerciseRemaining !== null && (
+                <div style={{
+                  position: "absolute", top: 10, right: 10,
+                  background: "rgba(0,0,0,0.75)", color: accentColor,
+                  fontFamily: "monospace", fontWeight: 800, fontSize: 22,
+                  padding: "6px 14px", borderRadius: 8,
+                }}>
+                  {exerciseRemaining}s
+                </div>
+              )}
             </div>
           )}
           {phase === "rest" && (
@@ -391,6 +401,7 @@ const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none"
 function closeBtnStyle(accent) {
   return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
+
 
 
 
