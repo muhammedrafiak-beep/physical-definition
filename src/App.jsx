@@ -624,12 +624,47 @@ const WORKOUT_SYSTEMS = [
 
 // ── MEAL PLANS ─────────────────────────────────────────────
 const MEALS = [
-  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#f59e0b", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Kerala.jpeg", baseCal: 1800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
+  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#f59e0b", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Kerala.jpeg", baseCal: 1800, meals: [{ mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg", time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack1.jpeg", time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack2.jpeg", time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Dinner.jpeg", time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
   { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#ef4444", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Protein.jpeg", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Egg whites × 6 + Oats 60g + Milk 200ml", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake 30g + Apple × 1", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice 120g + Veg 80g", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 1 + Peanut butter toast 40g", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish 180g + Sweet potato 150g + Salad 80g", cal: 420, p: 40, c: 42, f: 8 }] },
   { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#22c55e", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_FatBurn.jpeg", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt 150g + Berries 60g + Chia 10g", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber 100g + Hummus 40g", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad 200g + Olive oil 10ml", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds 20g + Black coffee 150ml", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish 150g + Vegetables 100g + Dal soup 100g", cal: 380, p: 38, c: 28, f: 8 }] },
-  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#60a5fa", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Vegetarian.jpeg", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
+  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#60a5fa", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Vegetarian.jpeg", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
   { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#9333ea", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Muscle.jpeg", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
 ];
+
+const MEAL_IMAGES = {
+  kerala: {
+    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg",
+    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack1.jpeg",
+    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg",
+    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Dinner.jpeg",
+  },
+  protein: {
+    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Breakfast.jpeg",
+    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Snack1.jpeg",
+    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Lunch.jpeg",
+    "Pre-workout": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_PreWorkout.jpeg",
+    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Dinner.jpeg",
+  },
+  fatburn: {
+    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Breakfast.jpeg",
+    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Snack1.jpeg",
+    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Lunch.jpeg",
+    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Dinner.jpeg",
+  },
+  veg: {
+    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Breakfast.jpeg",
+    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Snack1.jpeg",
+    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Lunch.jpeg",
+    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Dinner.jpeg",
+  },
+  bulk: {
+    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Breakfast.jpeg",
+    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Snack1.jpeg",
+    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Lunch.jpeg",
+    "Pre-workout": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_PreWorkout.jpeg",
+    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Dinner.jpeg",
+  },
+};
 
 // Scale a meal plan's quantities + macros to match a target calorie goal
 function scaleMealPlan(plan, targetCal) {
@@ -1656,18 +1691,24 @@ function MealSelector({ client, onSelect, onClose, lang }) {
                   </div>
                 ))}
               </div>
-              {plan.meals.map((m, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, padding: "7px 0", borderBottom: i < plan.meals.length - 1 ? `1px solid ${G.border}` : "none" }}>
-                  <div style={{ width: 52, flexShrink: 0 }}>
-                    <div style={{ fontSize: 10, color: plan.color, fontWeight: 700 }}>{m.time}</div>
-                    <div style={{ fontSize: 9, color: G.muted }}>{isAr ? m.nameAr : m.name}</div>
+              {plan.meals.map((m, i) => {
+                const mealImg = MEAL_IMAGES[rawPlan?.id]?.[m.name];
+                return (
+                  <div key={i} style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden", border: `1px solid ${G.border}` }}>
+                    {mealImg && <img src={mealImg} alt={m.name} style={{ width: "100%", height: 120, objectFit: "cover", display: "block" }} />}
+                    <div style={{ display: "flex", gap: 10, padding: "8px 10px" }}>
+                      <div style={{ width: 52, flexShrink: 0 }}>
+                        <div style={{ fontSize: 10, color: plan.color, fontWeight: 700 }}>{m.time}</div>
+                        <div style={{ fontSize: 9, color: G.muted }}>{isAr ? m.nameAr : m.name}</div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: G.text }}>{m.items}</div>
+                        <div style={{ fontSize: 10, color: G.muted, marginTop: 1 }}>{m.cal} kcal · P:{m.p}g C:{m.c}g F:{m.f}g</div>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 11, color: G.text }}>{m.items}</div>
-                    <div style={{ fontSize: 10, color: G.muted, marginTop: 1 }}>{m.cal} kcal · P:{m.p}g C:{m.c}g F:{m.f}g</div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <Btn ch={`✓ ${isAr ? "إضافة هذه الخطة" : "Add This Plan"}`} v="gold" full onClick={() => onSelect(plan, tot, target)} sx={{ padding: "12px", fontSize: 14, fontWeight: 700 }} />
           </div>
@@ -2398,10 +2439,32 @@ export default function App() {
                             <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{mp.emoji} {isAr ? mp.nameAr : mp.name}</div>
                           </div>
                         </div>
-                        <div className="card" style={{ padding: 16, minHeight: 150 }}>
-                          {liveC.nutritionPlan
-                            ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.nutritionPlan}</pre>
-                            : <div style={{ textAlign: "center", padding: "24px 20px", color: G.dim }}><div style={{ fontSize: 28, marginBottom: 8 }}>🥗</div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
+                        <div>
+                          {(() => {
+                            const pal = PAL.find(p => p.id === (liveC.pal || "moderate")) || PAL[2];
+                            const tdee = calcTDEE(liveC.weight, liveC.height, liveC.age, liveC.gender || "male", pal.factor);
+                            const target = goalCal(tdee, liveC.goal);
+                            const scaledPlan = scaleMealPlan(mp, target);
+                            return scaledPlan.meals.map((m, i) => {
+                              const mealImg = MEAL_IMAGES[mp.id]?.[m.name];
+                              return (
+                                <div key={i} style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden", border: `1px solid ${G.border}` }}>
+                                  {mealImg && <img src={mealImg} alt={m.name} style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }} />}
+                                  <div style={{ padding: "10px 12px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                                      <div>
+                                        <span style={{ fontSize: 11, color: mp.color, fontWeight: 700 }}>{m.time} — </span>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{isAr ? m.nameAr : m.name}</span>
+                                      </div>
+                                      <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700 }}>{m.cal} kcal</span>
+                                    </div>
+                                    <div style={{ fontSize: 11, color: G.muted, marginBottom: 4 }}>{m.items}</div>
+                                    <div style={{ fontSize: 10, color: G.muted }}>P:{m.p}g · C:{m.c}g · F:{m.f}g</div>
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
                       </div>
                     ) : (
@@ -2667,6 +2730,10 @@ export default function App() {
     </div>
   );
 }
+
+
+
+
 
 
 
