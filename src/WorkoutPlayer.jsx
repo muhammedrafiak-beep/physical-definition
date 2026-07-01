@@ -153,13 +153,13 @@ export function WorkoutPlayer({
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
-    if (phase === "exercise" && exDurationSeconds) {
-      setExerciseRemaining(exDurationSeconds);
+    const dur = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
+    if (phase === "exercise" && dur) {
+      setExerciseRemaining(dur);
     } else {
       setExerciseRemaining(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exIdx, setIdx, phase]);
+  }, [exIdx, setIdx, phase, current]);
 
   // Exercise duration countdown — auto-completes the set when it hits zero
   useEffect(() => {
@@ -391,6 +391,7 @@ const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none"
 function closeBtnStyle(accent) {
   return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
+
 
 
 
