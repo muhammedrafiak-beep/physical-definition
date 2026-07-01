@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { WorkoutPlayer } from "./WorkoutPlayer";
+import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -2192,7 +2193,7 @@ export default function App() {
   const activeCount = clients.filter(c => c.status === "Active").length;
   const goals = clients.reduce((a, c) => { a[c.goal] = (a[c.goal] || 0) + 1; return a; }, {});
   const GOALS = isAr ? GOALS_AR : GOALS_EN;
-  const NAV = [{ id: "dashboard", l: t.dashboard, i: "◈" }, { id: "clients", l: t.clients, i: "◎" }, { id: "plans", l: t.plans, i: "▤" }, { id: "requests", l: `${t.requests}${regs.length ? `(${regs.length})` : ""}`, i: "📋" }];
+  const NAV = [{ id: "dashboard", l: t.dashboard, i: "◈" }, { id: "clients", l: t.clients, i: "◎" }, { id: "plans", l: t.plans, i: "▤" }, { id: "requests", l: `${t.requests}${regs.length ? `(${regs.length})` : ""}`, i: "📋" }, { id: "history", l: "History", i: "📊" }];
 
   // LOADING
   if (loading) return (
@@ -2261,7 +2262,7 @@ export default function App() {
           <div style={{ display: "flex", gap: 7 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="danger" onClick={logout} sx={{ padding: "5px 12px", fontSize: 12 }} /></div>
         </div>
         <div style={{ background: G.surf, borderBottom: `1px solid ${G.border}`, display: "flex", overflowX: "auto" }}>
-          {[{ id: "profile", l: t.profile }, { id: "workout", l: t.workout }, { id: "nutrition", l: t.nutrition }, { id: "progress", l: t.progress }].map(tab => (
+          {[{ id: "profile", l: t.profile }, { id: "workout", l: t.workout }, { id: "nutrition", l: t.nutrition }, { id: "progress", l: t.progress }, { id: "history", l: "📊 History" }].map(tab => (
             <button key={tab.id} className="btn" onClick={() => setCTab(tab.id)} style={{ padding: "12px 16px", background: "none", fontSize: 13, fontWeight: 600, color: cTab === tab.id ? G.gold : G.muted, borderBottom: cTab === tab.id ? `2px solid ${G.gold}` : "2px solid transparent", whiteSpace: "nowrap" }}>{tab.l}</button>
           ))}
         </div>
@@ -2371,6 +2372,11 @@ export default function App() {
           {cTab === "progress" && (
             <ProgressTab client={liveC} setClients={setClients} lang={lang} isAr={isAr} t={t} />
           )}
+          {cTab === "history" && (
+            <div className="fd">
+              <ClientWorkoutHistory clientId={liveC.id} accentColor={G.gold} />
+            </div>
+          )}
         </div>
       </div>
     );
@@ -2474,6 +2480,13 @@ export default function App() {
 
         {/* PLANS */}
         {aTab === "plans" && <PlansTab clients={clients} selC={selC} setSelC={setSelC} setClients={setClients} lang={lang} onUpdate={dbUpdateClient} />}
+
+        {/* HISTORY */}
+        {aTab === "history" && (
+          <div className="fd">
+            <AdminWorkoutHistory clients={clients} />
+          </div>
+        )}
 
         {/* REQUESTS */}
         {aTab === "requests" && (
@@ -2591,6 +2604,9 @@ export default function App() {
     </div>
   );
 }
+
+
+
 
 
 
