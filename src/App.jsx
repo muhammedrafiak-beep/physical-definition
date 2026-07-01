@@ -624,11 +624,11 @@ const WORKOUT_SYSTEMS = [
 
 // ── MEAL PLANS ─────────────────────────────────────────────
 const MEALS = [
-  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#f59e0b", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=75", baseCal: 1800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
-  { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#ef4444", image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=75", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Egg whites × 6 + Oats 60g + Milk 200ml", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake 30g + Apple × 1", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice 120g + Veg 80g", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 1 + Peanut butter toast 40g", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish 180g + Sweet potato 150g + Salad 80g", cal: 420, p: 40, c: 42, f: 8 }] },
-  { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#22c55e", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=75", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt 150g + Berries 60g + Chia 10g", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber 100g + Hummus 40g", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad 200g + Olive oil 10ml", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds 20g + Black coffee 150ml", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish 150g + Vegetables 100g + Dal soup 100g", cal: 380, p: 38, c: 28, f: 8 }] },
-  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#60a5fa", image: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400&q=75", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
-  { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#9333ea", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=75", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
+  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#f59e0b", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Kerala.jpeg", baseCal: 1800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
+  { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#ef4444", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Protein.jpeg", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Egg whites × 6 + Oats 60g + Milk 200ml", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake 30g + Apple × 1", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice 120g + Veg 80g", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 1 + Peanut butter toast 40g", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish 180g + Sweet potato 150g + Salad 80g", cal: 420, p: 40, c: 42, f: 8 }] },
+  { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#22c55e", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_FatBurn.jpeg", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt 150g + Berries 60g + Chia 10g", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber 100g + Hummus 40g", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad 200g + Olive oil 10ml", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds 20g + Black coffee 150ml", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish 150g + Vegetables 100g + Dal soup 100g", cal: 380, p: 38, c: 28, f: 8 }] },
+  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#60a5fa", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Vegetarian.jpeg", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
+  { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#9333ea", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Muscle.jpeg", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
 ];
 
 // Scale a meal plan's quantities + macros to match a target calorie goal
@@ -1547,15 +1547,7 @@ function ExerciseCard({ exercise, color, lang }) {
           <div style={{ fontSize: 10, color: G.muted, marginBottom: 7, lineHeight: 1.5 }}>💡 {exercise.notes}</div>
         )}
         {/* YouTube link button only — no thumbnail */}
-        <a href={ytSearchUrl} target="_blank" rel="noreferrer"
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            padding: "7px", background: "#ff000012", border: "1px solid #ff000028",
-            borderRadius: 7, textDecoration: "none", color: "#ff6b6b", fontSize: 10, fontWeight: 600 }}>
-          <div style={{ width: 16, height: 16, background: "#ff0000", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <div style={{ width: 0, height: 0, borderTop: "4px solid transparent", borderBottom: "4px solid transparent", borderLeft: "7px solid white", marginLeft: 1 }} />
-          </div>
-          {isAr ? "شاهد على يوتيوب" : "Watch Tutorial"}
-        </a>
+
       </div>
     </div>
   );
@@ -1691,6 +1683,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
   const [showMeal, setShowMeal] = useState(false);
   const [showWO, setShowWO] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [showDayPicker, setShowDayPicker] = useState(false);
   const t = T[lang]; const isAr = lang === "ar";
   const sc = clients.find(c => c.id === selC?.id);
 
@@ -1766,7 +1759,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>⚡ {isAr ? "خطة التمرين" : "Workout Plan"}</div>
                 {ws && <div style={{ fontSize: 11, color: ws.color, marginTop: 2 }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>}
-                {ws && <button onClick={() => setShowPlayer(true)} style={{ marginTop: 8, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>}
+                {ws && <button onClick={() => setShowDayPicker(true)} style={{ marginTop: 8, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>}
               </div>
               {!editing ? (
                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
@@ -1804,8 +1797,26 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
             )}
           </div>
 
+          {showDayPicker && ws && (
+            <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+              <div style={{ background: "#181818", borderRadius: 16, padding: 24, width: "100%", maxWidth: 360 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: G.gold, marginBottom: 16 }}>⚡ Select Day</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                  <button onClick={() => { setActiveDay(null); setShowPlayer(true); setShowDayPicker(false); }} style={{ background: "#2a2a2a", color: "#fff", border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                    🏋️ Full Workout (All Days)
+                  </button>
+                  {ws.days.map((day, i) => (
+                    <button key={i} onClick={() => { setActiveDay(day.name); setShowPlayer(true); setShowDayPicker(false); }} style={{ background: `${ws.color}15`, color: ws.color, border: `1px solid ${ws.color}30`, borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                      📅 {day.name}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => setShowDayPicker(false)} style={{ width: "100%", background: "#333", color: "#ccc", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
+              </div>
+            </div>
+          )}
           {showPlayer && ws && (
-            <WorkoutPlayer workoutSystem={ws} client={sc} onClose={() => setShowPlayer(false)} accentColor={G.gold} />
+            <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={sc} onClose={() => { setShowPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
           )}
 
           {/* NUTRITION */}
@@ -2081,6 +2092,7 @@ export default function App() {
   const [aTab, setATab] = useState("dashboard");
   const [cTab, setCTab] = useState("profile");
   const [showClientPlayer, setShowClientPlayer] = useState(false);
+  const [showClientDayPicker, setShowClientDayPicker] = useState(false);
   const [activeDay, setActiveDay] = useState(null);
   const [selC, setSelC] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -2261,12 +2273,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}><Logo s={26} /><div className="sf gd" style={{ fontSize: 13, fontWeight: 700 }}>{t.appName}</div></div>
           <div style={{ display: "flex", gap: 7 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="danger" onClick={logout} sx={{ padding: "5px 12px", fontSize: 12 }} /></div>
         </div>
-        <div style={{ background: G.surf, borderBottom: `1px solid ${G.border}`, display: "flex", overflowX: "auto" }}>
-          {[{ id: "profile", l: t.profile }, { id: "workout", l: t.workout }, { id: "nutrition", l: t.nutrition }, { id: "progress", l: t.progress }, { id: "history", l: "📊 History" }].map(tab => (
-            <button key={tab.id} className="btn" onClick={() => setCTab(tab.id)} style={{ padding: "12px 16px", background: "none", fontSize: 13, fontWeight: 600, color: cTab === tab.id ? G.gold : G.muted, borderBottom: cTab === tab.id ? `2px solid ${G.gold}` : "2px solid transparent", whiteSpace: "nowrap" }}>{tab.l}</button>
-          ))}
-        </div>
-        <div style={{ padding: 14, maxWidth: 600, margin: "0 auto" }}>
+        <div style={{ padding: 14, maxWidth: 600, margin: "0 auto", paddingBottom: 80 }}>
           {cTab === "profile" && (
             <div className="fd">
               <div style={{ marginBottom: 14 }}>
@@ -2324,7 +2331,7 @@ export default function App() {
                         <div className="card" style={{ padding: "12px 14px", marginBottom: 14, border: `1px solid ${ws.color}30`, background: `${ws.color}08` }}>
                           <div style={{ fontSize: 15, fontWeight: 700, color: ws.color }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
                           <div style={{ fontSize: 11, color: G.muted, marginTop: 3 }}>{isAr ? ws.descAr : ws.desc}</div>
-                          <button onClick={() => setShowClientPlayer(true)} style={{ marginTop: 10, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "9px 18px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>
+                          <button onClick={() => setShowClientDayPicker(true)} style={{ marginTop: 10, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "9px 18px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>
                         </div>
                         {/* Days with exercise cards */}
                         {ws.days.map((day, di) => (
@@ -2340,6 +2347,24 @@ export default function App() {
                             </div>
                           </div>
                         ))}
+                        {showClientDayPicker && ws && (
+                          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+                            <div style={{ background: "#181818", borderRadius: 16, padding: 24, width: "100%", maxWidth: 360 }}>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: G.gold, marginBottom: 16 }}>⚡ Select Day</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                                <button onClick={() => { setActiveDay(null); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: "#2a2a2a", color: "#fff", border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                                  🏋️ Full Workout (All Days)
+                                </button>
+                                {ws.days.map((day, i) => (
+                                  <button key={i} onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: `${ws.color}15`, color: ws.color, border: `1px solid ${ws.color}30`, borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                                    📅 {day.name}
+                                  </button>
+                                ))}
+                              </div>
+                              <button onClick={() => setShowClientDayPicker(false)} style={{ width: "100%", background: "#333", color: "#ccc", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
+                            </div>
+                          </div>
+                        )}
                         {showClientPlayer && (
                           <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={liveC} onClose={() => { setShowClientPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
                         )}
@@ -2604,6 +2629,12 @@ export default function App() {
     </div>
   );
 }
+
+
+
+
+
+
 
 
 
