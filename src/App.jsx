@@ -2403,6 +2403,22 @@ export default function App() {
             </div>
           )}
         </div>
+        {/* BOTTOM NAV */}
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.surf, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)" }}>
+          {[
+            { id: "workout", l: "Workouts", i: "⚡" },
+            { id: "nutrition", l: "Nutrition", i: "🥗" },
+            { id: "progress", l: "Progress", i: "📈" },
+            { id: "history", l: "History", i: "📊" },
+            { id: "profile", l: "Profile", i: "👤" },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setCTab(tab.id)} style={{ flex: 1, background: "none", border: "none", padding: "10px 4px 8px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <span style={{ fontSize: 20 }}>{tab.i}</span>
+              <span style={{ fontSize: 9, fontWeight: 600, color: cTab === tab.id ? G.gold : G.muted }}>{tab.l}</span>
+              {cTab === tab.id && <div style={{ width: 4, height: 4, borderRadius: "50%", background: G.gold }} />}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
@@ -2629,6 +2645,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
