@@ -670,6 +670,7 @@ const MEAL_IMAGES = {
   kerala: {
     "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg",
     "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack1.jpeg",
+    "Snack@16:00": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack2.jpeg",
     "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg",
     "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Dinner.jpeg",
   },
@@ -683,12 +684,14 @@ const MEAL_IMAGES = {
   fatburn: {
     "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Breakfast.jpeg",
     "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Snack1.jpeg",
+    "Snack@16:00": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Snack2.jpeg",
     "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Lunch.jpeg",
     "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Dinner.jpeg",
   },
   veg: {
     "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Breakfast.jpeg",
     "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Snack1.jpeg",
+    "Snack@16:00": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Snack2.jpeg",
     "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Lunch.jpeg",
     "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Dinner.jpeg",
   },
@@ -2481,7 +2484,7 @@ export default function App() {
                             const target = goalCal(tdee, liveC.goal);
                             const scaledPlan = scaleMealPlan(mp, target);
                             return scaledPlan.meals.map((m, i) => {
-                              const mealImg = MEAL_IMAGES[mp.id]?.[m.name];
+                              const mealImg = MEAL_IMAGES[mp.id]?.[`${m.name}@${m.time}`] || MEAL_IMAGES[mp.id]?.[m.name];
                               const prepSteps = MEAL_PREP[mp.id]?.[m.name];
                               return (
                                 <div key={i} style={{ marginBottom: 16, borderRadius: 18, overflow: "hidden", background: G.surf, boxShadow: "0 4px 16px rgba(0,0,0,0.35)" }}>
@@ -2781,6 +2784,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
