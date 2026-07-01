@@ -35,13 +35,26 @@ function parseSets(setsVal) {
 function parseExerciseDurationSeconds(repsVal) {
   if (!repsVal) return null;
   const s = String(repsVal).toLowerCase();
-  if (!/(sec|min|hold|\bs\b)/.test(s)) return null;
+  // Time-based: "30 sec", "1 min", "30s", "hold"
   const minMatch = s.match(/(\d+)\s*min/);
   if (minMatch) return parseInt(minMatch[1], 10) * 60;
   const secMatch = s.match(/(\d+)\s*(sec|s)\b/);
   if (secMatch) return parseInt(secMatch[1], 10);
-  const num = parseInt(s, 10);
-  return isNaN(num) ? null : num;
+  if (s.includes("hold")) return 30;
+  // Rep-based: TUT (Time Under Tension) ~3 sec per rep
+  const repMatch = s.match(/(\d+)(?:\s*-\s*(\d+))?/);
+  if (repMatch) {
+    const lo = parseInt(repMatch[1], 10);
+    const hi = repMatch[2] ? parseInt(repMatch[2], 10) : lo;
+    const avgReps = Math.round((lo + hi) / 2);
+    if (avgReps <= 5) return 20;
+    if (avgReps <= 8) return 35;
+    if (avgReps <= 12) return 50;
+    if (avgReps <= 15) return 65;
+    if (avgReps <= 20) return 80;
+    return 90;
+  }
+  return 45;
 }
 
 function fmtClock(totalSeconds) {
@@ -378,6 +391,7 @@ const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none"
 function closeBtnStyle(accent) {
   return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
+
 
 
 
