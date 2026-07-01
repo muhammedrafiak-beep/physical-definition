@@ -631,6 +631,41 @@ const MEALS = [
   { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#9333ea", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Muscle.jpeg", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
 ];
 
+const MEAL_PREP = {
+  kerala: {
+    "Breakfast": ["Soak rice flour lightly with water and salt", "Layer flour and grated coconut in puttu maker, steam 7-10 min", "Heat kadala curry (pre-soaked chickpeas pressure cooked with onion, coconut & spices)", "Serve hot with 1 banana"],
+    "Snack": ["Open one fresh coconut and pour water into glass", "Portion 20g mixed nuts (almonds, cashews) into a bowl"],
+    "Lunch": ["Cook brown rice (1:2 rice-water) for 25 min", "Simmer dal with turmeric & salt until soft", "Cook fish curry with kudampuli, chilli & coconut milk 15 min", "Stir-fry vegetables 5 min with minimal oil"],
+    "Dinner": ["Knead wheat flour with water, rest 15 min, roll & cook chapatis on hot tawa", "Cook chicken curry with onion, tomato, ginger-garlic & spices 20 min", "Chop fresh salad — cucumber, carrot, onion with lemon"],
+  },
+  protein: {
+    "Breakfast": ["Whisk 6 egg whites, cook as omelette with minimal oil", "Cook 60g oats with 200ml milk for 5 min", "Serve together while warm"],
+    "Snack": ["Blend 30g whey protein with cold water or milk", "Eat 1 apple alongside"],
+    "Lunch": ["Season chicken breast with pepper, paprika & salt", "Grill 6-7 min per side until cooked through", "Serve with cooked brown rice and steamed vegetables"],
+    "Pre-workout": ["Toast whole wheat bread, spread peanut butter 40g", "Eat with 1 banana 45-60 min before workout"],
+    "Dinner": ["Marinate fish with lemon, garlic & herbs 15 min", "Grill 5-6 min per side", "Bake or boil sweet potato until fork-tender", "Serve with fresh salad"],
+  },
+  fatburn: {
+    "Breakfast": ["Add 150g Greek yogurt to bowl", "Top with 60g fresh berries and 10g chia seeds", "Let chia soak 5 min before eating"],
+    "Snack": ["Slice cucumber into sticks", "Serve with 40g hummus for dipping"],
+    "Lunch": ["Grill seasoned chicken breast, slice thin", "Toss mixed greens, tomato, cucumber with 10ml olive oil & lemon", "Top salad with warm chicken"],
+    "Dinner": ["Steam fish 12-15 min with ginger & garlic", "Steam mixed vegetables 8 min", "Heat light dal soup — serve everything together"],
+  },
+  veg: {
+    "Breakfast": ["Steam idli batter in moulds 10-12 min", "Heat sambar with vegetables", "Serve 4 idlis with sambar and coconut chutney"],
+    "Snack": ["Chop seasonal fruits into a bowl 150g", "Serve with 200ml chilled buttermilk"],
+    "Lunch": ["Cook brown rice 25 min", "Heat rajma curry (pre-soaked, pressure cooked with spices)", "Lightly pan-fry paneer cubes 80g", "Serve with fresh salad"],
+    "Dinner": ["Cook rotis on hot tawa", "Heat dal makhani (slow-cooked black dal with butter)", "Prepare mixed vegetable curry with minimal oil"],
+  },
+  bulk: {
+    "Breakfast": ["Scramble 4 whole eggs with minimal butter", "Cook 80g oats with 250ml full-fat milk", "Serve with 1 banana"],
+    "Snack": ["Blend 60g mass gainer with milk or water", "Eat 40g dates alongside"],
+    "Lunch": ["Cook white rice 180g", "Grill or curry 250g chicken", "Heat dal, add 10g ghee on rice", "Eat together as a full meal"],
+    "Pre-workout": ["Toast 2 slices bread with 30g peanut butter", "Eat with 2 bananas 45-60 min before workout"],
+    "Dinner": ["Cook 4 chapatis fresh", "Prepare mutton curry with onion-tomato gravy 30-40 min", "Serve with 200ml warm milk before bed"],
+  },
+};
+
 const MEAL_IMAGES = {
   kerala: {
     "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg",
@@ -2447,19 +2482,35 @@ export default function App() {
                             const scaledPlan = scaleMealPlan(mp, target);
                             return scaledPlan.meals.map((m, i) => {
                               const mealImg = MEAL_IMAGES[mp.id]?.[m.name];
+                              const prepSteps = MEAL_PREP[mp.id]?.[m.name];
                               return (
-                                <div key={i} style={{ marginBottom: 10, borderRadius: 10, overflow: "hidden", border: `1px solid ${G.border}` }}>
-                                  {mealImg && <img src={mealImg} alt={m.name} style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }} />}
-                                  <div style={{ padding: "10px 12px" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                                      <div>
-                                        <span style={{ fontSize: 11, color: mp.color, fontWeight: 700 }}>{m.time} — </span>
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{isAr ? m.nameAr : m.name}</span>
-                                      </div>
-                                      <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700 }}>{m.cal} kcal</span>
+                                <div key={i} style={{ marginBottom: 16, borderRadius: 18, overflow: "hidden", background: G.surf, boxShadow: "0 4px 16px rgba(0,0,0,0.35)" }}>
+                                  {mealImg && (
+                                    <div style={{ position: "relative" }}>
+                                      <img src={mealImg} alt={m.name} style={{ width: "100%", height: 170, objectFit: "cover", display: "block" }} />
+                                      <div style={{ position: "absolute", top: 10, left: 10, background: mp.color, color: "#000", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20 }}>{m.time}</div>
+                                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(transparent, rgba(0,0,0,0.65))" }} />
                                     </div>
-                                    <div style={{ fontSize: 11, color: G.muted, marginBottom: 4 }}>{m.items}</div>
-                                    <div style={{ fontSize: 10, color: G.muted }}>P:{m.p}g · C:{m.c}g · F:{m.f}g</div>
+                                  )}
+                                  <div style={{ padding: "12px 14px" }}>
+                                    <div style={{ fontSize: 16, fontWeight: 800, color: G.text, marginBottom: 6 }}>{isAr ? m.nameAr : m.name}</div>
+                                    <div style={{ fontSize: 11.5, color: G.muted, lineHeight: 1.5, marginBottom: 8 }}>{m.items}</div>
+                                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: prepSteps ? 10 : 0 }}>
+                                      <span style={{ background: "#ef444420", color: "#ef4444", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>🔥 {m.cal} kcal</span>
+                                      <span style={{ background: "#ef444415", color: "#f87171", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>P {m.p}g</span>
+                                      <span style={{ background: "#f59e0b15", color: G.amber, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>C {m.c}g</span>
+                                      <span style={{ background: "#60a5fa15", color: G.blue, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>F {m.f}g</span>
+                                    </div>
+                                    {prepSteps && (
+                                      <details style={{ background: G.surf2, borderRadius: 12, padding: "10px 12px" }}>
+                                        <summary style={{ fontSize: 12, fontWeight: 700, color: mp.color, cursor: "pointer", listStyle: "none" }}>👨‍🍳 How to Prep</summary>
+                                        <ol style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+                                          {prepSteps.map((step, si) => (
+                                            <li key={si} style={{ fontSize: 11.5, color: G.text, lineHeight: 1.6, marginBottom: 4 }}>{step}</li>
+                                          ))}
+                                        </ol>
+                                      </details>
+                                    )}
                                   </div>
                                 </div>
                               );
@@ -2730,6 +2781,8 @@ export default function App() {
     </div>
   );
 }
+
+
 
 
 
