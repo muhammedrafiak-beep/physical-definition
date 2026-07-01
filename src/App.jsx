@@ -946,6 +946,7 @@ function generatePDF(client, lang) {
     return `
     <div class="section">
       <div class="section-title" style="color:${mealPlan.color}">🥗 ${isAr ? mealPlan.nameAr : mealPlan.name}</div>
+      <img src="${mealPlan.image}" alt="${mealPlan.name}" style="width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:14px;" />
       <div class="macro-grid">
         <div class="macro-box" style="border-color:${mealPlan.color}"><div class="macro-val" style="color:${mealPlan.color}">${target}</div><div class="macro-label">${isAr ? "السعرات المستهدفة" : "Target Cal"}</div></div>
         <div class="macro-box"><div class="macro-val" style="color:#ef4444">${tot.p}g</div><div class="macro-label">${isAr ? "بروتين" : "Protein"}</div></div>
@@ -2386,10 +2387,31 @@ export default function App() {
                   }
                 })()
               ) : (
-                <div className="card" style={{ padding: 16, minHeight: 150 }}>
-                  {liveC.nutritionPlan
-                    ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.nutritionPlan}</pre>
-                    : <div style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}><div style={{ fontSize: 28, marginBottom: 8 }}>🥗</div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
+                <div>
+                  {(() => {
+                    const mp = MEALS.find(m => m.id === liveC.mealPlanId);
+                    return mp ? (
+                      <div>
+                        <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 14, position: "relative" }}>
+                          <img src={mp.image} alt={mp.name} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.8))", padding: "20px 14px 12px" }}>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{mp.emoji} {isAr ? mp.nameAr : mp.name}</div>
+                          </div>
+                        </div>
+                        <div className="card" style={{ padding: 16, minHeight: 150 }}>
+                          {liveC.nutritionPlan
+                            ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.nutritionPlan}</pre>
+                            : <div style={{ textAlign: "center", padding: "24px 20px", color: G.dim }}><div style={{ fontSize: 28, marginBottom: 8 }}>🥗</div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="card" style={{ padding: 16, minHeight: 150 }}>
+                        {liveC.nutritionPlan
+                          ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.nutritionPlan}</pre>
+                          : <div style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}><div style={{ fontSize: 28, marginBottom: 8 }}>🥗</div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -2645,6 +2667,8 @@ export default function App() {
     </div>
   );
 }
+
+
 
 
 
