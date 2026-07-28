@@ -2759,7 +2759,22 @@ export default function App() {
             return (
               <>
                 <div style={{ background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 11, padding: 14, marginBottom: 12, fontFamily: "monospace", direction: "ltr" }}>
-                  <pre style={{ fontSize: 12, color: G.text, whiteSpace: "pre-wrap", lineHeight: 1.8 }}>{credText}</pre>
+                  <div style={{ display:"flex",flexDirection:"column",gap:10,marginBottom:16 }}>
+  <div style={{ background:"rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
+    <div style={{ fontSize:11,color:G.muted,marginBottom:6,fontWeight:600 }}>📧 {isAr?"البريد الإلكتروني":"Email"}</div>
+    <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+      <div style={{ flex:1,fontSize:13,color:G.text,fontWeight:600,wordBreak:"break-all" }}>{shareD.email}</div>
+      <button onClick={()=>navigator.clipboard.writeText(shareD.email)} style={{ flexShrink:0,background:"rgba(99,102,241,0.2)",border:"1px solid rgba(99,102,241,0.4)",borderRadius:7,padding:"6px 12px",color:"#a5b4fc",fontSize:12,cursor:"pointer",fontWeight:600 }}>📋 {isAr?"نسخ":"Copy"}</button>
+    </div>
+  </div>
+  <div style={{ background:"rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
+    <div style={{ fontSize:11,color:G.muted,marginBottom:6,fontWeight:600 }}>🔑 {isAr?"كلمة المرور":"Password"}</div>
+    <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+      <div style={{ flex:1,fontSize:14,color:G.text,fontWeight:700,letterSpacing:2 }}>{shareD.password}</div>
+      <button onClick={()=>navigator.clipboard.writeText(shareD.password)} style={{ flexShrink:0,background:"rgba(99,102,241,0.2)",border:"1px solid rgba(99,102,241,0.4)",borderRadius:7,padding:"6px 12px",color:"#a5b4fc",fontSize:12,cursor:"pointer",fontWeight:600 }}>📋 {isAr?"نسخ":"Copy"}</button>
+    </div>
+  </div>
+</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {shareD?.phone && (
