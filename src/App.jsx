@@ -2388,7 +2388,7 @@ export default function App() {
               </div>
               {(liveC.workoutPlan || liveC.nutritionPlan) && (
                 <div style={{ marginTop: 12 }}>
-                  <Btn ch={`📄 ${isAr ? "تحميل خطتي PDF" : "Download My Plan PDF"}`} v="gold" full onClick={() => generatePDF(liveC, lang)} sx={{ padding: "12px", fontSize: 13 }} />
+                  
                 </div>
               )}
             </div>
@@ -2398,7 +2398,7 @@ export default function App() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                 <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{cTab === "workout" ? "⚡ " + t.workout : "🥗 " + t.nutrition}</div>
                 {(cTab === "workout" ? liveC.workoutPlan : liveC.nutritionPlan) && (
-                  <Btn ch="📄 PDF" v="ghost" onClick={() => generatePDF(liveC, lang)} sx={{ padding: "7px 12px", fontSize: 12 }} />
+                  
                 )}
               </div>
               {cTab === "workout" ? (
@@ -2755,7 +2755,7 @@ export default function App() {
             <div style={{ fontSize: 13, color: G.muted, marginTop: 5 }}>{t.shareDetails} {shareD?.name}</div>
           </div>
           {shareD && (() => {
-            const credText = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${shareD.name}!\n\n${isAr ? "بيانات دخولك" : "Your login details"}:\n\n📧 *${isAr ? "البريد" : "Email"}:* ${shareD.email}\n🔑 *${isAr ? "كلمة المرور" : "Password"}:* ${shareD.password}\n\n🌐 *App:* ${TRAINER.appUrl}\n\n${isAr ? "افتح الرابط وأضفه للشاشة الرئيسية 📱" : "Open link & Add to Home Screen 📱"}\n\n— ${TRAINER.name}\n${isAr ? "مدرب شخصي معتمد" : "Certified Personal Trainer"}`;
+            const credText = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${shareD.name}!\n\n${isAr ? "بيانات دخولك" : "Your login details"}:\n\n📧 ${isAr ? "البريد" : "Email"}:\n${shareD.email}\n\n🔑 ${isAr ? "كلمة المرور" : "Password"}:\n${shareD.password}\n\n🌐 *App:* ${TRAINER.appUrl}\n\n${isAr ? "افتح الرابط وأضفه للشاشة الرئيسية 📱" : "Open link & Add to Home Screen 📱"}\n\n— ${TRAINER.name}\n${isAr ? "مدرب شخصي معتمد" : "Certified Personal Trainer"}`;
             return (
               <>
                 <div style={{ background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 11, padding: 14, marginBottom: 12, fontFamily: "monospace", direction: "ltr" }}>
