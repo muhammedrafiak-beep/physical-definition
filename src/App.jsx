@@ -2642,7 +2642,7 @@ export default function App() {
                           style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 7, color: G.green, textDecoration: "none", fontSize: 11, fontWeight: 700 }}>
                           💬 {t.shareLogin}
                         </a>
-                        <button className="btn" onClick={() => navigator.clipboard.writeText(msg)}
+                        <button className="btn" onClick={() => navigator.clipboard.writeText(c.password)}
                           style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700 }}>
                           📋 {isAr ? "نسخ" : "Copy"}
                         </button>
