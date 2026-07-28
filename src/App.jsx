@@ -2397,9 +2397,6 @@ export default function App() {
             <div className="fd">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                 <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{cTab === "workout" ? "⚡ " + t.workout : "🥗 " + t.nutrition}</div>
-                {(cTab === "workout" ? liveC.workoutPlan : liveC.nutritionPlan) && (
-                  
-                )}
               </div>
               {cTab === "workout" ? (
                 (() => {
