@@ -2635,6 +2635,10 @@ export default function App() {
                     <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) deleteClient(c.id); }} sx={{ padding: "6px", fontSize: 12 }} />
                   </div>
+                    <div style={{ marginTop:10,padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,border:`1px solid ${G.border}` }}>
+                      <div style={{ fontSize:11,color:G.muted,marginBottom:5,fontWeight:600 }}>📝 {isAr?"ملاحظات المدرب":"Trainer Notes"}</div>
+                      <textarea value={notesDraft[c.id]??(c.trainer_notes||"")} onChange={e=>setNotesDraft(p=>({...p,[c.id]:e.target.value}))} onBlur={async()=>{if(notesDraft[c.id]!==undefined){const upd={...c,trainer_notes:notesDraft[c.id]};await dbUpdateClient(upd);setClients(p=>p.map(x=>x.id===c.id?upd:x));setNotesDraft(p=>{const n={...p};delete n[c.id];return n;});}}} placeholder={isAr?"ملاحظات خاصة...":"Private notes..."} style={{width:"100%",minHeight:55,background:"transparent",border:"none",color:G.text,fontSize:12,resize:"none",outline:"none",lineHeight:1.6,fontFamily:"Inter,sans-serif",padding:0}} />
+                    </div>
                   {c.phone && (() => {
                     const msg = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${c.name}!\n\n${isAr ? "بيانات دخولك" : "Your login details"}:\n\n📧 *${isAr ? "البريد" : "Email"}:* ${c.email}\n🔑 *${isAr ? "كلمة المرور" : "Password"}:* ${c.password}\n\n🌐 *App:* ${TRAINER.appUrl}\n\n${isAr ? "افتح الرابط وأضفه للشاشة الرئيسية 📱" : "Open link & Add to Home Screen 📱"}\n\n— ${TRAINER.name}`;
                     return (
