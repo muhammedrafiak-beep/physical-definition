@@ -809,6 +809,8 @@ const dbAddClient = async (c) => {
     workout_plan: c.workoutPlan, nutrition_plan: c.nutritionPlan,
     workout_system_id: c.workoutSystemId, meal_plan_id: c.mealPlanId,
     progress: c.progress || [],
+      trainer_notes: c.trainer_notes || "",
+      dob: c.dob || "",
   }]).select().single();
   if (error) { console.error("addClient:", error); return null; }
   return { ...c, id: data.id };
@@ -822,6 +824,8 @@ const dbUpdateClient = async (c) => {
     workout_plan: c.workoutPlan, nutrition_plan: c.nutritionPlan,
     workout_system_id: c.workoutSystemId, meal_plan_id: c.mealPlanId,
     progress: c.progress || [],
+      trainer_notes: c.trainer_notes || "",
+      dob: c.dob || "",
   }).eq("id", c.id);
   if (error) console.error("updateClient:", error);
 };
