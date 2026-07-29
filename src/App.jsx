@@ -2253,7 +2253,7 @@ export default function App() {
   const saveEdit = async () => {
     if (!editC) return;
     const fullPhone = form.phone ? `${editCountry} ${form.phone}` : editC.phone;
-    const updated = { ...editC, name: form.name || editC.name, email: form.email || editC.email, password: form.password || editC.password, age: +form.age || editC.age, weight: +form.weight || editC.weight, height: +form.height || editC.height, gender: form.gender || editC.gender, goal: form.goal || editC.goal, pal: form.pal || editC.pal, phone: fullPhone };
+    const updated = { ...editC, name: form.name || editC.name, email: form.email || editC.email, password: form.password || editC.password, age: +form.age || editC.age, weight: +form.weight || editC.weight, height: +form.height || editC.height, gender: form.gender || editC.gender, goal: form.goal || editC.goal, pal: form.pal || editC.pal, phone: fullPhone, dob: form.dob || editC.dob || "" };
     await dbUpdateClient(updated);
     setClients(p => p.map(c => c.id === editC.id ? updated : c));
     setShowEdit(false); setEditC(null); setForm(blank);
@@ -2264,7 +2264,7 @@ export default function App() {
     const knownCode = COUNTRIES.find(cc => cc.code === parts[0]);
     setEditCountry(knownCode ? parts[0] : "+974");
     const restNumber = knownCode ? parts.slice(1).join("") : (c.phone || "").replace(/\D/g, "");
-    setForm({ name: c.name, email: c.email, password: c.password, age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber });
+    setForm({ name: c.name, email: c.email, password: c.password, age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber, dob: c.dob || "" });
     setShowEdit(true);
   };
   const approveReg = async (reg) => {
