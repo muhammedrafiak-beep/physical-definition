@@ -795,6 +795,8 @@ const dbGetClients = async () => {
     workoutPlan: r.workout_plan, nutritionPlan: r.nutrition_plan,
     workoutSystemId: r.workout_system_id, mealPlanId: r.meal_plan_id,
     progress: r.progress || [],
+    dob: r.dob || "",
+    trainer_notes: r.trainer_notes || "",
   }));
 };
 
