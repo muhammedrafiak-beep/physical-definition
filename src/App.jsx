@@ -2178,9 +2178,10 @@ export default function App() {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editC, setEditC] = useState(null);
+  const [notesDraft, setNotesDraft] = useState({});
   const [showShare, setShowShare] = useState(false);
   const [shareD, setShareD] = useState(null);
-  const blank = { name: "", email: "", password: "", age: "", weight: "", height: "", gender: "male", goal: "Weight Loss", pal: "moderate", phone: "" };
+  const blank = { name: "", email: "", password: "", age: "", weight: "", height: "", gender: "male", goal: "Weight Loss", pal: "moderate", phone: "", dob: "" };
   const [form, setForm] = useState(blank);
   const sf = (k, v) => setForm(p => ({ ...p, [k]: v }));
   const [addCountry, setAddCountry] = useState("+974");
@@ -2383,7 +2384,7 @@ export default function App() {
                     <div style={{ width: 40, height: 40, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#080600", fontSize: 14 }}>MR</div>
                     <div><div className="sf gd" style={{ fontSize: 15, fontWeight: 700 }}>{TRAINER.name}</div><div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div></div>
                   </div>
-                  <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
+                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi Coach Rafi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
                 </div>
               </div>
               {(liveC.workoutPlan || liveC.nutritionPlan) && (
@@ -2592,6 +2593,7 @@ export default function App() {
               </div>
             </div>
             <div className="card" style={{ padding: 16 }}>
+              {(()=>{const today=new Date();today.setHours(0,0,0,0);const up=clients.filter(cl=>cl.dob).map(cl=>{const[,m,d]=cl.dob.split("-");let b=new Date(today.getFullYear(),+m-1,+d);if(b<today)b.setFullYear(today.getFullYear()+1);return{...cl,days:Math.ceil((b-today)/864e5)};}).filter(cl=>cl.days<=30).sort((a,b)=>a.days-b.days);if(!up.length)return null;return(<><div style={{fontSize:10,color:"#f59e0b",letterSpacing:1.5,textTransform:"uppercase",marginBottom:8,fontWeight:700}}>🎂 {isAr?"مواليد قادمة":"Upcoming Birthdays"}</div>{up.map(cl=>(<div key={cl.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${G.border}`}}><span style={{fontSize:13,color:G.text,fontWeight:600}}>{cl.name}</span><span style={{fontSize:12,color:cl.days<=7?"#f59e0b":G.muted,fontWeight:700}}>{cl.days===0?"🎉 Today!":cl.days===1?"Tomorrow 🎂":cl.days+" days"}</span></div>))}<div style={{height:1,background:G.border,margin:"12px 0"}}></div></>);})()}
               <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>{t.goalsDistribution}</div>
               {Object.entries(goals).map(([g, c]) => (<div key={g} style={{ marginBottom: 10 }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 12 }}><span>{g}</span><span style={{ color: G.gold, fontWeight: 700 }}>{c}</span></div><div style={{ height: 3, background: G.surf2, borderRadius: 3 }}><div style={{ height: "100%", width: `${(c / clients.length) * 100}%`, background: G.grad, borderRadius: 3 }} /></div></div>))}
             </div>
@@ -2726,6 +2728,7 @@ export default function App() {
           <div className="sf gd" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>✏️ {t.edit}</div>
           {editC && <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div style={{ gridColumn: "1/-1" }}><FF label={t.fullName} value={form.name} onChange={v => sf("name", v)} ph={editC.name} /></div>
+            <FF label="🎂 Date of Birth" value={form.dob} onChange={v => sf("dob", v)} ph="YYYY-MM-DD" />
             <FF label="Email" value={form.email} onChange={v => sf("email", v)} ph={editC.email} />
             <PhoneField label={t.phone} country={editCountry} setCountry={setEditCountry} phone={form.phone} setPhone={v => sf("phone", v)} />
             <FF label={isAr ? "كلمة مرور جديدة" : "New Password"} value={form.password} onChange={v => sf("password", v)} ph={isAr ? "فارغ = نفس القديم" : "Blank = keep"} />
