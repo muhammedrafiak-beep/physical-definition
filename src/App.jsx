@@ -1595,7 +1595,9 @@ function ExerciseCard({ exercise, color, lang }) {
     <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
       {/* Uniform animation area — same dark bg, same size for all */}
       <div style={{ background: "#111", padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
-        <ExerciseIllustration exerciseId={exercise.name} size={118} />
+        {(() => { const vid = getVideoForExercise(exercise.name); return vid ? (
+          <video src={vid} autoPlay loop muted playsInline style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", borderRadius: 10, maxHeight: 200 }} />
+        ) : <ExerciseIllustration exerciseId={exercise.name} size={118} />; })()}
         {/* muscle tags */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", marginTop: 7 }}>
           {muscles.map(([m, type], i) => (
