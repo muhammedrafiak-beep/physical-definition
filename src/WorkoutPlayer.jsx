@@ -11,7 +11,9 @@ const DEFAULT_VIDEO = "workout_all.mp4";
 
 function getVideoForExercise(exName) {
   const l = (exName || "").toLowerCase();
-  if (l.includes("pull-up") || l.includes("pullup") || l.includes("pull up") || l.includes("chin")) return "workout_all.mp4";
+  const VB = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/";
+  const VM = {"pull-up":"workout_all.mp4","pullup":"workout_all.mp4","pull up":"workout_all.mp4","chin":"workout_all.mp4","arm swing":"arm_swings.mp4.MP4","chest stretch":"chest_stretch.mp4.MP4","child":"childs_pose.mp4.MP4","hamstring stretch":"hamstring_stretch.mp4.MP4","hip circle":"hip_circles.mp4.MP4","hip flexor":"hip_flexor_stretch.mp4.MP4","jumping jack":"jumping_jacks.mp4.mp4","knee circle":"knee_circles.mp4.MP4","leg swing":"leg_swings.mp4.MP4","light jog":"light_jog_in_place.mp4.mp4","light walk":"light_walk_in_place.mp4.MP4","neck rotation":"neck_rotations.mp4.MP4","shoulder rotation":"shoulder_rotations.mp4.mp4","shoulder stretch":"shoulder_stretch.mp4.MP4","quad stretch":"standing_quad_stretch.mp4.MP4","torso rotation":"torso_rotations.mp4.MP4"};
+  for (const [k,v] of Object.entries(VM)) { if (l.includes(k)) return VB+v; }
   return null;
 }
 
