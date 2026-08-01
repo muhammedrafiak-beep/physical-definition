@@ -1583,6 +1583,9 @@ function getMuscleTargets(name) {
   return [["Full Body", "primary"]];
 }
 
+const VB = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/";
+const VM = {"arm swings":"arm_swings.mp4.MP4","chest stretch":"chest_stretch.mp4.MP4","child":"childs_pose.mp4.MP4","hamstring stretch":"hamstring_stretch.mp4.MP4","hip circles":"hip_circles.mp4.MP4","hip flexor":"hip_flexor_stretch.mp4.MP4","jumping jacks":"jumping_jacks.mp4.mp4","knee circles":"knee_circles.mp4.MP4","leg swings":"leg_swings.mp4.MP4","light jog":"light_jog_in_place.mp4.mp4","light walk":"light_walk_in_place.mp4.MP4","neck rotations":"neck_rotations.mp4.MP4","shoulder rotations":"shoulder_rotations.mp4.mp4","shoulder stretch":"shoulder_stretch.mp4.MP4","quad stretch":"standing_quad_stretch.mp4.MP4","torso rotations":"torso_rotations.mp4.MP4"};
+const getVideoForExercise = (name) => { const n = (name||"").toLowerCase(); for (const [k,v] of Object.entries(VM)) { if (n.includes(k)) return VB+v; } return null; };
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
   const muscles = getMuscleTargets(exercise.name);
