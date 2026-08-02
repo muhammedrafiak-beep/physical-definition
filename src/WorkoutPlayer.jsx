@@ -320,13 +320,13 @@ export function WorkoutPlayer({
           <div style={{ height: 4, width: `${progressPct}%`, background: accentColor, borderRadius: 2, transition: "width .3s" }} />
         </div>
 
-        <div style={{ position: "relative", width: "100%", aspectRatio: "16/9", background: "#000", marginTop: 14 }}>
+        <div style={{ position: "relative", width: "100%", aspectRatio: "9/16", background: "#000", marginTop: 0, flex: 1 }}>
           {phase === "exercise" && videoSrc && (
             <>
               <video
                 ref={videoRef}
                 src={videoSrc}
-                style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000", pointerEvents: "none" }}
                 loop muted playsInline autoPlay
               />
               {exerciseRemaining !== null && (
@@ -417,7 +417,7 @@ const overlayStyle = {
   display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
 };
 const cardStyle = { background: "#181818", borderRadius: 16, padding: 32, textAlign: "center", maxWidth: 360 };
-const playerCardStyle = { background: "#181818", borderRadius: 16, width: "100%", maxWidth: 480, maxHeight: "92vh", overflowY: "auto" };
+const playerCardStyle = { background: "#181818", borderRadius: 0, width: "100%", maxWidth: "100%", height: "100vh", maxHeight: "100vh", overflowY: "auto", display: "flex", flexDirection: "column", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" };
 const iconBtnStyle = { background: "none", border: "none", color: "#999", fontSize: 18, cursor: "pointer", padding: 4 };
 function primaryBtnStyle(accent) {
   return { flex: 1, background: accent, color: "#000", border: "none", borderRadius: 10, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" };
