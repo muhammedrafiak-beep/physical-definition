@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
+import { AIFormCheck } from "./AIFormCheck";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -126,6 +127,7 @@ export function WorkoutPlayer({
 
   const [exIdx, setExIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(1);
+  const [showAI, setShowAI] = useState(false);
   const [phase, setPhase] = useState("exercise"); // "exercise" | "rest" | "done"
   const [restRemaining, setRestRemaining] = useState(0);
   const [exerciseRemaining, setExerciseRemaining] = useState(null); // for duration-based exercises
@@ -312,6 +314,7 @@ export function WorkoutPlayer({
             <span style={{ color: accentColor, fontSize: 13, fontWeight: 700, fontFamily: "monospace" }}>
               ⏱ {fmtClock(elapsed)}
             </span>
+            <button onClick={() => setShowAI(true)} style={{ background:"rgba(212,175,55,0.15)",border:"1px solid rgba(212,175,55,0.3)",borderRadius:8,color:"#d4af37",padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700 }}>🤖 AI</button>
             <button onClick={handleEndEarly} style={iconBtnStyle}>✕</button>
           </div>
         </div>
@@ -412,6 +415,7 @@ function Pill({ label, color }) {
 }
 
 const overlayStyle = {
+  if (showAI) return <AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} clientName={client?.name} />;
   position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
   background: "rgba(0,0,0,0.92)", zIndex: 9999,
   display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
