@@ -1,7 +1,11 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { Pose, POSE_CONNECTIONS } from "@mediapipe/pose";
 import { Camera } from "@mediapipe/camera_utils";
-import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
+const drawConnectors = window.drawConnectors || (() => {});
+const drawLandmarks = window.drawLandmarks || (() => {});
+const drawConnectors = window.drawConnectors || (() => {});
+const drawLandmarks = window.drawLandmarks || (() => {});
+// drawing utils loaded via CDN in useEffect
 
 const EX_CFG = {
   pushup:    { label:"REPS", angleLabel:"Elbow Angle", tip:"Keep body straight · lower chest to floor" },
