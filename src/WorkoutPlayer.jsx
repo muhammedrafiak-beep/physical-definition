@@ -302,6 +302,7 @@ export function WorkoutPlayer({
   const videoFile = getVideoForExercise(current.exercise.name);
   const videoSrc = videoFile ? `${VIDEO_BASE}/${videoFile}` : null;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
+  if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} clientName={client?.name} />);
 
   return (
     <div style={overlayStyle}>
@@ -415,7 +416,6 @@ function Pill({ label, color }) {
 }
 
 const overlayStyle = {
-  if (showAI) return <AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} clientName={client?.name} />;
   position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
   background: "rgba(0,0,0,0.92)", zIndex: 9999,
   display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
