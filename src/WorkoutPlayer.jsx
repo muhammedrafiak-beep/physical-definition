@@ -331,7 +331,7 @@ export function WorkoutPlayer({
                 ref={videoRef}
                 src={videoSrc}
                 style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000", pointerEvents: "none" }}
-                loop muted playsInline autoPlay
+                loop muted playsInline autoPlay={phase === "exercise"}
               />
               {exerciseRemaining !== null && (
                 <div style={{
