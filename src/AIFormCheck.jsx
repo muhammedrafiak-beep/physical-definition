@@ -1,11 +1,8 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { Pose, POSE_CONNECTIONS } from "@mediapipe/pose";
 import { Camera } from "@mediapipe/camera_utils";
-const drawConnectors = window.drawConnectors || (() => {});
-const drawLandmarks = window.drawLandmarks || (() => {});
-const drawConnectors = window.drawConnectors || (() => {});
-const drawLandmarks = window.drawLandmarks || (() => {});
-// drawing utils loaded via CDN in useEffect
+const drawConnectors = (ctx, landmarks, connections, style) => { if (!window.drawConnectors) return; window.drawConnectors(ctx, landmarks, connections, style); };
+const drawLandmarks = (ctx, landmarks, style) => { if (!window.drawLandmarks) return; window.drawLandmarks(ctx, landmarks, style); };
 
 const EX_CFG = {
   pushup:    { label:"REPS", angleLabel:"Elbow Angle", tip:"Keep body straight · lower chest to floor" },
