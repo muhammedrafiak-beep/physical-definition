@@ -154,10 +154,13 @@ export function WorkoutPlayer({
 
   // Reset/start video + duration timer when moving to a new exercise/set
   useEffect(() => {
-    if (phase === "exercise" && videoRef.current) {
-      if (phase !== "exercise" && videoRef.current) { videoRef.current.pause(); }
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+    if (videoRef.current) {
+      if (phase === "exercise") {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
     }
     setSetStarted(false);
     setExerciseRemaining(null);
