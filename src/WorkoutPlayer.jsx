@@ -328,13 +328,13 @@ export function WorkoutPlayer({
           <div style={{ height: 4, width: `${progressPct}%`, background: accentColor, borderRadius: 2, transition: "width .3s" }} />
         </div>
 
-        <div style={{ position: "relative", width: "100%", flex: 1, background: "#000", overflow: "hidden" }}>
+          <div style={{ position: "relative", width: "100%", flex: 1, background: "#000", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {phase === "exercise" && videoSrc && (
             <>
               <video
                 ref={videoRef}
                 src={videoSrc}
-                style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000", pointerEvents: "none" }}
+                  style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000", pointerEvents: "none", display: "block" }}
                 loop muted playsInline autoPlay={phase === "exercise"}
               />
               {exerciseRemaining !== null && (
