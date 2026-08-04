@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from "react";
-import { Pose, POSE_CONNECTIONS } from "@mediapipe/pose";
-import { Camera } from "@mediapipe/camera_utils";
+
+
 const drawConnectors = (ctx, landmarks, connections, style) => { if (!window.drawConnectors) return; window.drawConnectors(ctx, landmarks, connections, style); };
 const drawLandmarks = (ctx, landmarks, style) => { if (!window.drawLandmarks) return; window.drawLandmarks(ctx, landmarks, style); };
 
@@ -110,7 +110,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
       await videoRef.current.play();
 
       if (!poseRef.current) {
-        poseRef.current = new Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}` });
+        poseRef.current = new window.Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}` });
         poseRef.current.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
         poseRef.current.onResults(res => {
           const cv = canvasRef.current;
@@ -121,7 +121,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
           ctx.scale(-1,1); ctx.translate(-cv.width,0);
           ctx.drawImage(res.image,0,0,cv.width,cv.height);
           if (res.poseLandmarks) {
-            drawConnectors(ctx,res.poseLandmarks,POSE_CONNECTIONS,{color:"rgba(34,197,94,0.8)",lineWidth:3});
+            drawConnectors(ctx,res.poseLandmarks,window.POSE_CONNECTIONS,{color:"rgba(34,197,94,0.8)",lineWidth:3});
             drawLandmarks(ctx,res.poseLandmarks,{color:"#d4af37",fillColor:"rgba(212,175,55,0.3)",lineWidth:2,radius:5});
             analyze(res.poseLandmarks.map(p=>({...p,x:1-p.x})));
           }
@@ -129,7 +129,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
         });
       }
 
-      camRef.current = new Camera(videoRef.current, {
+      camRef.current = new window.Camera(videoRef.current, {
         onFrame: async () => { await poseRef.current.send({ image: videoRef.current }); },
         width: 640, height: 480
       });
