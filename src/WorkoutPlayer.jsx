@@ -138,6 +138,15 @@ export function WorkoutPlayer({
   const videoRef = useRef(null);
   const timerRef = useRef(null);
   const stopwatchRef = useRef(null);
+    // Pause/play video based on phase
+    useEffect(() => {
+      if (!videoRef.current) return;
+      if (phase === "exercise") {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }, [phase]);
 
   const current = queue[exIdx];
   const totalSets = current ? parseSets(current.exercise.sets) : 1;
