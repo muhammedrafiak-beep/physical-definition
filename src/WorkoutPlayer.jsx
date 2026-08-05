@@ -172,7 +172,7 @@ export function WorkoutPlayer({
         videoRef.current.pause();
       }
     }
-    setSetStarted(false);
+      setSetStarted(exIdx > 0 || setIdx > 1);
     setExerciseRemaining(null);
   }, [exIdx, setIdx, phase]);
 
