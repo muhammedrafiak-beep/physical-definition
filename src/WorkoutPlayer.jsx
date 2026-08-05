@@ -128,6 +128,7 @@ export function WorkoutPlayer({
   const [exIdx, setExIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(1);
   const [showAI, setShowAI] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
   const [phase, setPhase] = useState("exercise"); // "exercise" | "rest" | "done"
   const [restRemaining, setRestRemaining] = useState(0);
   const [exerciseRemaining, setExerciseRemaining] = useState(null); // for duration-based exercises
@@ -141,16 +142,16 @@ export function WorkoutPlayer({
     // Pause/play video based on phase
     useEffect(() => {
       if (!videoRef.current) return;
-      if (phase === "exercise" && setStarted) {
+      if (phase === "exercise" && setStarted && !isPaused) {
         videoRef.current.play().catch(() => {});
       } else {
         videoRef.current.pause();
       }
-    }, [phase, setStarted]);
+    }, [phase, setStarted, isPaused]);
 
   const current = queue[exIdx];
   const totalSets = current ? parseSets(current.exercise.sets) : 1;
-  const restSeconds = current ? parseRestSeconds(current.exercise.rest) : 60;
+    const restSeconds = current ? Math.max(parseRestSeconds(current.exercise.rest), 2) : 60;
   const exDurationSeconds = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
 
   // Overall stopwatch — runs continuously while player is open
@@ -184,7 +185,7 @@ export function WorkoutPlayer({
 
   // Exercise duration countdown — auto-completes the set when it hits zero
   useEffect(() => {
-    if (phase !== "exercise" || exerciseRemaining === null) return;
+      if (phase !== "exercise" || exerciseRemaining === null || isPaused) return;
     if (exerciseRemaining <= 0) {
       handleSetDone();
       return;
@@ -192,7 +193,7 @@ export function WorkoutPlayer({
     const t = setTimeout(() => setExerciseRemaining((r) => r - 1), 1000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exerciseRemaining]);
+    }, [phase, exerciseRemaining, isPaused]);
 
   // Rest countdown
   useEffect(() => {
@@ -328,6 +329,9 @@ export function WorkoutPlayer({
             <span style={{ color: accentColor, fontSize: 13, fontWeight: 700, fontFamily: "monospace" }}>
               ⏱ {fmtClock(elapsed)}
             </span>
+              {setStarted && phase === "exercise" && (
+                <button onClick={() => setIsPaused(p => !p)} style={{ background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"#fff",padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700 }}>{isPaused ? "▶" : "⏸"}</button>
+              )}
             <button onClick={() => setShowAI(true)} style={{ background:"rgba(212,175,55,0.15)",border:"1px solid rgba(212,175,55,0.3)",borderRadius:8,color:"#d4af37",padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700 }}>🤖 AI</button>
             <button onClick={handleEndEarly} style={iconBtnStyle}>✕</button>
           </div>
