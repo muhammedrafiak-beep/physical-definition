@@ -181,7 +181,7 @@ export function WorkoutPlayer({
     if (!setStarted || phase !== "exercise") return;
     const dur = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
     if (dur) setExerciseRemaining(dur);
-  }, [setStarted]);
+    }, [setStarted, exIdx, setIdx, phase]);
 
   // Exercise duration countdown — auto-completes the set when it hits zero
   useEffect(() => {
