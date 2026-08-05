@@ -347,10 +347,12 @@ export function WorkoutPlayer({
           {phase === "exercise" && videoSrc && (
             <>
               <video
+                key={videoSrc}
                 ref={videoRef}
                 src={videoSrc}
-                  style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000", pointerEvents: "none", display: "block" }}
-                loop muted playsInline autoPlay={phase === "exercise"}
+                preload="auto"
+                style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000", pointerEvents: "none", display: "block" }}
+                loop muted playsInline autoPlay
               />
               {exerciseRemaining !== null && (
                 <div style={{
