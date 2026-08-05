@@ -173,7 +173,9 @@ export function WorkoutPlayer({
       }
     }
       setSetStarted(exIdx > 0 || setIdx > 1);
-    setExerciseRemaining(null);
+      const autoStart = exIdx > 0 || setIdx > 1;
+      const d = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
+      setExerciseRemaining(autoStart && d ? d : null);
   }, [exIdx, setIdx, phase]);
 
   // Start timer when user presses Start
