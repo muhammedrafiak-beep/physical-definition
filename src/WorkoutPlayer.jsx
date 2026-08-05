@@ -141,12 +141,12 @@ export function WorkoutPlayer({
     // Pause/play video based on phase
     useEffect(() => {
       if (!videoRef.current) return;
-      if (phase === "exercise") {
+      if (phase === "exercise" && setStarted) {
         videoRef.current.play().catch(() => {});
       } else {
         videoRef.current.pause();
       }
-    }, [phase]);
+    }, [phase, setStarted]);
 
   const current = queue[exIdx];
   const totalSets = current ? parseSets(current.exercise.sets) : 1;
@@ -164,7 +164,7 @@ export function WorkoutPlayer({
   // Reset/start video + duration timer when moving to a new exercise/set
   useEffect(() => {
     if (videoRef.current) {
-      if (phase === "exercise") {
+      if (phase === "exercise" && setStarted) {
         videoRef.current.currentTime = 0;
         videoRef.current.play().catch(() => {});
       } else {
