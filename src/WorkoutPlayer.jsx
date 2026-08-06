@@ -318,7 +318,7 @@ export function WorkoutPlayer({
   const videoFile = getVideoForExercise(current.exercise.name);
   const videoSrc = videoFile ? `${VIDEO_BASE}/${videoFile}` : null;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
-  if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} clientName={client?.name} />);
+  if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} targetReps={current?.exercise?.reps} clientName={client?.name} onRepsComplete={() => { setShowAI(false); handleSetDone(); }} />);
 
   return (
     <div style={overlayStyle}>

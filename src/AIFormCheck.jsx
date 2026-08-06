@@ -19,7 +19,9 @@ function calcAngle(a,b,c){
 }
 function pt(L,i){return{x:L[i].x,y:L[i].y};}
 
-export function AIFormCheck({ onClose, exerciseName, clientName }) {
+export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onRepsComplete }) {
+  const targetNum = (() => { const m = String(targetReps||"").match(/(\d+)/); return m ? parseInt(m[1],10) : null; })();
+  const doneFiredRef = useRef(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const poseRef = useRef(null);
@@ -62,6 +64,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
       }
       tip = a < 85 ? "✅ Great depth!" : a < 155 ? `Lower more — ${Math.round(a)}°` : "Lower chest to floor";
       if (Math.abs(hip - 180) > 30) { good = false; tip = "⚠️ Keep body straight — hips sagging!"; }
@@ -73,6 +76,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
       }
       tip = a > 155 ? "Start descent" : a > 90 ? `Go deeper — ${Math.round(a)}°` : "✅ Parallel depth!";
       if (L[25].x < L[27].x - 0.05) { good = false; tip = "⚠️ Knees caving — push them out!"; }
@@ -90,6 +94,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
       }
       if (a < 90 && stageRef.current === "up") stageRef.current = "down";
       tip = inAir ? "✅ In air — land softly!" : a < 90 ? "✅ Deep — explode up!" : "Squat down to jump";
@@ -101,6 +106,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
       }
       tip = a > 155 ? "Pull up from dead hang!" : L[15].y < L[0].y ? "✅ Chin above bar!" : `Keep pulling — ${Math.round(a)}°`;
     }
@@ -233,7 +239,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
           <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:16,pointerEvents:"none" }}>
             <div style={{ background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",display:"inline-flex",flexDirection:"column",alignItems:"center",width:"fit-content",border:"1px solid #2a2a2a" }}>
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2 }}>{cfg.label}</div>
-              <div style={{ fontSize:56,fontWeight:700,color:G.gold,lineHeight:1 }}>{curEx==="plank" ? plankSec+"s" : reps}</div>
+              <div style={{ fontSize:56,fontWeight:700,color:G.gold,lineHeight:1 }}>{curEx==="plank" ? plankSec+"s" : reps}{targetNum && curEx!=="plank" ? <span style={{ fontSize:22,color:"#666" }}>/{targetNum}</span> : null}</div>
             </div>
             <div style={{ position:"absolute",top:"50%",right:16,transform:"translateY(-50%)",background:"rgba(0,0,0,0.7)",borderRadius:12,padding:"12px 14px",textAlign:"center",border:"1px solid #2a2a2a" }}>
               <div style={{ fontSize:26,fontWeight:600,color:G.gold }}>{angle}°</div>
