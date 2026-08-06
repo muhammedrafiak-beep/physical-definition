@@ -20,7 +20,7 @@ function calcAngle(a,b,c){
 function pt(L,i){return{x:L[i].x,y:L[i].y};}
 
 export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onRepsComplete }) {
-  const targetNum = (() => { const m = String(targetReps||"").match(/(\d+)/); return m ? parseInt(m[1],10) : null; })();
+  const targetNum = (() => { const m = String(targetReps||"").match(/(\d+)/); return m ? Math.min(parseInt(m[1],10), 3) : 3; })();
   const doneFiredRef = useRef(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -64,7 +64,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
-        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(repsRef.current), 900); }
       }
       tip = a < 85 ? "✅ Great depth!" : a < 155 ? `Lower more — ${Math.round(a)}°` : "Lower chest to floor";
       if (Math.abs(hip - 180) > 30) { good = false; tip = "⚠️ Keep body straight — hips sagging!"; }
@@ -76,7 +76,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
-        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(repsRef.current), 900); }
       }
       tip = a > 155 ? "Start descent" : a > 90 ? `Go deeper — ${Math.round(a)}°` : "✅ Parallel depth!";
       if (L[25].x < L[27].x - 0.05) { good = false; tip = "⚠️ Knees caving — push them out!"; }
@@ -94,7 +94,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
-        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(repsRef.current), 900); }
       }
       if (a < 90 && stageRef.current === "up") stageRef.current = "down";
       tip = inAir ? "✅ In air — land softly!" : a < 90 ? "✅ Deep — explode up!" : "Squat down to jump";
@@ -106,7 +106,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
         stageRef.current = "up";
         repsRef.current += 1;
         setReps(repsRef.current);
-        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(), 900); }
+        if (targetNum && repsRef.current >= targetNum && !doneFiredRef.current) { doneFiredRef.current = true; stopCamera(); setTimeout(() => onRepsComplete && onRepsComplete(repsRef.current), 900); }
       }
       tip = a > 155 ? "Pull up from dead hang!" : L[15].y < L[0].y ? "✅ Chin above bar!" : `Keep pulling — ${Math.round(a)}°`;
     }

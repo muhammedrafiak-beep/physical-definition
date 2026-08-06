@@ -128,6 +128,8 @@ export function WorkoutPlayer({
   const [exIdx, setExIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(1);
   const [showAI, setShowAI] = useState(false);
+  const aiRepsRef = useRef(0);
+  const aiSetsRef = useRef(0);
     const [isPaused, setIsPaused] = useState(false);
   const [phase, setPhase] = useState("exercise"); // "exercise" | "rest" | "done"
   const [restRemaining, setRestRemaining] = useState(0);
@@ -318,7 +320,7 @@ export function WorkoutPlayer({
   const videoFile = getVideoForExercise(current.exercise.name);
   const videoSrc = videoFile ? `${VIDEO_BASE}/${videoFile}` : null;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
-  if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} targetReps={current?.exercise?.reps} clientName={client?.name} onRepsComplete={() => { setShowAI(false); handleSetDone(); }} />);
+  if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} targetReps={current?.exercise?.reps} clientName={client?.name} onRepsComplete={(n) => { aiRepsRef.current += (n||0); aiSetsRef.current += 1; setShowAI(false); handleSetDone(); }} />);
 
   return (
     <div style={overlayStyle}>
