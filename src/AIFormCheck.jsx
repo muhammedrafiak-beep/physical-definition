@@ -196,7 +196,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
   const cfg = EX_CFG[curEx];
 
   return (
-    <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,display:"flex",flexDirection:column,userSelect:"none" }}>
+    <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,display:"flex",flexDirection:"column",userSelect:"none" }}>
       {/* Header */}
       <div style={{ padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #1a1a1a",flexShrink:0 }}>
         <div style={{ fontSize:15,fontWeight:600,color:G.gold,display:"flex",alignItems:"center",gap:8 }}>
