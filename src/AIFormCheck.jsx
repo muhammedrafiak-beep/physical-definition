@@ -43,6 +43,14 @@ export function AIFormCheck({ onClose, exerciseName, clientName }) {
   useEffect(() => { curExRef.current = curEx; }, [curEx]);
 
   function analyze(L) {
+    const key = [11,12,23,24,25,26,27,28];
+    const vis = key.reduce((s,i) => s + (L[i]?.visibility ?? 0), 0) / key.length;
+    if (vis < 0.6) {
+      setFormGood(false);
+      setFormTip("Move back — your full body must be visible from head to feet");
+      setAngle(0);
+      return;
+    }
     const ex = curExRef.current;
     let a = 0, good = true, tip = "";
 
