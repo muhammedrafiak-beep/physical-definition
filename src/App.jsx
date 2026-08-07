@@ -2561,6 +2561,7 @@ export default function App() {
           {[
             { id: "workout", l: "Workouts", i: "⚡" },
             { id: "nutrition", l: "Nutrition", i: "🥗" },
+              { id: "pdscore", l: "PD-100", i: "🏆" },
             { id: "progress", l: "Progress", i: "📈" },
             { id: "history", l: "History", i: "📊" },
             { id: "profile", l: "Profile", i: "👤" },
