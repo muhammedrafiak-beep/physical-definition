@@ -51,6 +51,7 @@ export function PDScore({ client, onClose }) {
   const [best, setBest] = useState(null);
   const [saving, setSaving] = useState(false);
   const [finalScore, setFinalScore] = useState(null);
+  const [showHow, setShowHow] = useState(false);
 
   useEffect(() => { loadBoard(); return () => stopCam(); }, []);
 
@@ -251,6 +252,53 @@ export function PDScore({ client, onClose }) {
             <div style={{ fontSize:14,fontWeight:700,color:G.gold,flexShrink:0 }}>{s.isTime ? "60s" : s.reps}</div>
           </div>
         ))}
+
+        <div style={{ ...card, padding:0, overflow:"hidden", marginTop:14 }}>
+          <div onClick={() => setShowHow(!showHow)} style={{ padding:"13px 15px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer" }}>
+            <span style={{ fontSize:14,fontWeight:600,color:G.gold }}>📖 How the PD-100 works</span>
+            <span style={{ color:G.muted,fontSize:16 }}>{showHow ? "−" : "+"}</span>
+          </div>
+          {showHow && (
+            <div style={{ padding:"0 15px 15px",borderTop:`1px solid ${G.border}` }}>
+              <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"13px 0 6px" }}>What it is</div>
+              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65 }}>
+                A single continuous bodyweight benchmark. Five stations, 100 total reps, done back to back for time. It tests every major movement pattern — squat, pull, push, full body and core — and every energy system, from explosive power through to endurance. Your time becomes a PD Score that ranks you against every other client.
+              </div>
+
+              <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Before you start</div>
+              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.85 }}>
+                1. Lean your phone against something at chest height.<br/>
+                2. Stand back 2 to 3 metres so your whole body — head to feet — is in frame.<br/>
+                3. Make sure the room is well lit and there is space behind you.<br/>
+                4. A pull-up bar is needed for station 2.<br/>
+                5. Warm up properly first. This is a maximum effort test.
+              </div>
+
+              <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>During the test</div>
+              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.85 }}>
+                The clock starts the moment the camera opens and never stops — rest counts against you. The AI counts each rep only when you hit full range of motion, so half reps will not register. When a station hits its target it moves you on automatically. Watch the form badge: if it turns red, fix your position before continuing.
+              </div>
+
+              <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Your score</div>
+              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65,marginBottom:10 }}>
+                PD Score = 1000 minus your total time in seconds divided by 0.6. Faster finish, higher score. Retest monthly to see real progress.
+              </div>
+              <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6 }}>
+                {[["Elite","<7m",G.red],["Advanced","7-11m","#f59e0b"],["Intermediate","11-16m",G.gold],["Beginner","16m+",G.muted]].map(x => (
+                  <div key={x[0]} style={{ background:"rgba(255,255,255,0.04)",border:`1px solid ${G.border}`,borderRadius:8,padding:"8px 5px",textAlign:"center" }}>
+                    <div style={{ fontSize:11,fontWeight:700,color:x[2] }}>{x[0]}</div>
+                    <div style={{ fontSize:11,color:"#888",marginTop:2 }}>{x[1]}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Privacy</div>
+              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65 }}>
+                Nothing is recorded. The camera runs entirely on your own device and only body position points are read. No video leaves your phone.
+              </div>
+            </div>
+          )}
+        </div>
 
         <button onClick={start} style={{ width:"100%",padding:16,background:G.gold,border:"none",borderRadius:12,fontWeight:800,fontSize:16,cursor:"pointer",marginTop:6,marginBottom:16 }}>
           ▶ Start PD-100
