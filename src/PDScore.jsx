@@ -168,6 +168,10 @@ export function PDScore({ client, onClose }) {
     setScreen("loading");
     try{
       const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" } });
+      stationRef.current=0; repsRef.current=0; elapsedRef.current=0;
+      setStation(0); setReps(0); setElapsed(0); setTimes([]);
+      setScreen("live");
+      await new Promise(r => setTimeout(r, 120));
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
       if(!poseRef.current){
@@ -192,10 +196,7 @@ export function PDScore({ client, onClose }) {
         width:640, height:480
       });
       await camRef.current.start();
-      stationRef.current=0; repsRef.current=0; elapsedRef.current=0;
-      setStation(0); setReps(0); setElapsed(0); setTimes([]);
       timerRef.current = setInterval(() => { elapsedRef.current+=1; setElapsed(elapsedRef.current); }, 1000);
-      setScreen("live");
     }catch(e){
       setScreen("intro");
       alert("Camera access denied. Allow camera in browser settings.");
