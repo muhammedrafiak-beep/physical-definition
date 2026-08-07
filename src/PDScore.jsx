@@ -35,6 +35,7 @@ export function PDScore({ client, onClose }) {
   const repsRef = useRef(0);
   const stationRef = useRef(0);
   const burpeeRef = useRef({ plank:false, low:false, jump:false });
+  const groundRef = useRef(null);
   const timerRef = useRef(null);
   const plankRef = useRef(null);
 
@@ -73,10 +74,12 @@ export function PDScore({ client, onClose }) {
 
     if(st.id==="jumpSquat"){
       const a=calcAngle(pt(L,23),pt(L,25),pt(L,27));
-      const air=L[27].y < L[23].y-0.1;
-      if(a<100 && stageRef.current==="up") stageRef.current="down";
-      if(air && stageRef.current==="down"){ stageRef.current="up"; bump(); }
-      t = air ? "In air — land soft" : a<100 ? "Deep — explode up!" : "Squat down";
+      const ank=(L[27].y+L[28].y)/2;
+      if(groundRef.current===null || ank>groundRef.current) groundRef.current=ank;
+      const air=groundRef.current!==null && ank < groundRef.current-0.035;
+      if(a<110 && stageRef.current==="up") stageRef.current="down";
+      if(stageRef.current==="down" && (air || a>155)){ stageRef.current="up"; bump(); }
+      t = air ? "In air — land soft" : a<110 ? "Deep — explode up!" : "Squat down";
     }
     else if(st.id==="pullup"){
       const a=calcAngle(pt(L,11),pt(L,13),pt(L,15));
@@ -127,6 +130,7 @@ export function PDScore({ client, onClose }) {
     repsRef.current = 0;
     stageRef.current = "up";
     burpeeRef.current = {plank:false,low:false,jump:false};
+    groundRef.current = null;
     setStation(stationRef.current);
     setReps(0);
     setPlankSec(0);
