@@ -211,8 +211,11 @@ export function PDScore({ client, onClose }) {
 
   const card = { background:G.surf, border:`1px solid ${G.border}`, borderRadius:14, padding:16, marginBottom:10 };
 
+  const hiddenVideo = <video ref={videoRef} style={{ position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none" }} playsInline muted />;
+
   if(screen==="intro") return (
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto" }}>
+      {hiddenVideo}
       <div style={{ padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${G.border}`,position:"sticky",top:0,background:G.bg,zIndex:2 }}>
         <div style={{ fontSize:17,fontWeight:700,color:G.gold }}>🏆 PD-100</div>
         <button onClick={onClose} style={{ background:"transparent",border:`1px solid ${G.border}`,borderRadius:8,color:"#999",padding:"6px 12px",cursor:"pointer",fontSize:13 }}>✕</button>
@@ -266,13 +269,14 @@ export function PDScore({ client, onClose }) {
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14 }}>
       <div style={{ width:44,height:44,border:`3px solid ${G.border}`,borderTopColor:G.gold,borderRadius:"50%",animation:"pdspin .8s linear infinite" }}/>
       <div style={{ color:G.gold,fontSize:14,fontWeight:600 }}>Loading AI...</div>
-      <video ref={videoRef} style={{ display:"none" }} playsInline />
+      {hiddenVideo}
       <style>{`@keyframes pdspin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 
   if(screen==="done" && finalScore) return (
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto",padding:20 }}>
+      {hiddenVideo}
       <div style={{ textAlign:"center",paddingTop:30,marginBottom:22 }}>
         <div style={{ fontSize:48,marginBottom:10 }}>🏆</div>
         <div style={{ fontSize:13,color:G.muted,letterSpacing:2,textTransform:"uppercase" }}>PD Score</div>
@@ -309,7 +313,7 @@ export function PDScore({ client, onClose }) {
       </div>
 
       <div style={{ position:"relative",flex:1,background:"#111",overflow:"hidden" }}>
-        <video ref={videoRef} style={{ display:"none" }} playsInline />
+        {hiddenVideo}
         <canvas ref={canvasRef} style={{ width:"100%",height:"100%",objectFit:"cover" }} />
         <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:16,pointerEvents:"none" }}>
           <div style={{ background:"rgba(0,0,0,0.62)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",width:"fit-content",border:`1px solid ${G.border}` }}>
