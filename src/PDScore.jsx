@@ -223,12 +223,23 @@ export function PDScore({ client, onClose }) {
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto" }}>
       {hiddenVideo}
       <div style={{ padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${G.border}`,position:"sticky",top:0,background:G.bg,zIndex:2 }}>
-        <div style={{ fontSize:17,fontWeight:700,color:G.gold }}>🏆 PD-100</div>
+        <div>
+          <div style={{ fontSize:17,fontWeight:700,color:G.gold,lineHeight:1.2 }}>🏆 PD-100</div>
+          <div style={{ fontSize:10,color:G.muted,letterSpacing:1.5,textTransform:"uppercase",marginTop:1 }}>Physical Definition Benchmark</div>
+        </div>
         <button onClick={onClose} style={{ background:"transparent",border:`1px solid ${G.border}`,borderRadius:8,color:"#999",padding:"6px 12px",cursor:"pointer",fontSize:13 }}>✕</button>
       </div>
       <div style={{ padding:16 }}>
-        <div style={{ fontSize:13,color:"#aaa",lineHeight:1.7,marginBottom:14 }}>
-          100 reps · 5 movements · pure bodyweight · for time.<br/>AI counts every rep — no manual entry.
+        <div style={{ background:"rgba(212,175,55,0.07)",border:`1px solid rgba(212,175,55,0.25)`,borderRadius:14,padding:15,marginBottom:14 }}>
+          <div style={{ fontSize:16,fontWeight:700,color:G.gold,marginBottom:5 }}>The Physical Definition 100</div>
+          <div style={{ fontSize:13,color:"#bbb",lineHeight:1.7 }}>
+            Our own fitness benchmark — the one test every Physical Definition client is measured by. 100 reps across 5 movements, pure bodyweight, no equipment except a pull-up bar, done straight through for time.
+          </div>
+          <div style={{ display:"flex",gap:7,flexWrap:"wrap",marginTop:11 }}>
+            {["100 reps","5 movements","Bodyweight only","AI counted","For time"].map(x => (
+              <span key={x} style={{ fontSize:11,padding:"4px 10px",borderRadius:20,background:"rgba(255,255,255,0.05)",border:`1px solid ${G.border}`,color:"#aaa" }}>{x}</span>
+            ))}
+          </div>
         </div>
 
         {best && (
