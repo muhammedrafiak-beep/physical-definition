@@ -2,6 +2,7 @@
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { WorkoutPlayer } from "./WorkoutPlayer";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
+import { PDScore } from "./PDScore";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -2542,6 +2543,10 @@ export default function App() {
               )}
             </div>
           )}
+          {cTab === "pdscore" && (
+              <PDScore client={liveC} onClose={() => setCTab("workout")} />
+            )}
+
           {cTab === "progress" && (
             <ProgressTab client={liveC} setClients={setClients} lang={lang} isAr={isAr} t={t} />
           )}
