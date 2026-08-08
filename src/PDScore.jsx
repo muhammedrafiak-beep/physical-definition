@@ -70,7 +70,8 @@ export function PDScore({ client, onClose }) {
     const key=[11,12,23,24,25,26,27,28];
     const vs=key.map(i=>L[i]?.visibility??0);
     const avg=vs.reduce((s,v)=>s+v,0)/vs.length, lo=Math.min.apply(null,vs);
-    const vis=(avg>=0.6 && lo>=0.2) ? 1 : 0;
+    const feetIn=(L[27].y<0.97 && L[28].y<0.97 && L[27].y>0.02 && L[28].y>0.02);
+    const vis=(avg>=0.6 && lo>=0.2 && feetIn) ? 1 : 0;
     if(vis<0.6){ setGood(false); setTip("Move back — full body must be visible"); return; }
 
     const st = STATIONS[stationRef.current];
