@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { WorkoutPlayer } from "./WorkoutPlayer";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
@@ -752,7 +752,7 @@ const COUNTRIES = [
   { code: "+63", flag: "🇵🇭", name: "Philippines" }, { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
 ];
 
-const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://physical-definition.vercel.app" };
+const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://www.physicaldefinition.com" };
 const ADMIN = { u: "admin", p: "pd@rafi2024" };
 const SK = "pd_v7_clients"; const RK = "pd_v7_regs"; const LK = "pd_v7_lang";
 
