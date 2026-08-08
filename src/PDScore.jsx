@@ -81,13 +81,16 @@ export function PDScore({ client, onClose }) {
     if(st.id==="jumpSquat"){
       const a=calcAngle(pt(L,23),pt(L,25),pt(L,27));
       const ank=(L[27].y+L[28].y)/2;
-      if(groundRef.current===null || ank>groundRef.current) groundRef.current=ank;
+      if(groundRef.current===null) groundRef.current=ank;
       const air=groundRef.current!==null && ank < groundRef.current-0.035;
       const hipY=(L[23].y+L[24].y)/2, shY=(L[11].y+L[12].y)/2;
       const torso=Math.max(0.05, hipY-shY);
       const ankY=(L[27].y+L[28].y)/2;
       const legR=(ankY-hipY)/torso;
-      const isDown = a<115 || legR<1.35;
+      const kneeY=(L[25].y+L[26].y)/2, shin=Math.max(0.03, ank-kneeY);
+      const depthR=(ank-hipY)/shin;
+      if(depthR>1.75) groundRef.current = groundRef.current*0.88 + ank*0.12;
+      const isDown = depthR<1.40;
       const isUp   = air;
       if(isDown && stageRef.current==="up") stageRef.current="down";
       if(stageRef.current==="down" && isUp){ stageRef.current="up"; bump(); }
