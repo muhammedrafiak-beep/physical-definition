@@ -70,7 +70,7 @@ export function PDScore({ client, onClose }) {
     const key=[11,12,23,24,25,26,27,28];
     const vs=key.map(i=>L[i]?.visibility??0);
     const avg=vs.reduce((s,v)=>s+v,0)/vs.length, lo=Math.min.apply(null,vs);
-    const vis=(avg>=0.6 && lo>=0.3) ? 1 : 0;
+    const vis=(avg>=0.6 && lo>=0.2) ? 1 : 0;
     if(vis<0.6){ setGood(false); setTip("Move back — full body must be visible"); return; }
 
     const st = STATIONS[stationRef.current];
@@ -84,10 +84,10 @@ export function PDScore({ client, onClose }) {
       const air=groundRef.current!==null && ank < groundRef.current-0.035;
       const hipY=(L[23].y+L[24].y)/2, shY=(L[11].y+L[12].y)/2;
       const torso=Math.max(0.05, hipY-shY);
-      if(topHipRef.current===null || hipY<topHipRef.current) topHipRef.current=hipY;
-      const drop=(hipY-topHipRef.current)/torso;
-      const isDown = a<115 || drop>0.30;
-      const isUp   = (a>150 && drop<0.15) || air;
+      const ankY=(L[27].y+L[28].y)/2;
+      const legR=(ankY-hipY)/torso;
+      const isDown = a<115 || legR<1.35;
+      const isUp   = air;
       if(isDown && stageRef.current==="up") stageRef.current="down";
       if(stageRef.current==="down" && isUp){ stageRef.current="up"; bump(); }
       t = air ? "In air — land soft" : a<110 ? "Deep — explode up!" : "Squat down";
