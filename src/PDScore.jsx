@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
@@ -36,6 +36,7 @@ export function PDScore({ client, onClose }) {
   const stationRef = useRef(0);
   const burpeeRef = useRef({ plank:false, low:false, jump:false });
   const groundRef = useRef(null);
+  const lastRepRef = useRef(0);
   const timerRef = useRef(null);
   const plankRef = useRef(null);
 
@@ -66,7 +67,7 @@ export function PDScore({ client, onClose }) {
 
   function analyze(L){
     const key=[11,12,23,24,25,26,27,28];
-    const vis=key.reduce((s,i)=>s+(L[i]?.visibility??0),0)/key.length;
+    const vis=Math.min.apply(null,key.map(i=>L[i]?.visibility??0));
     if(vis<0.6){ setGood(false); setTip("Move back — full body must be visible"); return; }
 
     const st = STATIONS[stationRef.current];
@@ -85,7 +86,7 @@ export function PDScore({ client, onClose }) {
     else if(st.id==="pullup"){
       const a=calcAngle(pt(L,11),pt(L,13),pt(L,15));
       if(a>150 && stageRef.current==="up") stageRef.current="down";
-      if(L[0].y < L[15].y && stageRef.current==="down"){ stageRef.current="up"; bump(); }
+      if(L[15].y < L[11].y && L[0].y < L[15].y && stageRef.current==="down"){ stageRef.current="up"; bump(); }
       t = a>150 ? "Pull from dead hang" : "Chin over bar!";
     }
     else if(st.id==="pushup"){
@@ -117,6 +118,9 @@ export function PDScore({ client, onClose }) {
   }
 
   function bump(){
+    const now = performance.now();
+    if(now - lastRepRef.current < 400) return;
+    lastRepRef.current = now;
     repsRef.current += 1;
     setReps(repsRef.current);
     const st = STATIONS[stationRef.current];
