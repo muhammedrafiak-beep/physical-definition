@@ -37,6 +37,7 @@ export function PDScore({ client, onClose }) {
   const burpeeRef = useRef({ plank:false, low:false, jump:false });
   const groundRef = useRef(null);
   const lastRepRef = useRef(0);
+  const topHipRef = useRef(null);
   const timerRef = useRef(null);
   const plankRef = useRef(null);
 
@@ -67,7 +68,9 @@ export function PDScore({ client, onClose }) {
 
   function analyze(L){
     const key=[11,12,23,24,25,26,27,28];
-    const vis=Math.min.apply(null,key.map(i=>L[i]?.visibility??0));
+    const vs=key.map(i=>L[i]?.visibility??0);
+    const avg=vs.reduce((s,v)=>s+v,0)/vs.length, lo=Math.min.apply(null,vs);
+    const vis=(avg>=0.6 && lo>=0.3) ? 1 : 0;
     if(vis<0.6){ setGood(false); setTip("Move back — full body must be visible"); return; }
 
     const st = STATIONS[stationRef.current];
@@ -79,8 +82,14 @@ export function PDScore({ client, onClose }) {
       const ank=(L[27].y+L[28].y)/2;
       if(groundRef.current===null || ank>groundRef.current) groundRef.current=ank;
       const air=groundRef.current!==null && ank < groundRef.current-0.035;
-      if(a<110 && stageRef.current==="up") stageRef.current="down";
-      if(stageRef.current==="down" && (air || a>155)){ stageRef.current="up"; bump(); }
+      const hipY=(L[23].y+L[24].y)/2, shY=(L[11].y+L[12].y)/2;
+      const torso=Math.max(0.05, hipY-shY);
+      if(topHipRef.current===null || hipY<topHipRef.current) topHipRef.current=hipY;
+      const drop=(hipY-topHipRef.current)/torso;
+      const isDown = a<115 || drop>0.30;
+      const isUp   = (a>150 && drop<0.15) || air;
+      if(isDown && stageRef.current==="up") stageRef.current="down";
+      if(stageRef.current==="down" && isUp){ stageRef.current="up"; bump(); }
       t = air ? "In air — land soft" : a<110 ? "Deep — explode up!" : "Squat down";
     }
     else if(st.id==="pullup"){
@@ -136,6 +145,7 @@ export function PDScore({ client, onClose }) {
     stageRef.current = "up";
     burpeeRef.current = {plank:false,low:false,jump:false};
     groundRef.current = null;
+    topHipRef.current = null;
     setStation(stationRef.current);
     setReps(0);
     setPlankSec(0);
