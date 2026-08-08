@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
@@ -11,8 +11,6 @@ const STATIONS = [
   { id:"burpee",    name:"Burpees",     emoji:"🔥", reps:20, muscles:"Full body", sys:"All energy systems" },
   { id:"plank",     name:"Plank Hold",  emoji:"🧘", reps:60, isTime:true, muscles:"Deep core · Shoulders", sys:"Oxidative · isometric" },
 ];
-
-import PDModelPlayer, { angleToPosition } from './PDModelPlayer.jsx';
 
 function calcAngle(a,b,c){
   const r=Math.atan2(c.y-b.y,c.x-b.x)-Math.atan2(a.y-b.y,a.x-b.x);
@@ -38,7 +36,6 @@ export function PDScore({ client, onClose }) {
   const stationRef = useRef(0);
   const burpeeRef = useRef({ plank:false, low:false, jump:false });
   const groundRef = useRef(null);
-  const posRef = useRef(0);
   const timerRef = useRef(null);
   const plankRef = useRef(null);
 
@@ -78,7 +75,6 @@ export function PDScore({ client, onClose }) {
 
     if(st.id==="jumpSquat"){
       const a=calcAngle(pt(L,23),pt(L,25),pt(L,27));
-      posRef.current = angleToPosition(a, 165, 100);
       const ank=(L[27].y+L[28].y)/2;
       if(groundRef.current===null || ank>groundRef.current) groundRef.current=ank;
       const air=groundRef.current!==null && ank < groundRef.current-0.035;
@@ -383,11 +379,6 @@ export function PDScore({ client, onClose }) {
       <div style={{ position:"relative",flex:1,background:"#111",overflow:"hidden" }}>
         {hiddenVideo}
         <canvas ref={canvasRef} style={{ width:"100%",height:"100%",objectFit:"cover" }} />
-        {st.id==="jumpSquat" && (
-          <div style={{ position:"absolute",top:12,right:12,width:100,borderRadius:12,overflow:"hidden",border:`1px solid ${G.border}`,background:"#0A0E13",pointerEvents:"none",zIndex:5 }}>
-            <PDModelPlayer src="/sprites/squat-24.webp" positionRef={posRef} frames={24} cols={6} rows={4} />
-          </div>
-        )}
         <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:16,pointerEvents:"none" }}>
           <div style={{ background:"rgba(0,0,0,0.62)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",width:"fit-content",border:`1px solid ${G.border}` }}>
             <div style={{ fontSize:11,color:G.muted,letterSpacing:1.5,textTransform:"uppercase" }}>{st.emoji} {st.name}</div>
