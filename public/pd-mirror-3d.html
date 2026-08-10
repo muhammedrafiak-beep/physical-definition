@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PD Mirror — 3D model driven by camera</title>
+<style>
+  :root{
+    --bg:#05070A; --panel:#0B0F14; --gold:#E0A94A;
+    --ink:#EDF3F8; --ink3:rgba(237,243,248,.32);
+    --rule:rgba(224,169,74,.14);
+    --disp:"Barlow Condensed",Impact,"Arial Narrow",sans-serif;
+    --body:system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 12px 30px}
+  h1{font-family:var(--disp);text-transform:uppercase;letter-spacing:.18em;font-size:13px;
+     color:var(--gold);margin:2px 0 4px;font-weight:600}
+  .wrap{display:flex;gap:10px;width:100%;max-width:900px;flex-wrap:wrap;justify-content:center}
+  .panel{position:relative;flex:1 1 300px;min-width:280px;aspect-ratio:3/4;border-radius:18px;overflow:hidden;
+    background:#070A0E;border:1px solid var(--rule)}
+  .panel canvas,.panel video{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #video{object-fit:cover;visibility:hidden}
+  #camCanvas{object-fit:cover}
+  .tag{position:absolute;top:10px;left:12px;z-index:5;font-family:var(--disp);font-size:10px;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--gold);pointer-events:none}
+  .bar{width:100%;max-width:900px;background:var(--panel);border:1px solid var(--rule);border-radius:14px;
+    padding:12px 15px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
+  .bar b{font-family:var(--disp);letter-spacing:.15em;text-transform:uppercase;font-size:11px;color:var(--gold)}
+  .pill{padding:6px 12px;border-radius:99px;border:1px solid var(--rule);font-size:12px;color:var(--ink3)}
+  .pill.ok{color:#34E5A0;border-color:rgba(52,229,160,.35)}
+  .pill.warn{color:var(--gold);border-color:rgba(224,169,74,.4)}
+  button{padding:9px 14px;border-radius:10px;border:1px solid var(--rule);background:transparent;color:var(--ink);
+    font-family:var(--disp);letter-spacing:.14em;text-transform:uppercase;font-size:11.5px;cursor:pointer}
+  #log{width:100%;max-width:900px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--ink3);
+    background:#080B0F;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;
+    max-height:120px;overflow:auto;white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<h1>PD Mirror · 3D model driven by your camera</h1>
+
+<div class="wrap">
+  <div class="panel"><span class="tag">PD Model</span><canvas id="three"></canvas></div>
+  <div class="panel"><span class="tag">You</span>
+    <video id="video" playsinline muted></video>
+    <canvas id="camCanvas"></canvas>
+  </div>
+</div>
+
+<div class="bar">
+  <b>Status</b>
+  <span class="pill" id="st">starting…</span>
+  <span class="pill" id="dep">depth 0</span>
+  <button id="mirror">Mirror: on</button>
+  <button id="dump">Log bone names</button>
+</div>
+
+<div id="log">bones will be listed here</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+<script>
+const $=i=>document.getElementById(i);
+const logEl=$('log'), stEl=$('st'), depEl=$('dep');
+function log(s){logEl.textContent=s;}
+
+/* ======================================================================
+   1. THREE.JS
+   ====================================================================== */
+let scene,camera,renderer,model,skeletonReady=false;
+const canvas3=$('three');
+
+scene=new THREE.Scene();
+camera=new THREE.PerspectiveCamera(30,3/4,0.1,100);
+camera.position.set(0,1.05,4.2); camera.lookAt(0,0.95,0);
+renderer=new THREE.WebGLRenderer({canvas:canvas3,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+
+scene.add(new THREE.HemisphereLight(0x8fa6bd,0x0a0d12,0.75));
+const kl=new THREE.DirectionalLight(0xfff3e6,1.25); kl.position.set(2.4,3.6,3.0); scene.add(kl);
+const rl=new THREE.DirectionalLight(0xE0A94A,1.5);  rl.position.set(-2.6,2.2,-2.4); scene.add(rl);
+
+const pad=new THREE.Mesh(new THREE.CircleGeometry(1.1,48),
+  new THREE.MeshStandardMaterial({color:0x080b10,roughness:.9}));
+pad.rotation.x=-Math.PI/2; scene.add(pad);
+const ring=new THREE.Mesh(new THREE.RingGeometry(1.07,1.095,48),
+  new THREE.MeshBasicMaterial({color:0xE0A94A,transparent:true,opacity:.25,side:THREE.DoubleSide}));
+ring.rotation.x=-Math.PI/2; ring.position.y=.001; scene.add(ring);
+
+function fitPanels(){
+  [[canvas3,renderer,camera]].forEach(([cv,rd,cm])=>{
+    const r=cv.parentElement.getBoundingClientRect();
+    rd.setSize(r.width,r.height,false); cm.aspect=r.width/r.height; cm.updateProjectionMatrix();
+  });
+}
+addEventListener('resize',fitPanels);
+
+/* ======================================================================
+   2. BONE MAP — found by pattern, so it works across naming conventions
+   ====================================================================== */
+const BONES={};        // role -> bone
+const REST={};         // role -> {q:restWorldQuat, dir:restWorldDir, parent:bone}
+const allBones=[];
+
+const PATTERNS={
+  hips:      [/^hips$/,/pelvis/,/^root$/],
+  spine:     [/^spine$/,/spine_?0?1$/,/^chest$/],
+  chest:     [/spine_?0?2$/,/upperchest/,/^chest$/],
+  neck:      [/^neck$/],
+  head:      [/^head$/],
+  lUpLeg:    [/leftupleg/,/upleg_?l$/,/^l_?thigh/,/thigh_?l$/,/leftthigh/,/upperleg_?l$/],
+  lLeg:      [/^leftleg$/,/leg_?l$/,/^l_?shin/,/shin_?l$/,/lowerleg_?l$/,/leftshin/,/calf_?l$/],
+  lFoot:     [/leftfoot/,/foot_?l$/,/^l_?foot/],
+  rUpLeg:    [/rightupleg/,/upleg_?r$/,/^r_?thigh/,/thigh_?r$/,/rightthigh/,/upperleg_?r$/],
+  rLeg:      [/^rightleg$/,/leg_?r$/,/^r_?shin/,/shin_?r$/,/lowerleg_?r$/,/rightshin/,/calf_?r$/],
+  rFoot:     [/rightfoot/,/foot_?r$/,/^r_?foot/],
+  lArm:      [/leftarm$/,/upperarm_?l$/,/^l_?upperarm/,/arm_?l$/],
+  lForeArm:  [/leftforearm/,/forearm_?l$/,/^l_?forearm/,/lowerarm_?l$/],
+  rArm:      [/rightarm$/,/upperarm_?r$/,/^r_?upperarm/,/arm_?r$/],
+  rForeArm:  [/rightforearm/,/forearm_?r$/,/^r_?forearm/,/lowerarm_?r$/]
+};
+/* which landmark pair each bone should aim along */
+const AIM={
+  lUpLeg:[23,25], lLeg:[25,27],
+  rUpLeg:[24,26], rLeg:[26,28],
+  lArm:[11,13],   lForeArm:[13,15],
+  rArm:[12,14],   rForeArm:[14,16]
+};
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9_]/g,'');
+
+function mapBones(root){
+  root.traverse(o=>{ if(o.isBone) allBones.push(o); });
+  const used=new Set();
+  Object.keys(PATTERNS).forEach(role=>{
+    for(const re of PATTERNS[role]){
+      const hit=allBones.find(b=>!used.has(b)&&re.test(norm(b.name)));
+      if(hit){ BONES[role]=hit; used.add(hit); break; }
+    }
+  });
+  // record rest pose per aimed bone
+  root.updateMatrixWorld(true);
+  Object.keys(AIM).forEach(role=>{
+    const b=BONES[role]; if(!b) return;
+    const child=b.children.find(c=>c.isBone);
+    if(!child) { delete BONES[role]; return; }
+    const bw=new THREE.Vector3(), cw=new THREE.Vector3(), qw=new THREE.Quaternion();
+    b.getWorldPosition(bw); child.getWorldPosition(cw); b.getWorldQuaternion(qw);
+    REST[role]={q:qw.clone(), dir:cw.sub(bw).normalize(), bone:b};
+  });
+  const found=Object.keys(AIM).filter(r=>BONES[r]);
+  const missing=Object.keys(AIM).filter(r=>!BONES[r]);
+  log('bones total: '+allBones.length+
+      '\nmapped: '+found.join(', ')+
+      (missing.length?'\nMISSING: '+missing.join(', '):'\nall limb bones mapped')+
+      '\n\nfirst 20 names: '+allBones.slice(0,20).map(b=>b.name).join(', '));
+  skeletonReady=found.length>=4;
+}
+
+new THREE.GLTFLoader().load(
+  'https://threejs.org/examples/models/gltf/Soldier.glb',
+  gltf=>{
+    model=gltf.scene;
+    model.traverse(o=>{ if(o.isMesh){o.frustumCulled=false;} });
+    model.position.y=0; model.scale.setScalar(1);
+    scene.add(model);
+    mapBones(model);
+    fitPanels();
+  },
+  undefined,
+  err=>{ log('model load failed: '+err); }
+);
+
+/* ======================================================================
+   3. RETARGET — landmark directions become bone rotations
+   ====================================================================== */
+const qDelta=new THREE.Quaternion(), qWorld=new THREE.Quaternion(),
+      qParent=new THREE.Quaternion(), qOut=new THREE.Quaternion();
+const vA=new THREE.Vector3(), vB=new THREE.Vector3(), vDir=new THREE.Vector3();
+let mirror=true;
+const SMOOTH=0.35;                      // 0 = frozen, 1 = raw and jittery
+
+/* MediaPipe world landmarks: metres, origin at hip centre, y down, z toward camera.
+   Flip y and z to land in a Y-up right-handed space. */
+function lm3(L,i){
+  const p=L[i];
+  return vDir.set((mirror?-p.x:p.x), -p.y, -p.z);
+}
+function aim(role,L){
+  const b=BONES[role], rest=REST[role]; if(!b||!rest) return;
+  const [i0,i1]=AIM[role];
+  if(!L[i0]||!L[i1]) return;
+  vA.copy(lm3(L,i0)); vB.copy(lm3(L,i1));
+  vDir.subVectors(vB,vA);
+  if(vDir.lengthSq()<1e-8) return;
+  vDir.normalize();
+  qDelta.setFromUnitVectors(rest.dir,vDir);
+  qWorld.copy(qDelta).multiply(rest.q);
+  if(b.parent) { b.parent.getWorldQuaternion(qParent); qParent.invert(); qOut.copy(qParent).multiply(qWorld); }
+  else qOut.copy(qWorld);
+  b.quaternion.slerp(qOut,SMOOTH);
+  b.updateMatrixWorld(true);
+}
+const ORDER=['lUpLeg','lLeg','rUpLeg','rLeg','lArm','lForeArm','rArm','rForeArm'];
+function retarget(L){
+  if(!skeletonReady) return;
+  ORDER.forEach(r=>aim(r,L));
+}
+
+/* ======================================================================
+   4. CAMERA + POSE
+   ====================================================================== */
+const video=$('video'), cam=$('camCanvas'), cx=cam.getContext('2d');
+
+function drawCam(res){
+  const r=cam.parentElement.getBoundingClientRect();
+  if(cam.width!==Math.floor(r.width)||cam.height!==Math.floor(r.height)){
+    cam.width=Math.floor(r.width); cam.height=Math.floor(r.height);
+  }
+  const iw=res.image.width, ih=res.image.height;
+  const s=Math.max(cam.width/iw, cam.height/ih);
+  const dw=iw*s, dh=ih*s, dx=(cam.width-dw)/2, dy=(cam.height-dh)/2;
+  cx.save(); cx.clearRect(0,0,cam.width,cam.height);
+  if(mirror){ cx.translate(cam.width,0); cx.scale(-1,1); }
+  cx.filter='brightness(.55) saturate(.7)';
+  cx.drawImage(res.image,dx,dy,dw,dh);
+  cx.filter='none';
+  if(res.poseLandmarks){
+    const pts=res.poseLandmarks.map(p=>({x:dx/cam.width+p.x*dw/cam.width, y:dy/cam.height+p.y*dh/cam.height,
+                                        visibility:p.visibility}));
+    drawConnectors(cx,pts,POSE_CONNECTIONS,{color:'#7DE2FF',lineWidth:3});
+    drawLandmarks(cx,pts,{color:'#EAF9FF',lineWidth:1,radius:2.5});
+  }
+  cx.restore();
+}
+
+/* depth read-out reused from PD Score: leg geometry, arm-proof */
+function depthOf(L){
+  const hip=(L[23].y+L[24].y)/2, knee=(L[25].y+L[26].y)/2, ank=(L[27].y+L[28].y)/2;
+  const shin=Math.max(0.03, ank-knee);
+  const r=(ank-hip)/shin;                      // ~2.0 standing, ~1.0 deep
+  return Math.min(1,Math.max(0,(2.0-r)/0.85));
+}
+
+function onResults(res){
+  drawCam(res);
+  const L=res.poseLandmarks, W=res.poseWorldLandmarks;
+  if(!L){ stEl.textContent='no body'; stEl.className='pill'; return; }
+  const keys=[11,12,23,24,25,26,27,28];
+  const vs=keys.map(i=>L[i]?.visibility??0);
+  const avg=vs.reduce((a,b)=>a+b,0)/vs.length, lo=Math.min.apply(null,vs);
+  const feet=L[27].y<0.97&&L[28].y<0.97;
+  if(avg<0.6||lo<0.2||!feet){ stEl.textContent='step back — full body'; stEl.className='pill warn'; return; }
+  stEl.textContent=skeletonReady?'tracking':'model not mapped'; stEl.className='pill ok';
+  depEl.textContent='depth '+Math.round(depthOf(L)*100);
+  if(W) retarget(W);
+}
+
+const pose=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`});
+pose.setOptions({modelComplexity:1,smoothLandmarks:true,enableSegmentation:false,
+  minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+pose.onResults(onResults);
+
+setTimeout(()=>{
+  const mp=new Camera(video,{onFrame:async()=>{await pose.send({image:video});},width:640,height:480});
+  mp.start().catch(e=>{stEl.textContent='camera blocked'; stEl.className='pill warn'; log('camera: '+e);});
+},120);
+
+/* ======================================================================
+   5. UI
+   ====================================================================== */
+$('mirror').onclick=()=>{mirror=!mirror; $('mirror').textContent='Mirror: '+(mirror?'on':'off');};
+$('dump').onclick=()=>log(allBones.map(b=>b.name).join('\n')||'no bones');
+
+fitPanels();
+(function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
+</script>
+</body>
+</html>
