@@ -165,7 +165,7 @@ function mapBones(root){
 }
 
 new THREE.GLTFLoader().load(
-  'https://threejs.org/examples/models/gltf/Soldier.glb',
+  '/models/pd-figure.glb',
   gltf=>{
     model=gltf.scene;
     model.traverse(o=>{ if(o.isMesh){o.frustumCulled=false;} });
