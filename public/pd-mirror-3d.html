@@ -110,23 +110,6 @@ const BONES={};        // role -> bone
 const REST={};         // role -> {q:restWorldQuat, dir:restWorldDir, parent:bone}
 const allBones=[];
 
-const PATTERNS={
-  hips:      [/^hips$/,/pelvis/,/^root$/],
-  spine:     [/^spine$/,/spine_?0?1$/,/^chest$/],
-  chest:     [/spine_?0?2$/,/upperchest/,/^chest$/],
-  neck:      [/^neck$/],
-  head:      [/^head$/],
-  lUpLeg:    [/leftupleg/,/upleg_?l$/,/^l_?thigh/,/thigh_?l$/,/leftthigh/,/upperleg_?l$/],
-  lLeg:      [/^leftleg$/,/leg_?l$/,/^l_?shin/,/shin_?l$/,/lowerleg_?l$/,/leftshin/,/calf_?l$/],
-  lFoot:     [/leftfoot/,/foot_?l$/,/^l_?foot/],
-  rUpLeg:    [/rightupleg/,/upleg_?r$/,/^r_?thigh/,/thigh_?r$/,/rightthigh/,/upperleg_?r$/],
-  rLeg:      [/^rightleg$/,/leg_?r$/,/^r_?shin/,/shin_?r$/,/lowerleg_?r$/,/rightshin/,/calf_?r$/],
-  rFoot:     [/rightfoot/,/foot_?r$/,/^r_?foot/],
-  lArm:      [/leftarm$/,/upperarm_?l$/,/^l_?upperarm/,/arm_?l$/],
-  lForeArm:  [/leftforearm/,/forearm_?l$/,/^l_?forearm/,/lowerarm_?l$/],
-  rArm:      [/rightarm$/,/upperarm_?r$/,/^r_?upperarm/,/arm_?r$/],
-  rForeArm:  [/rightforearm/,/forearm_?r$/,/^r_?forearm/,/lowerarm_?r$/]
-};
 /* which landmark pair each bone should aim along */
 const AIM={
   lUpLeg:[23,25], lLeg:[25,27],
@@ -134,16 +117,35 @@ const AIM={
   lArm:[11,13],   lForeArm:[13,15],
   rArm:[12,14],   rForeArm:[14,16]
 };
-const norm=s=>s.toLowerCase().replace(/[^a-z0-9_]/g,'');
+/* Plain substring checks on the lowercased, punctuation-stripped name.
+   Order matters: more specific terms (upleg, forearm) are checked before
+   their generic counterparts (leg, arm) so e.g. "LeftUpLeg" never gets
+   claimed by the "leg" role. */
+function roleFor(rawName){
+  const n=rawName.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(n.includes('hips')||n.includes('pelvis')) return 'hips';
+  if(n.includes('spine2')||n.includes('chest')) return 'chest';
+  if(n.includes('spine')) return 'spine';
+  if(n.includes('neck')) return 'neck';
+  if(n.includes('head')) return 'head';
+  if(n.includes('leftupleg')||n.includes('leftthigh')) return 'lUpLeg';
+  if(n.includes('leftleg')||n.includes('leftshin')||n.includes('leftcalf')) return 'lLeg';
+  if(n.includes('leftfoot')) return 'lFoot';
+  if(n.includes('rightupleg')||n.includes('rightthigh')) return 'rUpLeg';
+  if(n.includes('rightleg')||n.includes('rightshin')||n.includes('rightcalf')) return 'rLeg';
+  if(n.includes('rightfoot')) return 'rFoot';
+  if(n.includes('leftforearm')||n.includes('leftlowerarm')) return 'lForeArm';
+  if(n.includes('leftarm')) return 'lArm';
+  if(n.includes('rightforearm')||n.includes('rightlowerarm')) return 'rForeArm';
+  if(n.includes('rightarm')) return 'rArm';
+  return null;
+}
 
 function mapBones(root){
   root.traverse(o=>{ if(o.isBone) allBones.push(o); });
-  const used=new Set();
-  Object.keys(PATTERNS).forEach(role=>{
-    for(const re of PATTERNS[role]){
-      const hit=allBones.find(b=>!used.has(b)&&re.test(norm(b.name)));
-      if(hit){ BONES[role]=hit; used.add(hit); break; }
-    }
+  allBones.forEach(b=>{
+    const role=roleFor(b.name);
+    if(role && !BONES[role]) BONES[role]=b;   // first match wins, never overwritten
   });
   // record rest pose per aimed bone
   root.updateMatrixWorld(true);
@@ -172,6 +174,19 @@ new THREE.GLTFLoader().load(
     model.position.y=0; model.scale.setScalar(1);
     scene.add(model);
     mapBones(model);
+
+    // auto-frame: measure the model and scale/position it to fill the panel nicely
+    const box=new THREE.Box3().setFromObject(model);
+    const size=new THREE.Vector3(); box.getSize(size);
+    const center=new THREE.Vector3(); box.getCenter(center);
+    const targetHeight=1.7; // desired figure height in scene units
+    const s=targetHeight/(size.y||1);
+    model.scale.setScalar(s);
+    model.position.set(-center.x*s, -box.min.y*s, -center.z*s);
+    camera.position.set(0, targetHeight*0.55, targetHeight*2.0);
+    camera.lookAt(0, targetHeight*0.5, 0);
+    log(logEl.textContent+'\n\nmodel height was '+size.y.toFixed(2)+' units, rescaled by '+s.toFixed(3));
+
     fitPanels();
   },
   undefined,
