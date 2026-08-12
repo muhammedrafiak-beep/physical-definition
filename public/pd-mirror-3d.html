@@ -2,63 +2,107 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PD Mirror — 3D model driven by camera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#05070A; --panel:#0B0F14; --gold:#E0A94A;
-    --ink:#EDF3F8; --ink3:rgba(237,243,248,.32);
+    --bg:#05070A; --panel:#0B0F14; --gold:#E0A94A; --gold-dim:rgba(224,169,74,.5);
+    --ink:#EDF3F8; --ink3:rgba(237,243,248,.32); --ink2:rgba(237,243,248,.55);
     --rule:rgba(224,169,74,.14);
     --disp:"Barlow Condensed",Impact,"Arial Narrow",sans-serif;
-    --body:system-ui,-apple-system,"Segoe UI",sans-serif;
+    --body:"Inter",system-ui,-apple-system,sans-serif;
   }
-  *{box-sizing:border-box}
+  *{box-sizing:border-box} html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
-    display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 12px 30px}
-  h1{font-family:var(--disp);text-transform:uppercase;letter-spacing:.18em;font-size:13px;
-     color:var(--gold);margin:2px 0 4px;font-weight:600}
-  .wrap{display:flex;gap:10px;width:100%;max-width:900px;flex-wrap:wrap;justify-content:center}
-  .panel{position:relative;flex:1 1 300px;min-width:280px;aspect-ratio:3/4;border-radius:18px;overflow:hidden;
-    background:#070A0E;border:1px solid var(--rule)}
-  .panel canvas,.panel video{position:absolute;inset:0;width:100%;height:100%;display:block}
-  #video{object-fit:cover;visibility:hidden}
-  #camCanvas{object-fit:cover}
-  .tag{position:absolute;top:10px;left:12px;z-index:5;font-family:var(--disp);font-size:10px;
-    letter-spacing:.2em;text-transform:uppercase;color:var(--gold);pointer-events:none}
-  .bar{width:100%;max-width:900px;background:var(--panel);border:1px solid var(--rule);border-radius:14px;
-    padding:12px 15px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
-  .bar b{font-family:var(--disp);letter-spacing:.15em;text-transform:uppercase;font-size:11px;color:var(--gold)}
-  .pill{padding:6px 12px;border-radius:99px;border:1px solid var(--rule);font-size:12px;color:var(--ink3)}
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 12px 30px;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .eyebrow{font-family:var(--disp);text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--gold-dim)}
+
+  .stage{position:relative;width:min(94vw,420px);aspect-ratio:9/16;border-radius:24px;overflow:hidden;
+    background-color:#05070A;box-shadow:0 0 0 1px rgba(224,169,74,.11),0 30px 80px -26px #000;
+    touch-action:none}
+  #three{display:block;width:100%;height:100%;cursor:grab}
+  #three:active{cursor:grabbing}
+
+  .hud{position:absolute;inset:0;pointer-events:none;padding:14px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .ttl .k{display:block;font-family:var(--disp);font-size:10px;letter-spacing:.22em;color:var(--gold);margin-bottom:2px;text-transform:uppercase}
+  .ttl .v{font-family:var(--disp);font-size:24px;font-weight:700;line-height:.92;text-transform:uppercase}
+  .status{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{padding:5px 10px;border-radius:99px;border:1px solid var(--rule);font-size:10.5px;
+    font-family:var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+    background:rgba(5,7,10,.55);backdrop-filter:blur(6px)}
   .pill.ok{color:#34E5A0;border-color:rgba(52,229,160,.35)}
-  .pill.warn{color:var(--gold);border-color:rgba(224,169,74,.4)}
-  button{padding:9px 14px;border-radius:10px;border:1px solid var(--rule);background:transparent;color:var(--ink);
-    font-family:var(--disp);letter-spacing:.14em;text-transform:uppercase;font-size:11.5px;cursor:pointer}
-  #log{width:100%;max-width:900px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--ink3);
-    background:#080B0F;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;
-    max-height:120px;overflow:auto;white-space:pre-wrap}
+  .pill.warn{color:var(--gold);border-color:rgba(224,169,74,.42)}
+
+  .bottom{display:flex;justify-content:space-between;align-items:flex-end}
+  .depth .n{font-family:var(--disp);font-size:38px;font-weight:700;line-height:.85;font-variant-numeric:tabular-nums}
+  .depth .l{font-family:var(--disp);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
+  .hint{font-size:10.5px;color:var(--ink3)}
+
+  #pip{position:absolute;width:104px;height:104px;border-radius:14px;overflow:hidden;
+    border:1px solid var(--rule);background:#070A0E;box-shadow:0 10px 26px -10px #000;
+    touch-action:none;z-index:6}
+  #pip video,#pip canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  #pip .tag{position:absolute;top:5px;left:7px;z-index:3;font-family:var(--disp);font-size:8.5px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold);pointer-events:none}
+  #pip .grip{position:absolute;right:2px;bottom:2px;width:16px;height:16px;z-index:4;cursor:nwse-resize;
+    background:radial-gradient(circle at 70% 70%,rgba(224,169,74,.55),transparent 60%)}
+  #pip .drag{position:absolute;inset:0;z-index:2;cursor:grab}
+
+  .bar{width:min(94vw,420px);background:var(--panel);border:1px solid var(--rule);border-radius:14px;
+    padding:11px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .bar b{font-family:var(--disp);letter-spacing:.14em;text-transform:uppercase;font-size:10.5px;color:var(--gold)}
+  button.chip{padding:8px 13px;border-radius:10px;border:1px solid var(--rule);background:transparent;color:var(--ink);
+    font-family:var(--disp);letter-spacing:.12em;text-transform:uppercase;font-size:11px;cursor:pointer}
+  button.chip.on{background:rgba(224,169,74,.12);border-color:rgba(224,169,74,.45)}
+  #log{width:min(94vw,420px);font-family:ui-monospace,monospace;font-size:10px;color:var(--ink3);
+    background:#080B0F;border:1px solid var(--rule);border-radius:12px;padding:9px 11px;
+    max-height:100px;overflow:auto;white-space:pre-wrap;display:none}
+  .foot{max-width:420px;font-size:11.5px;line-height:1.55;color:var(--ink3);text-align:center}
+  .foot b{color:var(--ink2);font-weight:500}
 </style>
 </head>
 <body>
 
-<h1>PD Mirror · 3D model driven by your camera</h1>
+<div class="eyebrow">Physical Definition · PD Mirror</div>
 
-<div class="wrap">
-  <div class="panel"><span class="tag">PD Model</span><canvas id="three"></canvas></div>
-  <div class="panel"><span class="tag">You</span>
+<div class="stage" id="stage">
+  <canvas id="three"></canvas>
+  <div class="hud">
+    <div class="top">
+      <div class="ttl"><span class="k">Station 1</span><span class="v">Squat</span></div>
+      <div class="status">
+        <span class="pill" id="st">starting…</span>
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="depth"><div class="n" id="pv">0</div><div class="l">Depth</div></div>
+      <div class="hint">drag model to orbit</div>
+    </div>
+  </div>
+  <div id="pip">
+    <span class="tag">You</span>
     <video id="video" playsinline muted></video>
     <canvas id="camCanvas"></canvas>
+    <div class="drag" id="pipDrag"></div>
+    <div class="grip" id="pipGrip"></div>
   </div>
 </div>
 
 <div class="bar">
-  <b>Status</b>
-  <span class="pill" id="st">starting…</span>
-  <span class="pill" id="dep">depth 0</span>
-  <button id="mirror">Mirror: on</button>
-  <button id="dump">Log bone names</button>
+  <b>Controls</b>
+  <button class="chip on" id="mirror">Mirror on</button>
+  <button class="chip" id="showLog">Bone log</button>
+  <button class="chip" id="resetPip">Reset camera box</button>
 </div>
 
-<div id="log">bones will be listed here</div>
+<div id="log"></div>
+
+<p class="foot">The model is driven live by your joints — <b>drag it to look from any angle</b>, and drag or resize the small camera box to wherever suits you. Sync can't drift: the pose <b>is</b> the model.</p>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -68,25 +112,23 @@
 
 <script>
 const $=i=>document.getElementById(i);
-const logEl=$('log'), stEl=$('st'), depEl=$('dep');
+const stage=$('stage'), logEl=$('log'), stEl=$('st'), pvEl=$('pv');
 function log(s){logEl.textContent=s;}
 
-/* ======================================================================
-   1. THREE.JS
-   ====================================================================== */
 let scene,camera,renderer,model,skeletonReady=false;
 const canvas3=$('three');
 
 scene=new THREE.Scene();
-camera=new THREE.PerspectiveCamera(30,3/4,0.1,100);
-camera.position.set(0,1.05,4.2); camera.lookAt(0,0.95,0);
+camera=new THREE.PerspectiveCamera(30,9/16,0.1,100);
 renderer=new THREE.WebGLRenderer({canvas:canvas3,antialias:true,alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
 
-scene.add(new THREE.HemisphereLight(0x8fa6bd,0x0a0d12,0.75));
-const kl=new THREE.DirectionalLight(0xfff3e6,1.25); kl.position.set(2.4,3.6,3.0); scene.add(kl);
-const rl=new THREE.DirectionalLight(0xE0A94A,1.5);  rl.position.set(-2.6,2.2,-2.4); scene.add(rl);
+scene.add(new THREE.HemisphereLight(0x8fa6bd,0x0a0d12,0.7));
+const kl=new THREE.DirectionalLight(0xfff3e6,1.2); kl.position.set(2.2,3.6,3.0); scene.add(kl);
+const rl=new THREE.DirectionalLight(0xE0A94A,1.4);  rl.position.set(-2.6,2.2,-2.4); scene.add(rl);
 
 const pad=new THREE.Mesh(new THREE.CircleGeometry(1.1,48),
   new THREE.MeshStandardMaterial({color:0x080b10,roughness:.9}));
@@ -95,32 +137,36 @@ const ring=new THREE.Mesh(new THREE.RingGeometry(1.07,1.095,48),
   new THREE.MeshBasicMaterial({color:0xE0A94A,transparent:true,opacity:.25,side:THREE.DoubleSide}));
 ring.rotation.x=-Math.PI/2; ring.position.y=.001; scene.add(ring);
 
-function fitPanels(){
-  [[canvas3,renderer,camera]].forEach(([cv,rd,cm])=>{
-    const r=cv.parentElement.getBoundingClientRect();
-    rd.setSize(r.width,r.height,false); cm.aspect=r.width/r.height; cm.updateProjectionMatrix();
-  });
+function fitStage(){
+  const r=stage.getBoundingClientRect();
+  renderer.setSize(r.width,r.height,false);
+  camera.aspect=r.width/r.height; camera.updateProjectionMatrix();
 }
-addEventListener('resize',fitPanels);
+addEventListener('resize',fitStage);
 
-/* ======================================================================
-   2. BONE MAP — found by pattern, so it works across naming conventions
-   ====================================================================== */
-const BONES={};        // role -> bone
-const REST={};         // role -> {q:restWorldQuat, dir:restWorldDir, parent:bone}
-const allBones=[];
+let yaw=0.05, pitch=0.02, dist=4.6, orbitTarget=0.95, dragging=false, lx=0, ly=0;
+function updateCam(){
+  camera.position.set(Math.sin(yaw)*Math.cos(pitch)*dist, orbitTarget+Math.sin(pitch)*dist, Math.cos(yaw)*Math.cos(pitch)*dist);
+  camera.lookAt(0,orbitTarget,0);
+}
+const pt=e=>e.touches?e.touches[0]:e;
+canvas3.addEventListener('mousedown',e=>{dragging=true;lx=pt(e).clientX;ly=pt(e).clientY;});
+canvas3.addEventListener('touchstart',e=>{dragging=true;lx=pt(e).clientX;ly=pt(e).clientY;},{passive:true});
+function orbitMove(e){
+  if(!dragging)return; const t=pt(e);
+  yaw+=(t.clientX-lx)*0.009; pitch=Math.max(-0.35,Math.min(0.55,pitch-(t.clientY-ly)*0.006));
+  lx=t.clientX; ly=t.clientY; if(e.cancelable)e.preventDefault();
+}
+addEventListener('mousemove',orbitMove); canvas3.addEventListener('touchmove',orbitMove,{passive:false});
+addEventListener('mouseup',()=>dragging=false); addEventListener('touchend',()=>dragging=false);
 
-/* which landmark pair each bone should aim along */
+const BONES={}, REST={}, allBones=[];
 const AIM={
   lUpLeg:[23,25], lLeg:[25,27],
   rUpLeg:[24,26], rLeg:[26,28],
   lArm:[11,13],   lForeArm:[13,15],
   rArm:[12,14],   rForeArm:[14,16]
 };
-/* Plain substring checks on the lowercased, punctuation-stripped name.
-   Order matters: more specific terms (upleg, forearm) are checked before
-   their generic counterparts (leg, arm) so e.g. "LeftUpLeg" never gets
-   claimed by the "leg" role. */
 function roleFor(rawName){
   const n=rawName.toLowerCase().replace(/[^a-z0-9]/g,'');
   if(n.includes('hips')||n.includes('pelvis')) return 'hips';
@@ -140,14 +186,12 @@ function roleFor(rawName){
   if(n.includes('rightarm')) return 'rArm';
   return null;
 }
-
 function mapBones(root){
   root.traverse(o=>{ if(o.isBone) allBones.push(o); });
   allBones.forEach(b=>{
     const role=roleFor(b.name);
-    if(role && !BONES[role]) BONES[role]=b;   // first match wins, never overwritten
+    if(role && !BONES[role]) BONES[role]=b;
   });
-  // record rest pose per aimed bone
   root.updateMatrixWorld(true);
   Object.keys(AIM).forEach(role=>{
     const b=BONES[role]; if(!b) return;
@@ -171,46 +215,35 @@ new THREE.GLTFLoader().load(
   gltf=>{
     model=gltf.scene;
     model.traverse(o=>{ if(o.isMesh){o.frustumCulled=false;} });
-    model.position.y=0; model.scale.setScalar(1);
     scene.add(model);
     mapBones(model);
 
-    // auto-frame: measure the model and scale/position it to fill the panel nicely
     const box=new THREE.Box3().setFromObject(model);
     const size=new THREE.Vector3(); box.getSize(size);
     const center=new THREE.Vector3(); box.getCenter(center);
-    const targetHeight=1.7; // desired figure height in scene units
+    const targetHeight=1.72;
     const s=targetHeight/(size.y||1);
     model.scale.setScalar(s);
     model.position.set(-center.x*s, -box.min.y*s, -center.z*s);
-    camera.position.set(0, targetHeight*0.55, targetHeight*2.0);
-    camera.lookAt(0, targetHeight*0.5, 0);
+    orbitTarget=targetHeight*0.56;
+    dist=targetHeight*1.55;
+    fitStage(); updateCam();
     log(logEl.textContent+'\n\nmodel height was '+size.y.toFixed(2)+' units, rescaled by '+s.toFixed(3));
-
-    fitPanels();
   },
   undefined,
   err=>{ log('model load failed: '+err); }
 );
 
-/* ======================================================================
-   3. RETARGET — landmark directions become bone rotations
-   ====================================================================== */
 const qDelta=new THREE.Quaternion(), qWorld=new THREE.Quaternion(),
       qParent=new THREE.Quaternion(), qOut=new THREE.Quaternion();
 const vA=new THREE.Vector3(), vB=new THREE.Vector3(), vDir=new THREE.Vector3();
 let mirror=true;
-const SMOOTH=0.35;                      // 0 = frozen, 1 = raw and jittery
+const SMOOTH=0.16;
 
-/* MediaPipe world landmarks: metres, origin at hip centre, y down, z toward camera.
-   Flip y and z to land in a Y-up right-handed space. */
-function lm3(L,i){
-  const p=L[i];
-  return vDir.set((mirror?-p.x:p.x), -p.y, -p.z);
-}
+function lm3(L,i){ const p=L[i]; return vDir.set((mirror?-p.x:p.x), -p.y, -p.z); }
 function aim(role,L){
   const b=BONES[role], rest=REST[role]; if(!b||!rest) return;
-  const [i0,i1]=AIM[role];
+  const io=AIM[role], i0=io[0], i1=io[1];
   if(!L[i0]||!L[i1]) return;
   vA.copy(lm3(L,i0)); vB.copy(lm3(L,i1));
   vDir.subVectors(vB,vA);
@@ -218,49 +251,40 @@ function aim(role,L){
   vDir.normalize();
   qDelta.setFromUnitVectors(rest.dir,vDir);
   qWorld.copy(qDelta).multiply(rest.q);
-  if(b.parent) { b.parent.getWorldQuaternion(qParent); qParent.invert(); qOut.copy(qParent).multiply(qWorld); }
+  if(b.parent){ b.parent.getWorldQuaternion(qParent); qParent.invert(); qOut.copy(qParent).multiply(qWorld); }
   else qOut.copy(qWorld);
   b.quaternion.slerp(qOut,SMOOTH);
   b.updateMatrixWorld(true);
 }
 const ORDER=['lUpLeg','lLeg','rUpLeg','rLeg','lArm','lForeArm','rArm','rForeArm'];
-function retarget(L){
-  if(!skeletonReady) return;
-  ORDER.forEach(r=>aim(r,L));
-}
+function retarget(L){ if(!skeletonReady) return; ORDER.forEach(r=>aim(r,L)); }
 
-/* ======================================================================
-   4. CAMERA + POSE
-   ====================================================================== */
-const video=$('video'), cam=$('camCanvas'), cx=cam.getContext('2d');
+const video=$('video'), pipCanvas=$('camCanvas'), cx=pipCanvas.getContext('2d');
 
 function drawCam(res){
-  const r=cam.parentElement.getBoundingClientRect();
-  if(cam.width!==Math.floor(r.width)||cam.height!==Math.floor(r.height)){
-    cam.width=Math.floor(r.width); cam.height=Math.floor(r.height);
-  }
+  const r=pipCanvas.getBoundingClientRect();
+  const w=Math.max(1,Math.floor(r.width)), h=Math.max(1,Math.floor(r.height));
+  if(pipCanvas.width!==w||pipCanvas.height!==h){ pipCanvas.width=w; pipCanvas.height=h; }
   const iw=res.image.width, ih=res.image.height;
-  const s=Math.max(cam.width/iw, cam.height/ih);
-  const dw=iw*s, dh=ih*s, dx=(cam.width-dw)/2, dy=(cam.height-dh)/2;
-  cx.save(); cx.clearRect(0,0,cam.width,cam.height);
-  if(mirror){ cx.translate(cam.width,0); cx.scale(-1,1); }
-  cx.filter='brightness(.55) saturate(.7)';
+  const s=Math.max(w/iw, h/ih);
+  const dw=iw*s, dh=ih*s, dx=(w-dw)/2, dy=(h-dh)/2;
+  cx.save(); cx.clearRect(0,0,w,h);
+  if(mirror){ cx.translate(w,0); cx.scale(-1,1); }
+  cx.filter='brightness(.6) saturate(.75)';
   cx.drawImage(res.image,dx,dy,dw,dh);
   cx.filter='none';
   if(res.poseLandmarks){
-    const pts=res.poseLandmarks.map(p=>({x:dx/cam.width+p.x*dw/cam.width, y:dy/cam.height+p.y*dh/cam.height,
-                                        visibility:p.visibility}));
-    drawConnectors(cx,pts,POSE_CONNECTIONS,{color:'#7DE2FF',lineWidth:3});
-    drawLandmarks(cx,pts,{color:'#EAF9FF',lineWidth:1,radius:2.5});
+    const pts=res.poseLandmarks.map(p=>({x:dx/w+p.x*dw/w, y:dy/h+p.y*dh/h, visibility:p.visibility}));
+    drawConnectors(cx,pts,POSE_CONNECTIONS,{color:'#7DE2FF',lineWidth:2});
+    drawLandmarks(cx,pts,{color:'#EAF9FF',lineWidth:1,radius:1.6});
   }
   cx.restore();
 }
 
-/* depth read-out reused from PD Score: leg geometry, arm-proof */
 function depthOf(L){
   const hip=(L[23].y+L[24].y)/2, knee=(L[25].y+L[26].y)/2, ank=(L[27].y+L[28].y)/2;
   const shin=Math.max(0.03, ank-knee);
-  const r=(ank-hip)/shin;                      // ~2.0 standing, ~1.0 deep
+  const r=(ank-hip)/shin;
   return Math.min(1,Math.max(0,(2.0-r)/0.85));
 }
 
@@ -270,32 +294,60 @@ function onResults(res){
   if(!L){ stEl.textContent='no body'; stEl.className='pill'; return; }
   const keys=[11,12,23,24,25,26,27,28];
   const vs=keys.map(i=>L[i]?.visibility??0);
-  const avg=vs.reduce((a,b)=>a+b,0)/vs.length, lo=Math.min.apply(null,vs);
+  const avg=vs.reduce(function(a,b){return a+b;},0)/vs.length, lo=Math.min.apply(null,vs);
   const feet=L[27].y<0.97&&L[28].y<0.97;
   if(avg<0.6||lo<0.2||!feet){ stEl.textContent='step back — full body'; stEl.className='pill warn'; return; }
   stEl.textContent=skeletonReady?'tracking':'model not mapped'; stEl.className='pill ok';
-  depEl.textContent='depth '+Math.round(depthOf(L)*100);
+  pvEl.textContent=Math.round(depthOf(L)*100);
   if(W) retarget(W);
 }
 
-const pose=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`});
+const pose=new Pose({locateFile:function(f){return 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/'+f;}});
 pose.setOptions({modelComplexity:1,smoothLandmarks:true,enableSegmentation:false,
   minDetectionConfidence:0.5,minTrackingConfidence:0.5});
 pose.onResults(onResults);
 
-setTimeout(()=>{
-  const mp=new Camera(video,{onFrame:async()=>{await pose.send({image:video});},width:640,height:480});
-  mp.start().catch(e=>{stEl.textContent='camera blocked'; stEl.className='pill warn'; log('camera: '+e);});
+setTimeout(function(){
+  const mp=new Camera(video,{onFrame:async function(){await pose.send({image:video});},width:640,height:480});
+  mp.start().catch(function(e){stEl.textContent='camera blocked'; stEl.className='pill warn'; log('camera: '+e);});
 },120);
 
-/* ======================================================================
-   5. UI
-   ====================================================================== */
-$('mirror').onclick=()=>{mirror=!mirror; $('mirror').textContent='Mirror: '+(mirror?'on':'off');};
-$('dump').onclick=()=>log(allBones.map(b=>b.name).join('\n')||'no bones');
+const pip=$('pip'), pipDrag=$('pipDrag'), pipGrip=$('pipGrip');
+function placePipDefault(){
+  const r=stage.getBoundingClientRect();
+  pip.style.width='104px'; pip.style.height='104px';
+  pip.style.left=(r.width-104-12)+'px'; pip.style.top='12px';
+}
+let mode=null, sx=0, sy=0, ox=0, oy=0, ow=0, oh=0;
+function stageRect(){ return stage.getBoundingClientRect(); }
+function clampPip(){
+  const r=stageRect(), pr=pip.getBoundingClientRect();
+  let left=parseFloat(pip.style.left), top=parseFloat(pip.style.top);
+  left=Math.max(4,Math.min(r.width-pr.width-4,left));
+  top=Math.max(4,Math.min(r.height-pr.height-4,top));
+  pip.style.left=left+'px'; pip.style.top=top+'px';
+}
+function ptOf(e){ return e.touches?e.touches[0]:e; }
+pipDrag.addEventListener('mousedown',function(e){mode='move';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ox=parseFloat(pip.style.left);oy=parseFloat(pip.style.top);e.stopPropagation();});
+pipDrag.addEventListener('touchstart',function(e){mode='move';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ox=parseFloat(pip.style.left);oy=parseFloat(pip.style.top);e.stopPropagation();},{passive:true});
+pipGrip.addEventListener('mousedown',function(e){mode='resize';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ow=pip.offsetWidth;oh=pip.offsetHeight;e.stopPropagation();});
+pipGrip.addEventListener('touchstart',function(e){mode='resize';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ow=pip.offsetWidth;oh=pip.offsetHeight;e.stopPropagation();},{passive:true});
+function pipMove(e){
+  if(!mode) return; const t=ptOf(e);
+  if(mode==='move'){ pip.style.left=(ox+t.clientX-sx)+'px'; pip.style.top=(oy+t.clientY-sy)+'px'; clampPip(); }
+  else{ const d=Math.max(t.clientX-sx,t.clientY-sy); const size=Math.max(72,Math.min(220,ow+d));
+        pip.style.width=size+'px'; pip.style.height=size+'px'; clampPip(); }
+  if(e.cancelable) e.preventDefault();
+}
+addEventListener('mousemove',pipMove); addEventListener('touchmove',pipMove,{passive:false});
+addEventListener('mouseup',function(){mode=null;}); addEventListener('touchend',function(){mode=null;});
 
-fitPanels();
-(function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
+$('mirror').onclick=function(){mirror=!mirror; $('mirror').textContent='Mirror '+(mirror?'on':'off'); $('mirror').classList.toggle('on',mirror);};
+$('showLog').onclick=function(){const v=logEl.style.display==='block'; logEl.style.display=v?'none':'block'; $('showLog').classList.toggle('on',!v);};
+$('resetPip').onclick=placePipDefault;
+
+fitStage(); placePipDefault(); updateCam();
+(function loop(){ requestAnimationFrame(loop); updateCam(); renderer.render(scene,camera); })();
 </script>
 </body>
 </html>
