@@ -81,7 +81,7 @@
     </div>
     <div class="bottom">
       <div class="depth"><div class="n" id="pv">0</div><div class="l">Depth</div></div>
-      <div class="hint">drag model to orbit</div>
+      <div class="hint" id="orbitDbg">yaw 0° / pitch 0°</div>
     </div>
   </div>
   <div id="pip">
@@ -361,7 +361,10 @@ $('showLog').onclick=function(){const v=logEl.style.display==='block'; logEl.sty
 $('resetPip').onclick=placePipDefault;
 
 fitStage(); placePipDefault(); updateCam();
-(function loop(){ requestAnimationFrame(loop); updateCam(); renderer.render(scene,camera); })();
+(function loop(){ requestAnimationFrame(loop); updateCam();
+  const dbg=document.getElementById('orbitDbg');
+  if(dbg) dbg.textContent='yaw '+Math.round(yaw*57.3)+'° / pitch '+Math.round(pitch*57.3)+'° / drag:'+(dragging?'Y':'N');
+  renderer.render(scene,camera); })();
 </script>
 </body>
 </html>
