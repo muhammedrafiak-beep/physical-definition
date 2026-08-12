@@ -144,21 +144,25 @@ function fitStage(){
 }
 addEventListener('resize',fitStage);
 
-let yaw=0.05, pitch=0.02, dist=4.6, orbitTarget=0.95, dragging=false, lx=0, ly=0;
+let yaw=0.05, pitch=0.02, dist=4.6, orbitTarget=0.95, dragging=false, lx=0, ly=0, dragId=null;
 function updateCam(){
   camera.position.set(Math.sin(yaw)*Math.cos(pitch)*dist, orbitTarget+Math.sin(pitch)*dist, Math.cos(yaw)*Math.cos(pitch)*dist);
   camera.lookAt(0,orbitTarget,0);
 }
-const pt=e=>e.touches?e.touches[0]:e;
-canvas3.addEventListener('mousedown',e=>{dragging=true;lx=pt(e).clientX;ly=pt(e).clientY;});
-canvas3.addEventListener('touchstart',e=>{dragging=true;lx=pt(e).clientX;ly=pt(e).clientY;},{passive:true});
-function orbitMove(e){
-  if(!dragging)return; const t=pt(e);
-  yaw+=(t.clientX-lx)*0.009; pitch=Math.max(-0.35,Math.min(0.55,pitch-(t.clientY-ly)*0.006));
-  lx=t.clientX; ly=t.clientY; if(e.cancelable)e.preventDefault();
-}
-addEventListener('mousemove',orbitMove); canvas3.addEventListener('touchmove',orbitMove,{passive:false});
-addEventListener('mouseup',()=>dragging=false); addEventListener('touchend',()=>dragging=false);
+canvas3.style.touchAction='none';
+canvas3.addEventListener('pointerdown',function(e){
+  dragging=true; dragId=e.pointerId; lx=e.clientX; ly=e.clientY;
+  try{canvas3.setPointerCapture(e.pointerId);}catch(err){}
+});
+canvas3.addEventListener('pointermove',function(e){
+  if(!dragging||e.pointerId!==dragId) return;
+  yaw+=(e.clientX-lx)*0.011; pitch=Math.max(-0.35,Math.min(0.55,pitch-(e.clientY-ly)*0.007));
+  lx=e.clientX; ly=e.clientY;
+});
+function endDrag(e){ if(e.pointerId===dragId){ dragging=false; dragId=null; } }
+canvas3.addEventListener('pointerup',endDrag);
+canvas3.addEventListener('pointercancel',endDrag);
+canvas3.addEventListener('lostpointercapture',function(){dragging=false;dragId=null;});
 
 const BONES={}, REST={}, allBones=[];
 const AIM={
@@ -318,7 +322,7 @@ function placePipDefault(){
   pip.style.width='104px'; pip.style.height='104px';
   pip.style.left=(r.width-104-12)+'px'; pip.style.top='12px';
 }
-let mode=null, sx=0, sy=0, ox=0, oy=0, ow=0, oh=0;
+let mode=null, sx=0, sy=0, ox=0, oy=0, ow=0, oh=0, pipId=null;
 function stageRect(){ return stage.getBoundingClientRect(); }
 function clampPip(){
   const r=stageRect(), pr=pip.getBoundingClientRect();
@@ -327,20 +331,30 @@ function clampPip(){
   top=Math.max(4,Math.min(r.height-pr.height-4,top));
   pip.style.left=left+'px'; pip.style.top=top+'px';
 }
-function ptOf(e){ return e.touches?e.touches[0]:e; }
-pipDrag.addEventListener('mousedown',function(e){mode='move';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ox=parseFloat(pip.style.left);oy=parseFloat(pip.style.top);e.stopPropagation();});
-pipDrag.addEventListener('touchstart',function(e){mode='move';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ox=parseFloat(pip.style.left);oy=parseFloat(pip.style.top);e.stopPropagation();},{passive:true});
-pipGrip.addEventListener('mousedown',function(e){mode='resize';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ow=pip.offsetWidth;oh=pip.offsetHeight;e.stopPropagation();});
-pipGrip.addEventListener('touchstart',function(e){mode='resize';const t=ptOf(e);sx=t.clientX;sy=t.clientY;ow=pip.offsetWidth;oh=pip.offsetHeight;e.stopPropagation();},{passive:true});
+pipDrag.style.touchAction='none'; pipGrip.style.touchAction='none';
+pipDrag.addEventListener('pointerdown',function(e){
+  mode='move'; pipId=e.pointerId; sx=e.clientX; sy=e.clientY;
+  ox=parseFloat(pip.style.left); oy=parseFloat(pip.style.top);
+  try{pipDrag.setPointerCapture(e.pointerId);}catch(err){}
+  e.stopPropagation();
+});
+pipGrip.addEventListener('pointerdown',function(e){
+  mode='resize'; pipId=e.pointerId; sx=e.clientX; sy=e.clientY;
+  ow=pip.offsetWidth; oh=pip.offsetHeight;
+  try{pipGrip.setPointerCapture(e.pointerId);}catch(err){}
+  e.stopPropagation();
+});
 function pipMove(e){
-  if(!mode) return; const t=ptOf(e);
-  if(mode==='move'){ pip.style.left=(ox+t.clientX-sx)+'px'; pip.style.top=(oy+t.clientY-sy)+'px'; clampPip(); }
-  else{ const d=Math.max(t.clientX-sx,t.clientY-sy); const size=Math.max(72,Math.min(220,ow+d));
+  if(!mode||e.pointerId!==pipId) return;
+  if(mode==='move'){ pip.style.left=(ox+e.clientX-sx)+'px'; pip.style.top=(oy+e.clientY-sy)+'px'; clampPip(); }
+  else{ const d=Math.max(e.clientX-sx,e.clientY-sy); const size=Math.max(72,Math.min(220,ow+d));
         pip.style.width=size+'px'; pip.style.height=size+'px'; clampPip(); }
-  if(e.cancelable) e.preventDefault();
 }
-addEventListener('mousemove',pipMove); addEventListener('touchmove',pipMove,{passive:false});
-addEventListener('mouseup',function(){mode=null;}); addEventListener('touchend',function(){mode=null;});
+function pipEnd(e){ if(e.pointerId===pipId){ mode=null; pipId=null; } }
+pipDrag.addEventListener('pointermove',pipMove); pipGrip.addEventListener('pointermove',pipMove);
+pipDrag.addEventListener('pointerup',pipEnd); pipGrip.addEventListener('pointerup',pipEnd);
+pipDrag.addEventListener('pointercancel',pipEnd); pipGrip.addEventListener('pointercancel',pipEnd);
+
 
 $('mirror').onclick=function(){mirror=!mirror; $('mirror').textContent='Mirror '+(mirror?'on':'off'); $('mirror').classList.toggle('on',mirror);};
 $('showLog').onclick=function(){const v=logEl.style.display==='block'; logEl.style.display=v?'none':'block'; $('showLog').classList.toggle('on',!v);};
