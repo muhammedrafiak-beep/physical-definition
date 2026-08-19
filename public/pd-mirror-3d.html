@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -98,14 +98,19 @@
   <button class="chip on" id="mirror">Mirror on</button>
   <button class="chip" id="showLog">Bone log</button>
   <button class="chip" id="resetPip">Reset camera box</button>
+  <button class="chip" id="cleanToggle">🎬 Clean record mode</button>
 </div>
 
 <div id="log"></div>
 
 <p class="foot">The model is driven live by your joints — <b>drag it to look from any angle</b>, and drag or resize the small camera box to wherever suits you. Sync can't drift: the pose <b>is</b> the model.</p>
 
+<!-- Three.js & OrbitControls -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<!-- MediaPipe Pose -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
@@ -115,7 +120,7 @@ const $=i=>document.getElementById(i);
 const stage=$('stage'), logEl=$('log'), stEl=$('st'), pvEl=$('pv');
 function log(s){logEl.textContent=s;}
 
-let scene,camera,renderer,model,skeletonReady=false;
+let scene,camera,renderer,model,controls,skeletonReady=false;
 const canvas3=$('three');
 
 scene=new THREE.Scene();
@@ -137,32 +142,20 @@ const ring=new THREE.Mesh(new THREE.RingGeometry(1.07,1.095,48),
   new THREE.MeshBasicMaterial({color:0xE0A94A,transparent:true,opacity:.25,side:THREE.DoubleSide}));
 ring.rotation.x=-Math.PI/2; ring.position.y=.001; scene.add(ring);
 
+// OrbitControls Setup for 360 Rotation
+controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true; // സ്വയമേവ കറങ്ങും
+controls.autoRotateSpeed = 1.5;
+controls.target.set(0, 0.95, 0);
+
 function fitStage(){
   const r=stage.getBoundingClientRect();
   renderer.setSize(r.width,r.height,false);
   camera.aspect=r.width/r.height; camera.updateProjectionMatrix();
 }
 addEventListener('resize',fitStage);
-
-let yaw=0.05, pitch=0.02, dist=4.6, orbitTarget=0.95, dragging=false, lx=0, ly=0, dragId=null;
-function updateCam(){
-  camera.position.set(Math.sin(yaw)*Math.cos(pitch)*dist, orbitTarget+Math.sin(pitch)*dist, Math.cos(yaw)*Math.cos(pitch)*dist);
-  camera.lookAt(0,orbitTarget,0);
-}
-canvas3.style.touchAction='none';
-canvas3.addEventListener('pointerdown',function(e){
-  dragging=true; dragId=e.pointerId; lx=e.clientX; ly=e.clientY;
-  try{canvas3.setPointerCapture(e.pointerId);}catch(err){}
-});
-canvas3.addEventListener('pointermove',function(e){
-  if(!dragging||e.pointerId!==dragId) return;
-  yaw+=(e.clientX-lx)*0.011; pitch=Math.max(-0.35,Math.min(0.55,pitch-(e.clientY-ly)*0.007));
-  lx=e.clientX; ly=e.clientY;
-});
-function endDrag(e){ if(e.pointerId===dragId){ dragging=false; dragId=null; } }
-canvas3.addEventListener('pointerup',endDrag);
-canvas3.addEventListener('pointercancel',endDrag);
-canvas3.addEventListener('lostpointercapture',function(){dragging=false;dragId=null;});
 
 const BONES={}, REST={}, allBones=[];
 const AIM={
@@ -215,7 +208,7 @@ function mapBones(root){
 }
 
 new THREE.GLTFLoader().load(
-  '/models/pd-figure.glb',
+  './free_rigged_male_basemesh/scene.gltf', // നിങ്ങൾ ഡൗൺലോഡ് ചെയ്ത മോഡലിന്റെ പാത്ത്
   gltf=>{
     model=gltf.scene;
     model.traverse(o=>{ if(o.isMesh){o.frustumCulled=false;} });
@@ -228,10 +221,14 @@ new THREE.GLTFLoader().load(
     const targetHeight=1.72;
     const s=targetHeight/(size.y||1);
     model.scale.setScalar(s);
+    // മോഡൽ കൃത്യമായി നടുവിലേക്ക് കൊണ്ടുവരാൻ
     model.position.set(-center.x*s, -box.min.y*s, -center.z*s);
-    orbitTarget=targetHeight*0.56;
-    dist=targetHeight*1.55;
-    fitStage(); updateCam();
+    
+    const orbitTarget=targetHeight*0.56;
+    controls.target.set(0, orbitTarget, 0);
+    controls.update();
+    
+    fitStage();
     log(logEl.textContent+'\n\nmodel height was '+size.y.toFixed(2)+' units, rescaled by '+s.toFixed(3));
   },
   undefined,
@@ -355,15 +352,26 @@ pipDrag.addEventListener('pointermove',pipMove); pipGrip.addEventListener('point
 pipDrag.addEventListener('pointerup',pipEnd); pipGrip.addEventListener('pointerup',pipEnd);
 pipDrag.addEventListener('pointercancel',pipEnd); pipGrip.addEventListener('pointercancel',pipEnd);
 
+ $('mirror').onclick=function(){mirror=!mirror; $('mirror').textContent='Mirror '+(mirror?'on':'off'); $('mirror').classList.toggle('on',mirror);};
+ $('showLog').onclick=function(){const v=logEl.style.display==='block'; logEl.style.display=v?'none':'block'; $('showLog').classList.toggle('on',!v);};
+ $('resetPip').onclick=placePipDefault;
+let cleanMode=false;
+$('cleanToggle').onclick=function(){
+  cleanMode=!cleanMode;
+  document.querySelector('.hud').style.display = cleanMode ? 'none' : 'flex';
+  document.getElementById('pip').style.display = cleanMode ? 'none' : 'block';
+  document.getElementById('resetPip').style.display = cleanMode ? 'none' : 'inline-flex';
+  const log = document.getElementById('log');
+  if(log) log.style.display = cleanMode ? 'none' : 'block';
+  this.textContent = cleanMode ? '👁 Show controls' : '🎬 Clean record mode';
+};
 
-$('mirror').onclick=function(){mirror=!mirror; $('mirror').textContent='Mirror '+(mirror?'on':'off'); $('mirror').classList.toggle('on',mirror);};
-$('showLog').onclick=function(){const v=logEl.style.display==='block'; logEl.style.display=v?'none':'block'; $('showLog').classList.toggle('on',!v);};
-$('resetPip').onclick=placePipDefault;
+fitStage(); placePipDefault();
 
-fitStage(); placePipDefault(); updateCam();
-(function loop(){ requestAnimationFrame(loop); updateCam();
+(function loop(){ requestAnimationFrame(loop);
+  controls.update(); // OrbitControls അപ്ഡേറ്റ് ചെയ്യുന്നു
   const dbg=document.getElementById('orbitDbg');
-  if(dbg) dbg.textContent='yaw '+Math.round(yaw*57.3)+'° / pitch '+Math.round(pitch*57.3)+'° / drag:'+(dragging?'Y':'N');
+  if(dbg) dbg.textContent='yaw '+Math.round(controls.getAzimuthalAngle()*57.3)+'° / pitch '+Math.round(controls.getPolarAngle()*57.3)+'°';
   renderer.render(scene,camera); })();
 </script>
 </body>
