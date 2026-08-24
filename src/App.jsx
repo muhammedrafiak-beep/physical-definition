@@ -92,8 +92,8 @@ const WORKOUT_SYSTEMS = [
   {
     id: "ppl", level: "intermediate", name: "Push / Pull / Legs", nameAr: "دفع / سحب / أرجل",
     color: "#ef4444", emoji: "💪",
-    desc: "3-day split targeting pushing, pulling, and leg movements",
-    descAr: "تقسيم 3 أيام للدفع والسحب والأرجل",
+    desc: "Push / Pull / Legs run TWICE a week (6 days) \u2014 at 3 days each muscle is trained only once, which is too little",
+    descAr: "دفع/سحب/أرجل مرتين أسبوعياً (6 أيام) — 3 أيام تعني تدريب كل عضلة مرة واحدة فقط وهو غير كافٍ",
     days: [
       {
         name: "Day 1 — Push (Chest, Shoulders, Triceps)",
@@ -165,6 +165,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Cable Row", sets: "4", reps: "10-12", rest: "60s", notes: "" },
           { name: "Lateral Raises", sets: "4", reps: "12-15", rest: "45s", notes: "" },
           { name: "Face Pulls", sets: "3", reps: "15", rest: "45s", notes: "" },
+          { name: "Cable Fly", sets: "3", reps: "12-15", rest: "60s", notes: "Brings weekly chest volume in line with the rest" },
           { name: "Preacher Curl", sets: "3", reps: "12", rest: "60s", notes: "" },
           { name: "Tricep Pushdown", sets: "3", reps: "12-15", rest: "60s", notes: "" },
         ]
@@ -319,30 +320,40 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "fullbody", level: "beginner", name: "Full Body Training", nameAr: "تدريب الجسم الكامل",
-    color: "#f97316", emoji: "🏋️",
-    desc: "3x/week full body — ideal for beginners and natural athletes",
-    descAr: "3 مرات أسبوعياً — مثالي للمبتدئين",
+    color: "#8b5cf6", emoji: "\ud83c\udfcb\ufe0f",
+    desc: "3 days a week, whole body each session \u2014 every muscle trained 3\u00d7 weekly, which is what makes it work for beginners",
+    descAr: "3 أيام أسبوعياً، الجسم كامل في كل جلسة — كل عضلة 3 مرات أسبوعياً",
     days: [
       {
-        name: "Day A — Full Body (Mon/Wed/Fri)",
+        name: "Day A \u2014 Full Body (Mon)",
         exercises: [
-          { name: "Squat", sets: "4", reps: "6-8", rest: "2min", notes: "Main compound" },
-          { name: "Bench Press", sets: "4", reps: "6-8", rest: "2min", notes: "" },
-          { name: "Deadlift", sets: "3", reps: "5", rest: "2min", notes: "Heavy" },
-          { name: "Pull-ups", sets: "3", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Overhead Press", sets: "3", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Plank", sets: "3", reps: "60 sec", rest: "30s", notes: "Core" },
+          { name: "Barbell Squat", sets: "3", reps: "6-8", rest: "2min", notes: "Main lift \u2014 add weight when all 3 sets hit 8" },
+          { name: "Bench Press", sets: "3", reps: "6-8", rest: "2min", notes: "Main upper push" },
+          { name: "Barbell Row", sets: "3", reps: "8-10", rest: "90s", notes: "Main upper pull" },
+          { name: "Overhead Press", sets: "2", reps: "8-10", rest: "90s", notes: "" },
+          { name: "Plank", sets: "3", reps: "45 sec", rest: "30s", notes: "Core" },
         ]
       },
       {
-        name: "Day B — Full Body (Alternate)",
+        name: "Day B \u2014 Full Body (Wed)",
         exercises: [
-          { name: "Romanian Deadlift", sets: "4", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Incline DB Press", sets: "4", reps: "10-12", rest: "75s", notes: "" },
-          { name: "Barbell Row", sets: "4", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Leg Press", sets: "3", reps: "12-15", rest: "75s", notes: "" },
-          { name: "Lateral Raises", sets: "3", reps: "15", rest: "60s", notes: "" },
-          { name: "Cable Curl + Pushdown", sets: "3", reps: "12", rest: "60s", notes: "Superset arms" },
+          { name: "Romanian Deadlift", sets: "3", reps: "8-10", rest: "90s", notes: "Hinge \u2014 moderate load, not a max effort" },
+          { name: "Incline DB Press", sets: "3", reps: "10-12", rest: "75s", notes: "Upper chest" },
+          { name: "Pull-ups / Lat Pulldown", sets: "3", reps: "8-12", rest: "90s", notes: "Vertical pull" },
+          { name: "Leg Press", sets: "3", reps: "12-15", rest: "75s", notes: "Quads" },
+          { name: "Lateral Raises", sets: "2", reps: "12-15", rest: "60s", notes: "Side delts" },
+          { name: "Dead Bug", sets: "3", reps: "8 each side", rest: "45s", notes: "Core \u2014 slow and controlled" },
+        ]
+      },
+      {
+        name: "Day C \u2014 Full Body (Fri)",
+        exercises: [
+          { name: "Deadlift", sets: "3", reps: "5", rest: "2min", notes: "The one heavy pull of the week \u2014 kept on its own day" },
+          { name: "Goblet Squat", sets: "3", reps: "10-12", rest: "90s", notes: "Lighter squat pattern after the deadlift" },
+          { name: "Dumbbell Press", sets: "3", reps: "10-12", rest: "75s", notes: "" },
+          { name: "Cable Row", sets: "3", reps: "10-12", rest: "75s", notes: "" },
+          { name: "Barbell Curl", sets: "2", reps: "10-12", rest: "60s", notes: "" },
+          { name: "Tricep Pushdown", sets: "2", reps: "12-15", rest: "60s", notes: "" },
         ]
       }
     ]
@@ -470,9 +481,10 @@ const WORKOUT_SYSTEMS = [
       {
         name: "Day 1 — Upper Body (Bodyweight)",
         exercises: [
-          { name: "Push-ups", sets: "4", reps: "10-15", rest: "60s", notes: "Knee push-ups if needed" },
+          { name: "Push-ups", sets: "4", reps: "10-15", rest: "60s", notes: "Knee \u2192 incline \u2192 full \u2192 feet raised as they get easier" },
           { name: "Incline Push-ups (on table/wall)", sets: "3", reps: "12", rest: "45s", notes: "Easier variation" },
           { name: "Tricep Dips (chair)", sets: "3", reps: "12", rest: "45s", notes: "Use sturdy chair" },
+          { name: "Table Inverted Row", sets: "4", reps: "8-12", rest: "60s", notes: "Under a sturdy table \u2014 the pulling this programme was missing" },
           { name: "Superman Hold", sets: "3", reps: "20 sec", rest: "30s", notes: "Back strength" },
           { name: "Plank Shoulder Taps", sets: "3", reps: "10 each", rest: "45s", notes: "Core + shoulder stability" },
         ]
@@ -494,6 +506,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Mountain Climbers", sets: "3", reps: "30 sec", rest: "45s", notes: "" },
           { name: "Plank", sets: "3", reps: "40 sec", rest: "30s", notes: "" },
           { name: "Bicycle Crunches", sets: "3", reps: "20", rest: "30s", notes: "" },
+          { name: "Towel Door Row", sets: "3", reps: "10-12", rest: "45s", notes: "Towel round a door handle, lean back and pull \u2014 second pull of the week" },
           { name: "Jumping Jacks", sets: "3", reps: "30 sec", rest: "30s", notes: "Cardio finisher" },
         ]
       }
@@ -527,6 +540,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Band Lateral Walk", sets: "2", reps: "10 steps each", rest: "60s", notes: "Loop band around ankles, hold support if needed" },
           { name: "Pilates Ring Knee Squeeze (seated)", sets: "3", reps: "12", rest: "45s", notes: "Inner thigh + pelvic floor, very gentle" },
           { name: "Standing Wall Push-ups", sets: "2", reps: "8-10", rest: "60s", notes: "Hands on wall, gentle chest/arm work" },
+          { name: "Sit-to-Stand (stand up quickly)", sets: "3", reps: "8", rest: "60s", notes: "Stand FAST, sit down slow \u2014 speed matters more than load at this age" },
           { name: "Foam Roller Calf Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Slow, gentle rolling — no pain" },
         ]
       },
@@ -536,7 +550,8 @@ const WORKOUT_SYSTEMS = [
           { name: "Chair-Assisted Mini Squats", sets: "3", reps: "8", rest: "60s", notes: "Hold chair back for support" },
           { name: "Band Seated Leg Extension", sets: "2", reps: "10 each", rest: "45s", notes: "Light tension band around ankle" },
           { name: "Pilates Ring Chest Press (seated)", sets: "3", reps: "10", rest: "45s", notes: "Squeeze ring between palms" },
-          { name: "Single Leg Stand (hold support)", sets: "2", reps: "15 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
+          { name: "Single Leg Stand (hold support)", sets: "3", reps: "20 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
+          { name: "Tandem Walk (heel-to-toe)", sets: "3", reps: "10 steps", rest: "45s", notes: "Along a wall — dynamic balance, which is what actually prevents falls" },
           { name: "Hand Massage / Self Massage (forearms, hands)", sets: "1", reps: "3-5 min", rest: "0s", notes: "Improves circulation, very relaxing" },
         ]
       },
@@ -547,6 +562,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Seated Band Shoulder Pull-Apart", sets: "3", reps: "10", rest: "45s", notes: "Posture + shoulder mobility" },
           { name: "Pilates Ring Ankle Press", sets: "2", reps: "10 each", rest: "30s", notes: "Ankle strength, seated" },
           { name: "Hand-held Massager — Lower Back & Legs", sets: "1", reps: "5-8 min", rest: "0s", notes: "Use on low setting, avoid joints directly" },
+          { name: "Walk", sets: "1", reps: "20-30 min", rest: "0s", notes: "At least twice a week on non-training days \u2014 the part most programmes leave out" },
           { name: "Deep Breathing + Gentle Neck Stretch", sets: "1", reps: "5 min", rest: "0s", notes: "Relaxation finish" },
         ]
       }
@@ -1830,6 +1846,11 @@ const EXERCISE_META = {
   "Shoulder Rotations":                          { p: ["Mobility"], s: ["Traps"], eq: ["bodyweight"] },
   "Shoulder Stretch":                            { p: ["Mobility"], s: ["Rear Delts"], eq: ["bodyweight"] },
   "Single Leg Stand (hold support)":             { p: ["Balance"], s: ["Ankles","Glutes"], eq: ["bodyweight"] },
+  "Sit-to-Stand (stand up quickly)":              { p: ["Quads"], s: ["Glutes","Balance"], eq: ["chair","bodyweight"] },
+  "Table Inverted Row":                           { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["bodyweight"] },
+  "Tandem Walk (heel-to-toe)":                    { p: ["Balance"], s: ["Ankles","Glutes"], eq: ["bodyweight"] },
+  "Towel Door Row":                               { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["bodyweight"] },
+  "Walk":                                         { p: ["Cardio"], s: ["Recovery"], eq: ["none"] },
   "Sit-to-Stand":                                { p: ["Quads"], s: ["Glutes","Balance"], eq: ["chair","bodyweight"] },
   "Skull Crushers":                              { p: ["Triceps"], s: [], eq: ["barbell","bench"] },
   "Slam Ball":                                   { p: ["Full Body"], s: ["Core","Cardio"], eq: ["slam ball"] },
