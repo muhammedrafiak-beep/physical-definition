@@ -825,7 +825,26 @@ const COUNTRIES = [
 ];
 
 const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://www.physicaldefinition.com" };
-const ADMIN = { u: "admin", p: "pd@rafi2024" };
+// The admin username and password used to live here, which meant they shipped
+// inside the browser bundle — anyone who opened devtools could read them.
+// They are now environment variables checked by /api/admin-login.
+
+const adminToken = () => {
+  try { return sessionStorage.getItem("pd_admin_token") || ""; } catch { return ""; }
+};
+
+// Issues a NEW password for a client and returns it once. Nobody can read a
+// client's existing password any more — it is stored only as a hash.
+const apiResetClientPassword = async (clientId) => {
+  const r = await fetch("/api/admin-reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken()}` },
+    body: JSON.stringify({ clientId }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Could not reset the password");
+  return d;
+};
 const SK = "pd_v7_clients"; const RK = "pd_v7_regs"; const LK = "pd_v7_lang";
 
 // Progress photos helpers
@@ -890,7 +909,7 @@ const dbAddClient = async (c) => {
 };
 
 const dbUpdateClient = async (c) => {
-  const { error } = await supabase.from("clients").update({
+  const patch = {
     name: c.name, email: c.email, password: c.password,
     age: c.age, weight: c.weight, height: c.height, gender: c.gender,
     goal: c.goal, pal: c.pal, phone: c.phone, status: c.status,
@@ -899,7 +918,14 @@ const dbUpdateClient = async (c) => {
     progress: c.progress || [],
       trainer_notes: c.trainer_notes || "",
       dob: c.dob || "",
-  }).eq("id", c.id);
+  };
+  // If a new plaintext password is being set here, the old hash has to go with
+  // it — otherwise login keeps verifying against the hash and the newly typed
+  // password silently never works. Clearing it puts the row back on the
+  // migrate-on-login path, so it is re-hashed at the client's next sign-in.
+  if (c.resetPasswordHash) patch.password_hash = null;
+
+  const { error } = await supabase.from("clients").update(patch).eq("id", c.id);
   if (error) console.error("updateClient:", error);
 };
 
@@ -2531,6 +2557,7 @@ export default function App() {
   const [notesDraft, setNotesDraft] = useState({});
   const [showShare, setShowShare] = useState(false);
   const [shareD, setShareD] = useState(null);
+  const [resettingId, setResettingId] = useState(null);
   const blank = { name: "", email: "", password: "", age: "", weight: "", height: "", gender: "male", goal: "Weight Loss", pal: "moderate", phone: "", dob: "" };
   const [form, setForm] = useState(blank);
   const sf = (k, v) => setForm(p => ({ ...p, [k]: v }));
@@ -2579,10 +2606,30 @@ export default function App() {
   // is no longer needed on this screen to sign someone in.
   const login = async () => {
     setLErr("");
-    if (lf.u === ADMIN.u && lf.p === ADMIN.p) { setCurUser({ name: TRAINER.name }); setScreen("admin"); return; }
     if (lBusy) return;
     setLBusy(true);
     try {
+      // Try the admin endpoint first. A failure here is not an error — it just
+      // means these are not the admin credentials, so fall through to a client
+      // login. Neither password is ever compared in the browser.
+      const ar = await fetch("/api/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: lf.u, password: lf.p }),
+      });
+      if (ar.ok) {
+        const ad = await ar.json().catch(() => ({}));
+        try { sessionStorage.setItem("pd_admin_token", ad.token || ""); } catch {}
+        setCurUser({ name: TRAINER.name });
+        setScreen("admin");
+        return;
+      }
+      if (ar.status === 500) {
+        const ad = await ar.json().catch(() => ({}));
+        setLErr(ad.error || t.invalidCredentials);
+        return;
+      }
+
       const r = await fetch("/api/client-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2601,7 +2648,7 @@ export default function App() {
   };
   const logout = () => {
     setScreen("login"); setCurUser(null); setLf({ u: "", p: "" });
-    try { sessionStorage.removeItem("pd_screen"); sessionStorage.removeItem("pd_user"); sessionStorage.removeItem("pd_token"); } catch {}
+    try { sessionStorage.removeItem("pd_screen"); sessionStorage.removeItem("pd_user"); sessionStorage.removeItem("pd_token"); sessionStorage.removeItem("pd_admin_token"); } catch {}
   };
   const addClient = async () => {
     if (!form.name || !form.email) return;
@@ -2615,7 +2662,10 @@ export default function App() {
   const saveEdit = async () => {
     if (!editC) return;
     const fullPhone = form.phone ? `${editCountry} ${form.phone}` : editC.phone;
-    const updated = { ...editC, name: form.name || editC.name, email: form.email || editC.email, password: form.password || editC.password, age: +form.age || editC.age, weight: +form.weight || editC.weight, height: +form.height || editC.height, gender: form.gender || editC.gender, goal: form.goal || editC.goal, pal: form.pal || editC.pal, phone: fullPhone, dob: form.dob || editC.dob || "" };
+    // A typed password here is a deliberate override, so the stored hash must
+    // be cleared alongside it (see dbUpdateClient).
+    const typedNewPassword = !!form.password && form.password !== editC.password;
+    const updated = { ...editC, name: form.name || editC.name, email: form.email || editC.email, password: form.password || editC.password, age: +form.age || editC.age, weight: +form.weight || editC.weight, height: +form.height || editC.height, gender: form.gender || editC.gender, goal: form.goal || editC.goal, pal: form.pal || editC.pal, phone: fullPhone, dob: form.dob || editC.dob || "", resetPasswordHash: typedNewPassword };
     await dbUpdateClient(updated);
     setClients(p => p.map(c => c.id === editC.id ? updated : c));
     setShowEdit(false); setEditC(null); setForm(blank);
@@ -3012,22 +3062,32 @@ export default function App() {
                       <div style={{ fontSize:11,color:G.muted,marginBottom:5,fontWeight:600 }}>📝 {isAr?"ملاحظات المدرب":"Trainer Notes"}</div>
                       <textarea value={notesDraft[c.id]??(c.trainer_notes||"")} onChange={e=>setNotesDraft(p=>({...p,[c.id]:e.target.value}))} onBlur={async()=>{if(notesDraft[c.id]!==undefined){const upd={...c,trainer_notes:notesDraft[c.id]};await dbUpdateClient(upd);setClients(p=>p.map(x=>x.id===c.id?upd:x));setNotesDraft(p=>{const n={...p};delete n[c.id];return n;});}}} placeholder={isAr?"ملاحظات خاصة...":"Private notes..."} style={{width:"100%",minHeight:55,background:"transparent",border:"none",color:G.text,fontSize:12,resize:"none",outline:"none",lineHeight:1.6,fontFamily:"Inter,sans-serif",padding:0}} />
                     </div>
-                  {c.phone && (() => {
-                    const msg = `🏋️ *Physical Definition*\n\n${isAr ? "مرحباً" : "Hi"} ${c.name}!\n\n${isAr ? "بيانات دخولك" : "Your login details"}:\n\n📧 *${isAr ? "البريد" : "Email"}:* ${c.email}\n🔑 *${isAr ? "كلمة المرور" : "Password"}:* ${c.password}\n\n🌐 *App:* ${TRAINER.appUrl}\n\n${isAr ? "افتح الرابط وأضفه للشاشة الرئيسية 📱" : "Open link & Add to Home Screen 📱"}\n\n— ${TRAINER.name}`;
-                    return (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                        <a href={`https://wa.me/${c.phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`}
-                          target="_blank" rel="noreferrer"
-                          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 7, color: G.green, textDecoration: "none", fontSize: 11, fontWeight: 700 }}>
-                          💬 {t.shareLogin}
-                        </a>
-                        <button className="btn" onClick={() => navigator.clipboard.writeText(c.password)}
-                          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700 }}>
-                          📋 {isAr ? "نسخ" : "Copy"}
-                        </button>
-                      </div>
-                    );
-                  })()}
+                  {/* Passwords are stored as hashes, so an existing one cannot be
+                      read back and re-sent. Issuing a new one is the only correct
+                      option — and the only one that still works if the client has
+                      forgotten theirs. */}
+                  <button className="btn" disabled={resettingId === c.id}
+                    onClick={async () => {
+                      const ask = isAr
+                        ? `سيتم إنشاء كلمة مرور جديدة لـ ${c.name}. كلمة المرور الحالية لن تعمل بعد ذلك. متابعة؟`
+                        : `This creates a NEW password for ${c.name}. Their current password will stop working. Continue?`;
+                      if (!window.confirm(ask)) return;
+                      setResettingId(c.id);
+                      try {
+                        const d = await apiResetClientPassword(c.id);
+                        setShareD({ name: c.name, email: c.email, password: d.password, phone: c.phone });
+                        setShowShare(true);
+                      } catch (e) {
+                        window.alert(e.message || "Could not reset the password");
+                      } finally {
+                        setResettingId(null);
+                      }
+                    }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700, opacity: resettingId === c.id ? 0.6 : 1 }}>
+                    {resettingId === c.id
+                      ? (isAr ? "جارٍ..." : "Working…")
+                      : `🔑 ${isAr ? "كلمة مرور جديدة ومشاركة" : "New password & share"}`}
+                  </button>
                 </div>
               );
             })}
