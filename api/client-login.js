@@ -58,10 +58,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SESSION_SECRET } = process.env;
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SESSION_SECRET) {
-    console.error("client-login: missing env vars");
-    return res.status(500).json({ error: "Server is not configured" });
+  // SUPABASE_URL is preferred, but fall back to the VITE_-prefixed one the
+  // browser build already uses — it is the same value and is not a secret.
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SESSION_SECRET = process.env.SESSION_SECRET;
+
+  // Name the missing variables. Names only — never values.
+  const missing = [];
+  if (!SUPABASE_URL) missing.push("SUPABASE_URL");
+  if (!SUPABASE_SERVICE_ROLE_KEY) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (!SESSION_SECRET) missing.push("SESSION_SECRET");
+
+  if (missing.length) {
+    console.error("client-login: missing env vars:", missing.join(", "));
+    return res.status(500).json({
+      error: `Server is not configured — missing: ${missing.join(", ")}`,
+    });
   }
 
   const body = typeof req.body === "string" ? safeJson(req.body) : req.body;
