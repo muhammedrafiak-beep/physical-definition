@@ -130,18 +130,49 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "This account is disabled. Contact your trainer." });
   }
 
-  // migrate-on-login: hash it now and clear the plaintext copy.
+  // migrate-on-login: hash the password, then clear the plaintext copy.
+  //
+  // These are two separate writes on purpose. Done as one update, a failure on
+  // either half rolls back BOTH — which is how a NOT NULL constraint on
+  // `password` silently left every row unhashed while logins kept succeeding.
+  // Writing the hash first means that even if clearing the plaintext fails,
+  // every future login for this client already goes through the hashed path.
+  let migrationOk = null; // null = not attempted
   if (needsMigration) {
+    migrationOk = false;
     try {
       const password_hash = await hashPassword(password);
-      const { error: upErr } = await admin
+
+      const { error: hashErr } = await admin
         .from("clients")
-        .update({ password_hash, password: null })
+        .update({ password_hash })
         .eq("id", row.id);
-      if (upErr) console.error("client-login: migration failed", upErr.message);
+
+      if (hashErr) {
+        console.error("client-login: could not write password_hash for client", row.id, "-", hashErr.message);
+      } else {
+        const { error: clearErr } = await admin
+          .from("clients")
+          .update({ password: null })
+          .eq("id", row.id);
+
+        if (clearErr) {
+          // Hash landed, plaintext did not clear. Not fatal, but it means the
+          // plaintext is still sitting in the table — surface it loudly.
+          console.error("client-login: password_hash written but plaintext NOT cleared for client", row.id, "-", clearErr.message);
+        } else {
+          migrationOk = true;
+        }
+      }
     } catch (e) {
-      // A failed upgrade must not block a valid login — it retries next time.
-      console.error("client-login: migration threw", e);
+      console.error("client-login: migration threw for client", row.id, "-", e && e.message);
+    }
+
+    if (!migrationOk) {
+      console.error(
+        "client-login: MIGRATION INCOMPLETE for client", row.id,
+        "— this client's password is still stored in plaintext. Check the clients table."
+      );
     }
   }
 
@@ -150,7 +181,7 @@ export default async function handler(req, res) {
   return res.status(200).json({
     token,
     client: toPublicClient(row),
-    migrated: needsMigration,
+    migrated: migrationOk === true,
   });
 }
 
