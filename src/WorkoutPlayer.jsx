@@ -93,10 +93,23 @@ const COOLDOWN_EXERCISES = [
   { name: "Deep Breathing", sets: 1, reps: "60 sec", rest: "0s" },
 ];
 
+// A system may define its own warm-up / cool-down. It MUST be able to: the shared
+// warm-up opens with jogging and jumping jacks, which is unsafe in front of the
+// senior, lower-back, shoulder and knee programmes. Only fall back to the shared
+// arrays when a system has not specified its own.
+function resolveWarmup(workoutSystem) {
+  const w = workoutSystem && workoutSystem.warmup;
+  return Array.isArray(w) && w.length ? w : WARMUP_EXERCISES;
+}
+function resolveCooldown(workoutSystem) {
+  const c = workoutSystem && workoutSystem.cooldown;
+  return Array.isArray(c) && c.length ? c : COOLDOWN_EXERCISES;
+}
+
 function flattenWorkout(workoutSystem, dayFilter) {
   if (!workoutSystem || !workoutSystem.days) return [];
   const list = [];
-  WARMUP_EXERCISES.forEach(ex => list.push({ dayName: "🔥 Warm-up", exercise: ex }));
+  resolveWarmup(workoutSystem).forEach(ex => list.push({ dayName: "🔥 Warm-up", exercise: ex }));
   const days = dayFilter
     ? workoutSystem.days.filter((d) => d.name === dayFilter)
     : workoutSystem.days;
@@ -105,7 +118,7 @@ function flattenWorkout(workoutSystem, dayFilter) {
       list.push({ dayName: day.name, exercise: ex });
     });
   });
-  COOLDOWN_EXERCISES.forEach(ex => list.push({ dayName: "🧘 Cool-down", exercise: ex }));
+  resolveCooldown(workoutSystem).forEach(ex => list.push({ dayName: "🧘 Cool-down", exercise: ex }));
   return list;
 }
 
