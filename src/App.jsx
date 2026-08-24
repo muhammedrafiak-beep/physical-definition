@@ -92,8 +92,8 @@ const WORKOUT_SYSTEMS = [
   {
     id: "ppl", level: "intermediate", name: "Push / Pull / Legs", nameAr: "دفع / سحب / أرجل",
     color: "#ef4444", emoji: "💪",
-    desc: "3-day split targeting pushing, pulling, and leg movements",
-    descAr: "تقسيم 3 أيام للدفع والسحب والأرجل",
+    desc: "Push / Pull / Legs run TWICE a week (6 days) \u2014 at 3 days each muscle is trained only once, which is too little",
+    descAr: "دفع/سحب/أرجل مرتين أسبوعياً (6 أيام) — 3 أيام تعني تدريب كل عضلة مرة واحدة فقط وهو غير كافٍ",
     days: [
       {
         name: "Day 1 — Push (Chest, Shoulders, Triceps)",
@@ -165,6 +165,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Cable Row", sets: "4", reps: "10-12", rest: "60s", notes: "" },
           { name: "Lateral Raises", sets: "4", reps: "12-15", rest: "45s", notes: "" },
           { name: "Face Pulls", sets: "3", reps: "15", rest: "45s", notes: "" },
+          { name: "Cable Fly", sets: "3", reps: "12-15", rest: "60s", notes: "Brings weekly chest volume in line with the rest" },
           { name: "Preacher Curl", sets: "3", reps: "12", rest: "60s", notes: "" },
           { name: "Tricep Pushdown", sets: "3", reps: "12-15", rest: "60s", notes: "" },
         ]
@@ -319,30 +320,40 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "fullbody", level: "beginner", name: "Full Body Training", nameAr: "تدريب الجسم الكامل",
-    color: "#f97316", emoji: "🏋️",
-    desc: "3x/week full body — ideal for beginners and natural athletes",
-    descAr: "3 مرات أسبوعياً — مثالي للمبتدئين",
+    color: "#8b5cf6", emoji: "\ud83c\udfcb\ufe0f",
+    desc: "3 days a week, whole body each session \u2014 every muscle trained 3\u00d7 weekly, which is what makes it work for beginners",
+    descAr: "3 أيام أسبوعياً، الجسم كامل في كل جلسة — كل عضلة 3 مرات أسبوعياً",
     days: [
       {
-        name: "Day A — Full Body (Mon/Wed/Fri)",
+        name: "Day A \u2014 Full Body (Mon)",
         exercises: [
-          { name: "Squat", sets: "4", reps: "6-8", rest: "2min", notes: "Main compound" },
-          { name: "Bench Press", sets: "4", reps: "6-8", rest: "2min", notes: "" },
-          { name: "Deadlift", sets: "3", reps: "5", rest: "2min", notes: "Heavy" },
-          { name: "Pull-ups", sets: "3", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Overhead Press", sets: "3", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Plank", sets: "3", reps: "60 sec", rest: "30s", notes: "Core" },
+          { name: "Barbell Squat", sets: "3", reps: "6-8", rest: "2min", notes: "Main lift \u2014 add weight when all 3 sets hit 8" },
+          { name: "Bench Press", sets: "3", reps: "6-8", rest: "2min", notes: "Main upper push" },
+          { name: "Barbell Row", sets: "3", reps: "8-10", rest: "90s", notes: "Main upper pull" },
+          { name: "Overhead Press", sets: "2", reps: "8-10", rest: "90s", notes: "" },
+          { name: "Plank", sets: "3", reps: "45 sec", rest: "30s", notes: "Core" },
         ]
       },
       {
-        name: "Day B — Full Body (Alternate)",
+        name: "Day B \u2014 Full Body (Wed)",
         exercises: [
-          { name: "Romanian Deadlift", sets: "4", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Incline DB Press", sets: "4", reps: "10-12", rest: "75s", notes: "" },
-          { name: "Barbell Row", sets: "4", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Leg Press", sets: "3", reps: "12-15", rest: "75s", notes: "" },
-          { name: "Lateral Raises", sets: "3", reps: "15", rest: "60s", notes: "" },
-          { name: "Cable Curl + Pushdown", sets: "3", reps: "12", rest: "60s", notes: "Superset arms" },
+          { name: "Romanian Deadlift", sets: "3", reps: "8-10", rest: "90s", notes: "Hinge \u2014 moderate load, not a max effort" },
+          { name: "Incline DB Press", sets: "3", reps: "10-12", rest: "75s", notes: "Upper chest" },
+          { name: "Pull-ups / Lat Pulldown", sets: "3", reps: "8-12", rest: "90s", notes: "Vertical pull" },
+          { name: "Leg Press", sets: "3", reps: "12-15", rest: "75s", notes: "Quads" },
+          { name: "Lateral Raises", sets: "2", reps: "12-15", rest: "60s", notes: "Side delts" },
+          { name: "Dead Bug", sets: "3", reps: "8 each side", rest: "45s", notes: "Core \u2014 slow and controlled" },
+        ]
+      },
+      {
+        name: "Day C \u2014 Full Body (Fri)",
+        exercises: [
+          { name: "Deadlift", sets: "3", reps: "5", rest: "2min", notes: "The one heavy pull of the week \u2014 kept on its own day" },
+          { name: "Goblet Squat", sets: "3", reps: "10-12", rest: "90s", notes: "Lighter squat pattern after the deadlift" },
+          { name: "Dumbbell Press", sets: "3", reps: "10-12", rest: "75s", notes: "" },
+          { name: "Cable Row", sets: "3", reps: "10-12", rest: "75s", notes: "" },
+          { name: "Barbell Curl", sets: "2", reps: "10-12", rest: "60s", notes: "" },
+          { name: "Tricep Pushdown", sets: "2", reps: "12-15", rest: "60s", notes: "" },
         ]
       }
     ]
@@ -470,9 +481,10 @@ const WORKOUT_SYSTEMS = [
       {
         name: "Day 1 — Upper Body (Bodyweight)",
         exercises: [
-          { name: "Push-ups", sets: "4", reps: "10-15", rest: "60s", notes: "Knee push-ups if needed" },
+          { name: "Push-ups", sets: "4", reps: "10-15", rest: "60s", notes: "Knee \u2192 incline \u2192 full \u2192 feet raised as they get easier" },
           { name: "Incline Push-ups (on table/wall)", sets: "3", reps: "12", rest: "45s", notes: "Easier variation" },
           { name: "Tricep Dips (chair)", sets: "3", reps: "12", rest: "45s", notes: "Use sturdy chair" },
+          { name: "Table Inverted Row", sets: "4", reps: "8-12", rest: "60s", notes: "Under a sturdy table \u2014 the pulling this programme was missing" },
           { name: "Superman Hold", sets: "3", reps: "20 sec", rest: "30s", notes: "Back strength" },
           { name: "Plank Shoulder Taps", sets: "3", reps: "10 each", rest: "45s", notes: "Core + shoulder stability" },
         ]
@@ -494,6 +506,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Mountain Climbers", sets: "3", reps: "30 sec", rest: "45s", notes: "" },
           { name: "Plank", sets: "3", reps: "40 sec", rest: "30s", notes: "" },
           { name: "Bicycle Crunches", sets: "3", reps: "20", rest: "30s", notes: "" },
+          { name: "Towel Door Row", sets: "3", reps: "10-12", rest: "45s", notes: "Towel round a door handle, lean back and pull \u2014 second pull of the week" },
           { name: "Jumping Jacks", sets: "3", reps: "30 sec", rest: "30s", notes: "Cardio finisher" },
         ]
       }
@@ -527,6 +540,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Band Lateral Walk", sets: "2", reps: "10 steps each", rest: "60s", notes: "Loop band around ankles, hold support if needed" },
           { name: "Pilates Ring Knee Squeeze (seated)", sets: "3", reps: "12", rest: "45s", notes: "Inner thigh + pelvic floor, very gentle" },
           { name: "Standing Wall Push-ups", sets: "2", reps: "8-10", rest: "60s", notes: "Hands on wall, gentle chest/arm work" },
+          { name: "Sit-to-Stand (stand up quickly)", sets: "3", reps: "8", rest: "60s", notes: "Stand FAST, sit down slow \u2014 speed matters more than load at this age" },
           { name: "Foam Roller Calf Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Slow, gentle rolling — no pain" },
         ]
       },
@@ -536,7 +550,8 @@ const WORKOUT_SYSTEMS = [
           { name: "Chair-Assisted Mini Squats", sets: "3", reps: "8", rest: "60s", notes: "Hold chair back for support" },
           { name: "Band Seated Leg Extension", sets: "2", reps: "10 each", rest: "45s", notes: "Light tension band around ankle" },
           { name: "Pilates Ring Chest Press (seated)", sets: "3", reps: "10", rest: "45s", notes: "Squeeze ring between palms" },
-          { name: "Single Leg Stand (hold support)", sets: "2", reps: "15 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
+          { name: "Single Leg Stand (hold support)", sets: "3", reps: "20 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
+          { name: "Tandem Walk (heel-to-toe)", sets: "3", reps: "10 steps", rest: "45s", notes: "Along a wall — dynamic balance, which is what actually prevents falls" },
           { name: "Hand Massage / Self Massage (forearms, hands)", sets: "1", reps: "3-5 min", rest: "0s", notes: "Improves circulation, very relaxing" },
         ]
       },
@@ -547,6 +562,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Seated Band Shoulder Pull-Apart", sets: "3", reps: "10", rest: "45s", notes: "Posture + shoulder mobility" },
           { name: "Pilates Ring Ankle Press", sets: "2", reps: "10 each", rest: "30s", notes: "Ankle strength, seated" },
           { name: "Hand-held Massager — Lower Back & Legs", sets: "1", reps: "5-8 min", rest: "0s", notes: "Use on low setting, avoid joints directly" },
+          { name: "Walk", sets: "1", reps: "20-30 min", rest: "0s", notes: "At least twice a week on non-training days \u2014 the part most programmes leave out" },
           { name: "Deep Breathing + Gentle Neck Stretch", sets: "1", reps: "5 min", rest: "0s", notes: "Relaxation finish" },
         ]
       }
@@ -919,22 +935,6 @@ const dbDeleteClient = async (id) => {
 const dbGetRegs = async () => {
   try { return (await adminPost({ action: "list_registrations" })).registrations; }
   catch (e) { console.error("getRegs:", e.message); return null; }
-};
-
-// PUBLIC — the sign-up form at /register is filled in by people who have no
-// account yet, so this one cannot carry a token.
-const dbAddReg = async (r) => {
-  try {
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(r),
-    });
-    if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      throw new Error(d.error || "Could not send your registration");
-    }
-  } catch (e) { console.error("addReg:", e.message); throw e; }
 };
 
 const dbDeleteReg = async (id) => {
@@ -1830,6 +1830,11 @@ const EXERCISE_META = {
   "Shoulder Rotations":                          { p: ["Mobility"], s: ["Traps"], eq: ["bodyweight"] },
   "Shoulder Stretch":                            { p: ["Mobility"], s: ["Rear Delts"], eq: ["bodyweight"] },
   "Single Leg Stand (hold support)":             { p: ["Balance"], s: ["Ankles","Glutes"], eq: ["bodyweight"] },
+  "Sit-to-Stand (stand up quickly)":              { p: ["Quads"], s: ["Glutes","Balance"], eq: ["chair","bodyweight"] },
+  "Table Inverted Row":                           { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["bodyweight"] },
+  "Tandem Walk (heel-to-toe)":                    { p: ["Balance"], s: ["Ankles","Glutes"], eq: ["bodyweight"] },
+  "Towel Door Row":                               { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["bodyweight"] },
+  "Walk":                                         { p: ["Cardio"], s: ["Recovery"], eq: ["none"] },
   "Sit-to-Stand":                                { p: ["Quads"], s: ["Glutes","Balance"], eq: ["chair","bodyweight"] },
   "Skull Crushers":                              { p: ["Triceps"], s: [], eq: ["barbell","bench"] },
   "Slam Ball":                                   { p: ["Full Body"], s: ["Core","Cardio"], eq: ["slam ball"] },
@@ -2465,27 +2470,68 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
   );
 }
 
-function RegPage({ lang, setLang, onSubmit }) {
-  const [f, setF] = useState({ name: "", email: "", phone: "", age: "", weight: "", height: "", gender: "male", goal: "Weight Loss", pal: "moderate" });
-  const [country, setCountry] = useState("+974");
-  const [done, setDone] = useState(false);
-  const t = T[lang]; const isAr = lang === "ar";
-  const set = (k, v) => setF(p => ({ ...p, [k]: v }));
-  const submit = () => { if (!f.name || !f.email || !f.phone) return; onSubmit({ ...f, phone: `${country} ${f.phone}` }); setDone(true); };
-  const goals = isAr ? GOALS_AR : GOALS_EN;
+// PAR-Q+ ids must match api/_lib/assign.js — the server screens on these.
+const PARQ = [
+  { id: "heart",     en: "Has a doctor ever said you have a heart condition, or that you should only exercise under medical supervision?", ar: "هل قال لك طبيب إن لديك مشكلة في القلب أو أنه يجب أن تتمرن تحت إشراف طبي؟" },
+  { id: "chestPain", en: "Do you get chest pain during physical activity, or have you had chest pain at rest in the last month?", ar: "هل تشعر بألم في الصدر أثناء النشاط البدني أو أثناء الراحة خلال الشهر الماضي؟" },
+  { id: "dizzy",     en: "Do you lose balance from dizziness, or have you fainted in the last 12 months?", ar: "هل تفقد توازنك بسبب الدوخة أو فقدت الوعي خلال 12 شهراً؟" },
+  { id: "bonejoint", en: "Do you have a bone or joint problem that could get worse with exercise?", ar: "هل لديك مشكلة في العظام أو المفاصل قد تسوء بالتمرين؟" },
+  { id: "bp",        en: "Are you taking medication for blood pressure or a heart condition?", ar: "هل تتناول أدوية لضغط الدم أو القلب؟" },
+  { id: "pregnancy", en: "Are you pregnant, or have you given birth in the last 6 months?", ar: "هل أنتِ حامل أو ولدتِ خلال الأشهر الستة الماضية؟" },
+  { id: "surgery",   en: "Have you had surgery in the last 6 months?", ar: "هل أجريت عملية جراحية خلال الأشهر الستة الماضية؟" },
+  { id: "other",     en: "Is there any other reason you should not do physical activity?", ar: "هل هناك أي سبب آخر يمنعك من ممارسة النشاط البدني؟" },
+];
 
-  if (done) return (
-    <div style={{ minHeight: "100vh", background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <style>{CSS}</style>
-      <div className="card" style={{ maxWidth: 400, width: "100%", padding: "36px 22px", textAlign: "center", border: `1px solid ${G.borderHi}` }} dir={isAr ? "rtl" : "ltr"}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-        <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>{t.regSubmitted}</div>
-        <div style={{ fontSize: 14, color: G.muted, lineHeight: 1.8 }}>{t.regApproval}</div>
-      </div>
+function YesNo({ value, onChange, isAr }) {
+  const opt = (v, label, color) => (
+    <button type="button" onClick={() => onChange(v)}
+      style={{
+        flex: 1, padding: "7px 0", fontSize: 12, fontWeight: 700, cursor: "pointer",
+        borderRadius: 7, border: `1px solid ${value === v ? color : G.border}`,
+        background: value === v ? `${color}22` : "transparent",
+        color: value === v ? color : G.muted,
+      }}>{label}</button>
+  );
+  return (
+    <div style={{ display: "flex", gap: 6, width: 132, flexShrink: 0 }}>
+      {opt(false, isAr ? "لا" : "No", G.green)}
+      {opt(true, isAr ? "نعم" : "Yes", G.amber)}
     </div>
   );
+}
 
-  return (
+function RegPage({ lang, setLang }) {
+  const [step, setStep] = useState(1);
+  const [f, setF] = useState({
+    name: "", email: "", phone: "", age: "", weight: "", height: "",
+    gender: "male", goal: "Weight Loss", pal: "moderate",
+    experience: "beginner", daysPerWeek: "3", equipment: "full_gym", limitation: "none",
+  });
+  const [parq, setParq] = useState({});
+  const [country, setCountry] = useState("+974");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [result, setResult] = useState(null);
+  const t = T[lang]; const isAr = lang === "ar";
+  const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+
+  const submit = async () => {
+    setErr(""); setBusy(true);
+    try {
+      const r = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...f, phone: `${country} ${f.phone}`, daysPerWeek: +f.daysPerWeek, parq }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(d.error || "Something went wrong. Try again."); return; }
+      setResult(d);
+    } catch {
+      setErr("Could not reach the server. Check your connection and try again.");
+    } finally { setBusy(false); }
+  };
+
+  const shell = (children) => (
     <div style={{ minHeight: "100vh", background: G.bg, padding: 20 }}>
       <style>{CSS}</style>
       <div style={{ maxWidth: 480, margin: "0 auto" }}>
@@ -2493,28 +2539,169 @@ function RegPage({ lang, setLang, onSubmit }) {
         <div style={{ textAlign: "center", padding: "16px 0 18px" }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}><Logo s={44} /></div>
           <div className="sf gd" style={{ fontSize: 22, fontWeight: 700, letterSpacing: 2 }}>{t.appName}</div>
-          <div style={{ fontSize: 11, color: G.muted, letterSpacing: 2, marginTop: 5 }}>{t.joinUs}</div>
         </div>
-        <div className="card" style={{ padding: 20, border: `1px solid ${G.borderHi}` }} dir={isAr ? "rtl" : "ltr"}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}>
-            <div style={{ gridColumn: "1/-1" }}><FF label={`${t.fullName} *`} value={f.name} onChange={v => set("name", v)} ph="Name" /></div>
-            <div style={{ gridColumn: "1/-1" }}><FF label="Email *" value={f.email} onChange={v => set("email", v)} ph="email@example.com" /></div>
-            <div style={{ gridColumn: "1/-1" }}><PhoneField label={`${t.phone} *`} country={country} setCountry={setCountry} phone={f.phone} setPhone={v => set("phone", v)} /></div>
-            <FF label={t.age} value={f.age} onChange={v => set("age", v)} ph="25" />
-            <FF label={`${t.weight} (kg)`} value={f.weight} onChange={v => set("weight", v)} ph="70" />
-            <FF label={`${t.height} (cm)`} value={f.height} onChange={v => set("height", v)} ph="170" />
-            <FF label={t.gender} value={f.gender} onChange={v => set("gender", v)} opts={[{ id: "male", label: t.male }, { id: "female", label: t.female }]} />
-            <FF label={t.goal} value={f.goal} onChange={v => set("goal", v)} opts={goals} />
-            <div style={{ gridColumn: "1/-1" }}><FF label={t.activityLevel} value={f.pal} onChange={v => set("pal", v)} opts={PAL.map(p => ({ id: p.id, label: `${p.icon} ${isAr ? p.ar : p.en}` }))} /></div>
-          </div>
-          <Btn ch={t.submitRequest} v="gold" full onClick={submit} sx={{ padding: "12px", fontSize: 14, marginTop: 16 }} />
-        </div>
-        <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: G.dim }}>
-          {t.alreadyAccount} <a href="/" style={{ color: G.gold }}>{t.loginHere}</a>
-        </div>
+        <div dir={isAr ? "rtl" : "ltr"}>{children}</div>
       </div>
     </div>
   );
+
+  // ── Done: account created, plan already assigned ───────────
+  if (result && result.status === "ready") return shell(
+    <div className="card" style={{ padding: "30px 22px", border: `1px solid ${G.borderHi}` }}>
+      <div style={{ textAlign: "center", fontSize: 44, marginBottom: 10 }}>✅</div>
+      <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, textAlign: "center", marginBottom: 8 }}>
+        {isAr ? "حسابك جاهز" : "You're in"}
+      </div>
+      <div style={{ fontSize: 13, color: G.muted, textAlign: "center", lineHeight: 1.7, marginBottom: 20 }}>
+        {isAr ? "خطتك التدريبية جاهزة بالفعل. احفظ كلمة المرور هذه — لن تظهر مرة أخرى."
+              : "Your training plan is already waiting. Save this password — it will not be shown again."}
+      </div>
+      {[[isAr ? "البريد" : "Email", result.email], [isAr ? "كلمة المرور" : "Password", result.password]].map(([k, v]) => (
+        <div key={k} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}`, borderRadius: 10, padding: "11px 13px", marginBottom: 9 }}>
+          <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 4 }}>{k}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: G.text, wordBreak: "break-all" }}>{v}</div>
+            <button onClick={() => navigator.clipboard.writeText(v)} className="btn"
+              style={{ flexShrink: 0, background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)", borderRadius: 7, padding: "6px 12px", color: "#a5b4fc", fontSize: 12, fontWeight: 600 }}>
+              📋 {isAr ? "نسخ" : "Copy"}
+            </button>
+          </div>
+        </div>
+      ))}
+      {result.needsReview && (
+        <div style={{ fontSize: 12, color: G.amber, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 9, padding: "10px 12px", margin: "12px 0", lineHeight: 1.6 }}>
+          ⚠️ {isAr ? "سيتواصل معك أحد مدربينا للتأكد من أن هذه الخطة مناسبة لك." : "One of our coaches will check in to make sure this plan suits you."}
+        </div>
+      )}
+      <Btn ch={isAr ? "تسجيل الدخول" : "Sign in →"} v="gold" full onClick={() => { window.location.href = "/"; }} sx={{ padding: "13px", fontSize: 14, marginTop: 10 }} />
+    </div>
+  );
+
+  // ── Done: this one needs the trainer, not the app ──────────
+  if (result) return shell(
+    <div className="card" style={{ padding: "32px 22px", textAlign: "center", border: `1px solid ${G.borderHi}` }}>
+      <div style={{ fontSize: 44, marginBottom: 12 }}>👋</div>
+      <div className="sf gd" style={{ fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
+        {isAr ? "شكراً لك" : "Thanks — got it"}
+      </div>
+      <div style={{ fontSize: 14, color: G.muted, lineHeight: 1.8 }}>{result.message}</div>
+      <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
+        style={{ display: "inline-block", marginTop: 18, padding: "10px 18px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 9, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+        💬 {isAr ? "تواصل معنا" : "Message us"}
+      </a>
+    </div>
+  );
+
+  const dots = (
+    <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 16 }}>
+      {[1, 2, 3].map(n => (
+        <div key={n} style={{ width: step === n ? 22 : 7, height: 7, borderRadius: 4, background: n <= step ? G.gold : G.dim, transition: "width .2s" }} />
+      ))}
+    </div>
+  );
+
+  const nav = (back, next, nextLabel, disabled) => (
+    <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
+      {back && <Btn ch={isAr ? "رجوع" : "← Back"} v="ghost" onClick={back} sx={{ padding: "12px 18px", fontSize: 13 }} />}
+      <div style={{ flex: 1 }}>
+        <Btn ch={nextLabel} v="gold" full onClick={next} sx={{ padding: "12px", fontSize: 14, opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? "none" : "auto" }} />
+      </div>
+    </div>
+  );
+
+  // ── Step 1: who they are ───────────────────────────────────
+  if (step === 1) return shell(<>
+    {dots}
+    <div className="card" style={{ padding: 20, border: `1px solid ${G.borderHi}` }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: G.text, marginBottom: 14 }}>{isAr ? "عن نفسك" : "About you"}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}>
+        <div style={{ gridColumn: "1/-1" }}><FF label={`${t.fullName} *`} value={f.name} onChange={v => set("name", v)} ph="Name" /></div>
+        <div style={{ gridColumn: "1/-1" }}><FF label="Email *" value={f.email} onChange={v => set("email", v)} ph="email@example.com" /></div>
+        <div style={{ gridColumn: "1/-1" }}><PhoneField label={`${t.phone} *`} country={country} setCountry={setCountry} phone={f.phone} setPhone={v => set("phone", v)} /></div>
+        <FF label={t.age} value={f.age} onChange={v => set("age", v)} ph="25" />
+        <FF label={`${t.weight} (kg)`} value={f.weight} onChange={v => set("weight", v)} ph="70" />
+        <FF label={`${t.height} (cm)`} value={f.height} onChange={v => set("height", v)} ph="170" />
+        <FF label={t.gender} value={f.gender} onChange={v => set("gender", v)} opts={[{ id: "male", label: t.male }, { id: "female", label: t.female }]} />
+        <div style={{ gridColumn: "1/-1" }}><FF label={t.goal} value={f.goal} onChange={v => set("goal", v)} opts={isAr ? GOALS_AR : GOALS_EN} /></div>
+      </div>
+      {nav(null, () => setStep(2), isAr ? "التالي" : "Next →", !f.name || !f.email || !f.phone)}
+    </div>
+    <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: G.dim }}>
+      {t.alreadyAccount} <a href="/" style={{ color: G.gold }}>{t.loginHere}</a>
+    </div>
+  </>);
+
+  // ── Step 2: how they train ─────────────────────────────────
+  if (step === 2) return shell(<>
+    {dots}
+    <div className="card" style={{ padding: 20, border: `1px solid ${G.borderHi}` }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: G.text, marginBottom: 4 }}>{isAr ? "تدريبك" : "Your training"}</div>
+      <div style={{ fontSize: 12, color: G.muted, marginBottom: 16, lineHeight: 1.6 }}>
+        {isAr ? "هذه الإجابات تحدد خطتك." : "These answers decide which plan you get."}
+      </div>
+      <div style={{ display: "grid", gap: 12 }}>
+        <FF label={isAr ? "خبرتك في التدريب" : "How long have you been training?"} value={f.experience} onChange={v => set("experience", v)}
+          opts={[
+            { id: "beginner", label: isAr ? "مبتدئ (أقل من 6 أشهر)" : "New to it (under 6 months)" },
+            { id: "intermediate", label: isAr ? "متوسط (6 أشهر - سنتان)" : "6 months to 2 years" },
+            { id: "advanced", label: isAr ? "متقدم (أكثر من سنتين)" : "Over 2 years, consistently" },
+          ]} />
+        <FF label={isAr ? "كم يوماً في الأسبوع؟" : "How many days a week can you train?"} value={f.daysPerWeek} onChange={v => set("daysPerWeek", v)}
+          opts={[{ id: "2", label: "2" }, { id: "3", label: "3" }, { id: "4", label: "4" }, { id: "5", label: "5" }, { id: "6", label: "6" }]} />
+        <FF label={isAr ? "ما المتاح لديك؟" : "What do you have access to?"} value={f.equipment} onChange={v => set("equipment", v)}
+          opts={[
+            { id: "full_gym", label: isAr ? "صالة رياضية كاملة" : "A full gym" },
+            { id: "home_basic", label: isAr ? "دمبل وأحزمة في المنزل" : "Dumbbells / bands at home" },
+            { id: "none", label: isAr ? "لا شيء — وزن الجسم فقط" : "Nothing — bodyweight only" },
+          ]} />
+        <FF label={isAr ? "هل لديك ألم مستمر في مكان ما؟" : "Any ongoing pain anywhere?"} value={f.limitation} onChange={v => set("limitation", v)}
+          opts={[
+            { id: "none", label: isAr ? "لا" : "No" },
+            { id: "knee", label: isAr ? "الركبة" : "Knee" },
+            { id: "back", label: isAr ? "أسفل الظهر" : "Lower back" },
+            { id: "shoulder", label: isAr ? "الكتف" : "Shoulder" },
+          ]} />
+      </div>
+      {f.limitation !== "none" && (
+        <div style={{ fontSize: 12, color: G.blue, background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.28)", borderRadius: 9, padding: "10px 12px", marginTop: 12, lineHeight: 1.6 }}>
+          {isAr ? "سيبني أحد مدربينا خطتك بنفسه بدلاً من أن يخمّن التطبيق." : "One of our coaches will build your plan personally rather than have the app guess — pain is not something software should be assessing."}
+        </div>
+      )}
+      {nav(() => setStep(1), () => setStep(3), isAr ? "التالي" : "Next →", false)}
+    </div>
+  </>);
+
+  // ── Step 3: PAR-Q screening ────────────────────────────────
+  const answered = PARQ.every(q => parq[q.id] !== undefined);
+  return shell(<>
+    {dots}
+    <div className="card" style={{ padding: 20, border: `1px solid ${G.borderHi}` }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: G.text, marginBottom: 4 }}>{isAr ? "استبيان السلامة" : "Health check"}</div>
+      <div style={{ fontSize: 12, color: G.muted, marginBottom: 16, lineHeight: 1.6 }}>
+        {isAr ? "أجب بصدق. إذا كانت إجابتك نعم على أي سؤال، سيتواصل معك رافي بدلاً من إعطائك خطة تلقائياً."
+              : "Answer honestly. A yes to any of these means a coach contacts you, instead of the app handing you a plan."}
+      </div>
+      <div style={{ display: "grid", gap: 2 }}>
+        {PARQ.map(q => (
+          <div key={q.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0", borderBottom: `1px solid ${G.border}` }}>
+            <div style={{ flex: 1, fontSize: 12.5, color: G.text, lineHeight: 1.55 }}>{isAr ? q.ar : q.en}</div>
+            <YesNo value={parq[q.id]} onChange={v => setParq(p => ({ ...p, [q.id]: v }))} isAr={isAr} />
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 11, color: G.dim, marginTop: 14, lineHeight: 1.65 }}>
+        {isAr ? "بالمتابعة، أنت تؤكد أن هذه الإجابات صحيحة، وتفهم أن هذا تدريب لياقة وليس علاجاً طبياً."
+              : "By continuing you confirm these answers are accurate, and understand this is fitness coaching, not medical treatment."}
+      </div>
+      {err && <div style={{ color: G.red, fontSize: 13, marginTop: 12, textAlign: "center" }}>{err}</div>}
+      {nav(() => setStep(2), submit, busy ? "…" : (isAr ? "أنشئ حسابي" : "Create my account"), !answered || busy)}
+      {!answered && (
+        <div style={{ fontSize: 11, color: G.muted, textAlign: "center", marginTop: 8 }}>
+          {isAr ? "أجب على كل الأسئلة للمتابعة" : "Answer every question to continue"}
+        </div>
+      )}
+    </div>
+  </>);
 }
 
 // ── MAIN APP ───────────────────────────────────────────────
@@ -2600,10 +2787,7 @@ export default function App() {
   }, [clients]);
 
   if (window.location.pathname === "/register") {
-    return <RegPage lang={lang} setLang={setLang} onSubmit={async (data) => {
-      try { await dbAddReg(data); }
-      catch (e) { window.alert(e.message || "Could not send your registration. Try again."); throw e; }
-    }} />;
+    return <RegPage lang={lang} setLang={setLang} />;
   }
 
   // Client credentials are verified on the server (/api/client-login) against a
@@ -2813,7 +2997,7 @@ export default function App() {
                     <div style={{ width: 40, height: 40, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#080600", fontSize: 14 }}>MR</div>
                     <div><div className="sf gd" style={{ fontSize: 15, fontWeight: 700 }}>{TRAINER.name}</div><div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div></div>
                   </div>
-                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi Coach Rafi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
+                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
                 </div>
               </div>
               {(liveC.workoutPlan || liveC.nutritionPlan) && (
