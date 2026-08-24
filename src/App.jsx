@@ -2522,7 +2522,9 @@ export default function App() {
   const [lang, setLang] = useState(() => ld(LK, "en"));
   const [clients, setClients] = useState([]);
   const [regs, setRegs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Starts false: nothing is fetched at mount any more. The login screen must
+  // render immediately — the admin data load flips this while it runs.
+  const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState(() => {
     try { return sessionStorage.getItem("pd_screen") || "login"; } catch { return "login"; }
   });
@@ -2553,21 +2555,30 @@ export default function App() {
 
   const t = T[lang]; const isAr = lang === "ar";
 
-  // Load data from Supabase on mount
+  // Load the trainer's data whenever the admin screen is entered — on sign-in,
+  // and again on a refresh that restores an admin session.
+  //
+  // This deliberately keys off `screen` rather than running once on mount. At
+  // mount nobody is signed in yet, so a mount-only fetch would have no admin
+  // token to send and the list would sit empty until a manual reload.
+  //
+  // A signed-in client never reaches this: their portal runs off their own
+  // record, and the server would refuse the request anyway.
   useEffect(() => {
+    if (screen !== "admin") return;
+    let cancelled = false;
     const load = async () => {
-      // Only the trainer loads the client list. A signed-in client has no
-      // business fetching everyone else's details, and after this change the
-      // server would refuse anyway — their portal runs off their own record.
-      if (!adminToken()) { setLoading(false); return; }
+      if (!adminToken()) return;
       setLoading(true);
       const [cls, rgs] = await Promise.all([dbGetClients(), dbGetRegs()]);
+      if (cancelled) return;
       if (cls) setClients(cls); else setClients(ld(SK, DEMO));
       if (rgs) setRegs(rgs); else setRegs(ld(RK, []));
       setLoading(false);
     };
     load();
-  }, []);
+    return () => { cancelled = true; };
+  }, [screen]);
 
   // Persist lang
   useEffect(() => { sv(LK, lang); }, [lang]);
