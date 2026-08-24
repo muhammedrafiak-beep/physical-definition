@@ -90,7 +90,7 @@ const T = {
 // ── WORKOUT SYSTEMS ────────────────────────────────────────
 const WORKOUT_SYSTEMS = [
   {
-    id: "ppl", name: "Push / Pull / Legs", nameAr: "دفع / سحب / أرجل",
+    id: "ppl", level: "intermediate", name: "Push / Pull / Legs", nameAr: "دفع / سحب / أرجل",
     color: "#ef4444", emoji: "💪",
     desc: "3-day split targeting pushing, pulling, and leg movements",
     descAr: "تقسيم 3 أيام للدفع والسحب والأرجل",
@@ -131,7 +131,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "upperlower", name: "Upper / Lower Split", nameAr: "تقسيم علوي / سفلي",
+    id: "upperlower", level: "beginner", name: "Upper / Lower Split", nameAr: "تقسيم علوي / سفلي",
     color: "#f59e0b", emoji: "⚡",
     desc: "4-day split alternating upper and lower body training",
     descAr: "تقسيم 4 أيام بين الجزء العلوي والسفلي",
@@ -183,7 +183,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "fst7", name: "FST-7 Training", nameAr: "تدريب FST-7",
+    id: "fst7", level: "advanced", name: "FST-7 Training", nameAr: "تدريب FST-7",
     color: "#9333ea", emoji: "🔥",
     desc: "Fascia Stretch Training — 7 sets on last exercise to maximize pump",
     descAr: "تمدد اللفافة — 7 مجموعات في آخر تمرين لأقصى ضخ",
@@ -233,7 +233,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "superset", name: "Superset Training", nameAr: "تدريب السوبرسيت",
+    id: "superset", level: "intermediate", name: "Superset Training", nameAr: "تدريب السوبرسيت",
     color: "#22c55e", emoji: "⚡",
     desc: "Pair antagonist muscles — maximum efficiency, time-saving",
     descAr: "تدريب العضلات المتعاكسة معاً — كفاءة عالية",
@@ -274,7 +274,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "circuit", name: "Circuit Training", nameAr: "التدريب الدائري",
+    id: "circuit", level: "beginner", name: "Circuit Training", nameAr: "التدريب الدائري",
     color: "#60a5fa", emoji: "🔄",
     desc: "All exercises back-to-back with minimal rest — fat burn + conditioning",
     descAr: "جميع التمارين متتالية مع راحة قليلة",
@@ -318,7 +318,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "fullbody", name: "Full Body Training", nameAr: "تدريب الجسم الكامل",
+    id: "fullbody", level: "beginner", name: "Full Body Training", nameAr: "تدريب الجسم الكامل",
     color: "#f97316", emoji: "🏋️",
     desc: "3x/week full body — ideal for beginners and natural athletes",
     descAr: "3 مرات أسبوعياً — مثالي للمبتدئين",
@@ -348,7 +348,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "hiit", name: "HIIT Training", nameAr: "تدريب HIIT",
+    id: "hiit", level: "intermediate", name: "HIIT Training", nameAr: "تدريب HIIT",
     color: "#ef4444", emoji: "🔥",
     desc: "High Intensity Interval Training — maximum calorie burn",
     descAr: "تدريب متقطع عالي الكثافة — حرق أقصى للسعرات",
@@ -388,7 +388,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "crossfit", name: "CrossFit Style", nameAr: "أسلوب كروسفيت",
+    id: "crossfit", level: "advanced", name: "CrossFit Style", nameAr: "أسلوب كروسفيت",
     color: "#0ea5e9", emoji: "🏆",
     desc: "Functional fitness — strength, cardio, and gymnastics combined",
     descAr: "لياقة وظيفية — قوة وكارديو وجمباز معاً",
@@ -421,7 +421,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "arnold", name: "Arnold Split", nameAr: "تقسيم أرنولد",
+    id: "arnold", level: "advanced", name: "Arnold Split", nameAr: "تقسيم أرنولد",
     color: "#d4af37", emoji: "🌟",
     desc: "6-day split by Arnold Schwarzenegger — classic bodybuilding",
     descAr: "تقسيم 6 أيام بأسلوب أرنولد — بناء جسم كلاسيكي",
@@ -462,7 +462,7 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "homebw", name: "Home Bodyweight", nameAr: "تمارين منزلية بوزن الجسم",
+    id: "homebw", level: "beginner", name: "Home Bodyweight", nameAr: "تمارين منزلية بوزن الجسم",
     color: "#10b981", emoji: "🏠",
     desc: "No equipment needed — train anywhere using only your body weight",
     descAr: "بدون معدات — تدريب في أي مكان بوزن الجسم فقط",
@@ -500,10 +500,25 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "senior75", name: "Senior Fitness 75+", nameAr: "لياقة كبار السن 75+",
+    id: "senior75", level: "clinical", name: "Senior Fitness 75+", nameAr: "لياقة كبار السن 75+",
     color: "#06b6d4", emoji: "🧓",
     desc: "Gentle, safe training using resistance bands, foam roller, Pilates ring & self-massage — designed for elderly clients",
     descAr: "تدريب لطيف وآمن باستخدام أحزمة المقاومة وأسطوانة الفوم وحلقة البيلاتس — مصمم لكبار السن",
+    warmup: [
+      { name: "Seated Marching", sets: "1", reps: "60 sec", rest: "0s", notes: "Sit tall, lift knees gently, swing arms" },
+      { name: "Ankle Pumps (seated)", sets: "1", reps: "15 each", rest: "0s", notes: "Point and flex — wakes up circulation" },
+      { name: "Seated Shoulder Rolls", sets: "1", reps: "10 each way", rest: "0s", notes: "Slow, no force" },
+      { name: "Neck Rotations (small range)", sets: "1", reps: "30 sec", rest: "0s", notes: "Never push into pain" },
+      { name: "Seated Torso Turns", sets: "1", reps: "8 each side", rest: "0s", notes: "Hands crossed on chest, gentle" },
+      { name: "Sit-to-Stand", sets: "1", reps: "5 reps", rest: "30s", notes: "Hold chair arms if needed — this is the warm-up and a test" },
+    ],
+    cooldown: [
+      { name: "Seated Deep Breathing", sets: "1", reps: "60 sec", rest: "0s", notes: "Slow in through nose, longer out" },
+      { name: "Seated Hamstring Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Leg straight, heel on floor, sit tall" },
+      { name: "Seated Calf & Ankle Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Toes pulled up toward you" },
+      { name: "Seated Chest Opener", sets: "1", reps: "20 sec", rest: "10s", notes: "Hands behind, gentle — opens posture" },
+      { name: "Neck Side Stretch", sets: "1", reps: "20 sec each", rest: "0s", notes: "Ear toward shoulder, no pulling" },
+    ],
     days: [
       {
         name: "Day 1 — Seated & Standing Mobility",
@@ -538,10 +553,23 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "lowback", name: "Lower Back Pain Relief", nameAr: "تخفيف آلام أسفل الظهر",
+    id: "lowback", level: "clinical", name: "Lower Back Pain Relief", nameAr: "تخفيف آلام أسفل الظهر",
     color: "#f43f5e", emoji: "🩹",
     desc: "Gentle core stabilization and mobility work to relieve and prevent lower back pain",
     descAr: "تمارين لطيفة لتقوية الجذع وتحسين الحركة لتخفيف آلام أسفل الظهر",
+    warmup: [
+      { name: "Light Walk in Place", sets: "1", reps: "2 min", rest: "0s", notes: "Raise temperature before any spine work" },
+      { name: "Pelvic Tilts (lying)", sets: "1", reps: "10 reps", rest: "0s", notes: "Small, comfortable range" },
+      { name: "Cat-Cow (slow)", sets: "1", reps: "8 reps", rest: "0s", notes: "Move through the range you have today" },
+      { name: "Knee Rocks (lying)", sets: "1", reps: "8 each side", rest: "0s", notes: "Knees bent, rock side to side, small range" },
+      { name: "Glute Bridge (warm-up reps)", sets: "1", reps: "8 reps", rest: "30s", notes: "Light — just waking the hips up" },
+    ],
+    cooldown: [
+      { name: "Knee-to-Chest Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "One leg at a time, relaxed" },
+      { name: "Supine Figure-4 Glute Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Ankle over knee, pull gently" },
+      { name: "Child's Pose", sets: "1", reps: "45 sec", rest: "0s", notes: "Knees wide if more comfortable" },
+      { name: "Diaphragmatic Breathing (lying)", sets: "1", reps: "60 sec", rest: "0s", notes: "Hand on belly — settles the nervous system" },
+    ],
     days: [
       {
         name: "Day 1 — Gentle Mobility",
@@ -566,10 +594,24 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "shoulder", name: "Shoulder Pain Rehab", nameAr: "علاج تأهيلي لألم الكتف",
+    id: "shoulder", level: "clinical", name: "Shoulder Pain Rehab", nameAr: "علاج تأهيلي لألم الكتف",
     color: "#8b5cf6", emoji: "💢",
     desc: "Rotator cuff strengthening and mobility to relieve shoulder pain and improve range of motion",
     descAr: "تقوية الكتف وتحسين المرونة لتخفيف الألم",
+    warmup: [
+      { name: "Light Walk in Place", sets: "1", reps: "2 min", rest: "0s", notes: "General warm-up, no arm swinging yet" },
+      { name: "Pendulum Swing", sets: "1", reps: "30 sec each arm", rest: "0s", notes: "Lean forward, let the arm hang and swing" },
+      { name: "Shoulder Rolls", sets: "1", reps: "10 each way", rest: "0s", notes: "Slow and controlled" },
+      { name: "Scapular Squeeze", sets: "1", reps: "10 reps", rest: "0s", notes: "Squeeze shoulder blades, hold 2 sec" },
+      { name: "Wall Slides (small range)", sets: "1", reps: "8 reps", rest: "30s", notes: "Only as high as stays pain-free" },
+      { name: "Neck Side Stretch", sets: "1", reps: "20 sec each", rest: "0s", notes: "Releases upper trap before shoulder work" },
+    ],
+    cooldown: [
+      { name: "Cross-body Shoulder Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Gentle, never forced" },
+      { name: "Doorway Chest Stretch", sets: "1", reps: "20 sec", rest: "10s", notes: "Pain-free range only" },
+      { name: "Upper Trap Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Opposite hand under the seat if sitting" },
+      { name: "Deep Breathing", sets: "1", reps: "60 sec", rest: "0s", notes: "Shoulders down and relaxed" },
+    ],
     days: [
       {
         name: "Day 1 — Mobility & Activation",
@@ -594,10 +636,25 @@ const WORKOUT_SYSTEMS = [
     ]
   },
   {
-    id: "kneefriendly", name: "Knee Pain Friendly", nameAr: "تمارين مناسبة لألم الركبة",
+    id: "kneefriendly", level: "clinical", name: "Knee Pain Friendly", nameAr: "تمارين مناسبة لألم الركبة",
     color: "#eab308", emoji: "🦵",
     desc: "Low-impact strength training that protects the knees while building leg strength",
     descAr: "تدريب منخفض التأثير يحمي الركبة مع بناء قوة الأرجل",
+    warmup: [
+      { name: "Stationary Bike or Light Walk", sets: "1", reps: "5 min", rest: "0s", notes: "Best knee warm-up there is — no impact" },
+      { name: "Ankle Pumps", sets: "1", reps: "15 each", rest: "0s", notes: "Point and flex" },
+      { name: "Seated Knee Extensions (bodyweight)", sets: "1", reps: "10 each", rest: "0s", notes: "Small range, no weight — just warming the joint" },
+      { name: "Straight Leg Raises", sets: "1", reps: "8 each", rest: "0s", notes: "Quad activation without bending the knee" },
+      { name: "Glute Bridge (warm-up reps)", sets: "1", reps: "8 reps", rest: "0s", notes: "Wakes the hips so the knee does less work" },
+      { name: "Standing Hip Circles (small)", sets: "1", reps: "8 each way", rest: "30s", notes: "Hold support, small controlled circles" },
+    ],
+    cooldown: [
+      { name: "Seated Hamstring Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Sit tall, heel on floor" },
+      { name: "Standing Quad Stretch (with support)", sets: "1", reps: "20 sec each", rest: "10s", notes: "Hold a wall or chair" },
+      { name: "Calf Stretch (wall)", sets: "1", reps: "20 sec each", rest: "10s", notes: "Back heel down, front knee bent" },
+      { name: "Foam Roller Quad (above knee only)", sets: "1", reps: "45 sec each", rest: "10s", notes: "Never roll over the kneecap or joint line" },
+      { name: "Deep Breathing", sets: "1", reps: "60 sec", rest: "0s", notes: "" },
+    ],
     days: [
       {
         name: "Day 1 — Quad & Glute Activation (Low Impact)",
@@ -622,6 +679,21 @@ const WORKOUT_SYSTEMS = [
     ]
   }
 ];
+
+// ── TRAINING LEVELS ────────────────────────────────────────
+// Gates what a client should be shown. "clinical" systems are conditioning
+// programmes built around a limitation — they are not medical treatment and
+// need a screening conversation before being assigned.
+const LEVEL_META = {
+  beginner:     { label: "Beginner",     labelAr: "مبتدئ",  color: "#22c55e" },
+  intermediate: { label: "Intermediate", labelAr: "متوسط",  color: "#60a5fa" },
+  advanced:     { label: "Advanced",     labelAr: "متقدم",  color: "#ef4444",
+    warn: "Advanced system — heavy or technical lifts and high weekly volume. Assign only to a client with a solid training base and sound technique.",
+    warnAr: "نظام متقدم — تمارين ثقيلة أو تقنية وحجم تدريبي عالٍ. لا يُسند إلا لعميل لديه أساس تدريبي جيد وتقنية سليمة." },
+  clinical:     { label: "Clinical",     labelAr: "تأهيلي", color: "#06b6d4",
+    warn: "Conditioning programme, not medical treatment. Screen the client first, and refer to a physiotherapist or doctor for undiagnosed, worsening or radiating pain.",
+    warnAr: "برنامج تأهيل بدني وليس علاجاً طبياً. افحص العميل أولاً، وحوّله إلى أخصائي علاج طبيعي أو طبيب في حال وجود ألم غير مشخّص أو متزايد أو ممتد." },
+};
 
 // ── MEAL PLANS ─────────────────────────────────────────────
 const MEALS = [
@@ -1562,8 +1634,249 @@ function HumanAnim({ exerciseId, accentColor, size=120 }) {
   </svg>);
 }
 
+// ── EXERCISE METADATA ──────────────────────────────────────
+// Explicit muscle + equipment tags, keyed by exercise name.
+//
+// The keyword guesser below used to be the ONLY source of muscle tags. It
+// labelled anything it did not recognise as "Full Body" (e.g. Straight Leg
+// Raises, Clamshells, Wall Sit), and because of rule ordering it tagged
+// "Leg Curl" as Biceps and "Leg Extension" as Triceps. It is now only a
+// fallback for names not listed here.
+//
+// These move onto the exercise objects when the schema is widened; keeping
+// them in one table for now avoids touching all 215 entries at once.
+const EXERCISE_META = {
+  "10 Push-ups":                                 { p: ["Chest"], s: ["Triceps","Core"], eq: ["bodyweight"] },
+  "15 Air Squats":                               { p: ["Quads"], s: ["Glutes"], eq: ["bodyweight"] },
+  "5 Pull-ups":                                  { p: ["Lats"], s: ["Biceps","Core"], eq: ["pull-up bar"] },
+  "Ab Wheel Rollout":                            { p: ["Core"], s: ["Lats","Stabilizers"], eq: ["ab wheel"] },
+  "Ankle Pumps":                                 { p: ["Ankles"], s: ["Calves"], eq: ["bodyweight"] },
+  "Ankle Pumps (seated)":                        { p: ["Ankles"], s: ["Calves"], eq: ["chair","bodyweight"] },
+  "Ankle Rotations":                             { p: ["Mobility"], s: ["Ankles"], eq: ["bodyweight"] },
+  "Arm Swings":                                  { p: ["Mobility"], s: ["Delts"], eq: ["bodyweight"] },
+  "Arnold Press":                                { p: ["Delts"], s: ["Triceps","Core"], eq: ["dumbbell"] },
+  "Back Squat":                                  { p: ["Quads"], s: ["Glutes","Core"], eq: ["barbell"] },
+  "Band External Rotation":                      { p: ["Rotator Cuff"], s: ["Rear Delts"], eq: ["band"] },
+  "Band Front Raise (light)":                    { p: ["Front Delts"], s: ["Rotator Cuff"], eq: ["band"] },
+  "Band Internal Rotation":                      { p: ["Rotator Cuff"], s: [], eq: ["band"] },
+  "Band Lateral Raise (light)":                  { p: ["Side Delts"], s: ["Rotator Cuff"], eq: ["band"] },
+  "Band Lateral Walk":                           { p: ["Hip Abductors"], s: ["Glutes","Balance"], eq: ["band"] },
+  "Band Seated Leg Extension":                   { p: ["Quads"], s: [], eq: ["band"] },
+  "Band Seated Row":                             { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["band"] },
+  "Barbell Curl":                                { p: ["Biceps"], s: ["Forearms"], eq: ["barbell"] },
+  "Barbell Row":                                 { p: ["Mid Back"], s: ["Lats","Biceps","Rear Delts"], eq: ["barbell"] },
+  "Barbell Squat":                               { p: ["Quads"], s: ["Glutes","Core"], eq: ["barbell"] },
+  "Battle Ropes":                                { p: ["Delts"], s: ["Core","Cardio"], eq: ["rope"] },
+  "Bench Press":                                 { p: ["Chest"], s: ["Triceps","Front Delts"], eq: ["barbell","bench"] },
+  "Bicycle Crunches":                            { p: ["Obliques"], s: ["Core"], eq: ["bodyweight"] },
+  "Bird Dog":                                    { p: ["Core"], s: ["Lower Back","Glutes","Stabilizers"], eq: ["bodyweight"] },
+  "Bodyweight Squat":                            { p: ["Quads"], s: ["Glutes"], eq: ["bodyweight"] },
+  "Bodyweight Squats":                           { p: ["Quads"], s: ["Glutes"], eq: ["bodyweight"] },
+  "Box Jumps":                                   { p: ["Quads"], s: ["Glutes","Calves"], eq: ["box"] },
+  "Box Step-ups":                                { p: ["Quads"], s: ["Glutes","Balance"], eq: ["box"] },
+  "Burpees":                                     { p: ["Full Body"], s: ["Cardio","Chest","Quads"], eq: ["bodyweight"] },
+  "Burpees (or step-back version)":              { p: ["Full Body"], s: ["Cardio","Chest","Quads"], eq: ["bodyweight"] },
+  "Cable Curl":                                  { p: ["Biceps"], s: ["Forearms"], eq: ["cable"] },
+  "Cable Curl + Pushdown":                       { p: ["Biceps","Triceps"], s: ["Forearms"], eq: ["cable"] },
+  "Cable Fly":                                   { p: ["Chest"], s: ["Front Delts"], eq: ["cable"] },
+  "Cable Lateral Raise":                         { p: ["Side Delts"], s: ["Traps"], eq: ["cable"] },
+  "Cable Pushdown":                              { p: ["Triceps"], s: [], eq: ["cable"] },
+  "Cable Row":                                   { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["cable"] },
+  "Calf Raise":                                  { p: ["Calves"], s: [], eq: ["bodyweight","machine"] },
+  "Calf Raises":                                 { p: ["Calves"], s: [], eq: ["bodyweight"] },
+  "Calf Stretch (wall)":                         { p: ["Mobility"], s: ["Calves"], eq: ["wall"] },
+  "Cat-Cow (slow)":                              { p: ["Mobility"], s: ["Lower Back","Core"], eq: ["bodyweight"] },
+  "Cat-Cow Stretch":                             { p: ["Mobility"], s: ["Lower Back","Core"], eq: ["bodyweight"] },
+  "Chair-Assisted Mini Squats":                  { p: ["Quads"], s: ["Glutes","Balance"], eq: ["chair","bodyweight"] },
+  "Chest Stretch":                               { p: ["Mobility"], s: ["Chest"], eq: ["bodyweight"] },
+  "Child's Pose":                                { p: ["Mobility"], s: ["Lower Back","Lats"], eq: ["bodyweight"] },
+  "Childs Pose":                                 { p: ["Mobility"], s: ["Lower Back","Lats"], eq: ["bodyweight"] },
+  "Clamshells (band optional)":                  { p: ["Hip Abductors"], s: ["Glutes"], eq: ["band","bodyweight"] },
+  "Close Grip Bench":                            { p: ["Triceps"], s: ["Chest","Front Delts"], eq: ["barbell","bench"] },
+  "Close Grip Bench Press":                      { p: ["Triceps"], s: ["Chest","Front Delts"], eq: ["barbell","bench"] },
+  "Concentration Curl":                          { p: ["Biceps"], s: ["Forearms"], eq: ["dumbbell"] },
+  "Cool Down Walk":                              { p: ["Recovery"], s: ["Cardio"], eq: ["none"] },
+  "Cross-body Shoulder Stretch":                 { p: ["Mobility"], s: ["Rear Delts"], eq: ["bodyweight"] },
+  "Dead Bug":                                    { p: ["Core"], s: ["Stabilizers"], eq: ["bodyweight"] },
+  "Deadlift":                                    { p: ["Lower Back","Glutes"], s: ["Hamstrings","Traps","Core"], eq: ["barbell"] },
+  "Deep Breathing":                              { p: ["Recovery"], s: [], eq: ["none"] },
+  "Deep Breathing + Gentle Neck Stretch":        { p: ["Recovery"], s: ["Mobility"], eq: ["none"] },
+  "Diaphragmatic Breathing (lying)":             { p: ["Recovery"], s: ["Core"], eq: ["none"] },
+  "Doorway Chest Stretch":                       { p: ["Mobility"], s: ["Chest","Front Delts"], eq: ["doorway"] },
+  "Double Unders / Jump Rope":                   { p: ["Calves"], s: ["Cardio"], eq: ["jump rope"] },
+  "Dumbbell Curl":                               { p: ["Biceps"], s: ["Forearms"], eq: ["dumbbell"] },
+  "Dumbbell Press":                              { p: ["Chest"], s: ["Triceps","Front Delts"], eq: ["dumbbell","bench"] },
+  "Dumbbell Row":                                { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["dumbbell"] },
+  "Dumbbell Shoulder Press":                     { p: ["Delts"], s: ["Triceps"], eq: ["dumbbell"] },
+  "Elbow Circles":                               { p: ["Mobility"], s: [], eq: ["bodyweight"] },
+  "Face Pulls":                                  { p: ["Rear Delts"], s: ["Rotator Cuff","Traps"], eq: ["cable"] },
+  "Flat Dumbbell Press":                         { p: ["Chest"], s: ["Triceps","Front Delts"], eq: ["dumbbell","bench"] },
+  "Foam Roller Calf Release":                    { p: ["Recovery"], s: ["Calves"], eq: ["foam roller"] },
+  "Foam Roller Quad & IT Band Release":          { p: ["Recovery"], s: ["Quads"], eq: ["foam roller"] },
+  "Foam Roller Quad (above knee only)":          { p: ["Recovery"], s: ["Quads"], eq: ["foam roller"] },
+  "Foam Roller Thoracic Release":                { p: ["Recovery"], s: ["Mobility","Mid Back"], eq: ["foam roller"] },
+  "Foam Roller Upper Back Release":              { p: ["Recovery"], s: ["Mobility","Mid Back"], eq: ["foam roller"] },
+  "GHD Sit-ups":                                 { p: ["Core"], s: ["Hip Flexors"], eq: ["machine"] },
+  "Gentle Walking":                              { p: ["Cardio"], s: ["Recovery"], eq: ["none"] },
+  "Glute Bridge":                                { p: ["Glutes"], s: ["Hamstrings","Core"], eq: ["bodyweight"] },
+  "Glute Bridge (warm-up reps)":                 { p: ["Glutes"], s: ["Hamstrings"], eq: ["bodyweight"] },
+  "Glute Bridges":                               { p: ["Glutes"], s: ["Hamstrings","Core"], eq: ["bodyweight"] },
+  "Goblet Squat":                                { p: ["Quads"], s: ["Glutes","Core"], eq: ["dumbbell","kettlebell"] },
+  "Hack Squat / Leg Press":                      { p: ["Quads"], s: ["Glutes"], eq: ["machine"] },
+  "Hammer Curl":                                 { p: ["Biceps"], s: ["Forearms"], eq: ["dumbbell"] },
+  "Hamstring Stretch":                           { p: ["Mobility"], s: ["Hamstrings"], eq: ["bodyweight"] },
+  "Hand Massage / Self Massage (forearms, hands)": { p: ["Recovery"], s: ["Forearms"], eq: ["none"] },
+  "Hand Massager — Around Knee (not on joint)":  { p: ["Recovery"], s: ["Quads","Calves"], eq: ["massager"] },
+  "Hand-held Massager — Lower Back & Legs":      { p: ["Recovery"], s: ["Lower Back"], eq: ["massager"] },
+  "High Knees":                                  { p: ["Hip Flexors"], s: ["Cardio","Calves"], eq: ["bodyweight"] },
+  "Hip Circles":                                 { p: ["Mobility"], s: ["Hip Flexors"], eq: ["bodyweight"] },
+  "Hip Flexor Stretch":                          { p: ["Mobility"], s: ["Hip Flexors"], eq: ["bodyweight"] },
+  "Hip Thrust":                                  { p: ["Glutes"], s: ["Hamstrings"], eq: ["barbell","bench"] },
+  "Hyperextensions":                             { p: ["Lower Back"], s: ["Glutes","Hamstrings"], eq: ["machine"] },
+  "Incline Barbell Press":                       { p: ["Upper Chest"], s: ["Front Delts","Triceps"], eq: ["barbell","bench"] },
+  "Incline DB Press":                            { p: ["Upper Chest"], s: ["Front Delts","Triceps"], eq: ["dumbbell","bench"] },
+  "Incline Dumbbell Press":                      { p: ["Upper Chest"], s: ["Front Delts","Triceps"], eq: ["dumbbell","bench"] },
+  "Incline Push-ups (on table/wall)":            { p: ["Chest"], s: ["Triceps","Core"], eq: ["bodyweight"] },
+  "Jump Rope":                                   { p: ["Calves"], s: ["Cardio"], eq: ["jump rope"] },
+  "Jump Squats":                                 { p: ["Quads"], s: ["Glutes","Calves"], eq: ["bodyweight"] },
+  "Jumping Jacks":                               { p: ["Cardio"], s: ["Calves","Delts"], eq: ["bodyweight"] },
+  "Kettlebell Swing":                            { p: ["Glutes","Hamstrings"], s: ["Core","Cardio"], eq: ["kettlebell"] },
+  "Knee Circles":                                { p: ["Mobility"], s: [], eq: ["bodyweight"] },
+  "Knee Rocks (lying)":                          { p: ["Mobility"], s: ["Lower Back"], eq: ["bodyweight"] },
+  "Knee-to-Chest Stretch":                       { p: ["Mobility"], s: ["Lower Back","Glutes"], eq: ["bodyweight"] },
+  "Lateral Raises":                              { p: ["Side Delts"], s: ["Traps"], eq: ["dumbbell"] },
+  "Leg Curl":                                    { p: ["Hamstrings"], s: [], eq: ["machine"] },
+  "Leg Extension":                               { p: ["Quads"], s: [], eq: ["machine"] },
+  "Leg Press":                                   { p: ["Quads"], s: ["Glutes"], eq: ["machine"] },
+  "Leg Raises":                                  { p: ["Core"], s: ["Hip Flexors"], eq: ["bodyweight"] },
+  "Leg Swings":                                  { p: ["Mobility"], s: ["Hamstrings","Hip Flexors"], eq: ["bodyweight"] },
+  "Light Jog in Place":                          { p: ["Cardio"], s: ["Mobility"], eq: ["bodyweight"] },
+  "Light Walk in Place":                         { p: ["Cardio"], s: ["Mobility"], eq: ["bodyweight"] },
+  "Massager — Upper Trap & Shoulder":            { p: ["Recovery"], s: ["Traps"], eq: ["massager"] },
+  "Modified Side Plank (knees down)":            { p: ["Obliques"], s: ["Core","Stabilizers"], eq: ["bodyweight"] },
+  "Mountain Climbers":                           { p: ["Core"], s: ["Cardio","Front Delts"], eq: ["bodyweight"] },
+  "Neck Rotations":                              { p: ["Mobility"], s: [], eq: ["bodyweight"] },
+  "Neck Rotations (small range)":                { p: ["Mobility"], s: [], eq: ["bodyweight"] },
+  "Neck Side Stretch":                           { p: ["Mobility"], s: ["Traps"], eq: ["bodyweight"] },
+  "Overhead Press":                              { p: ["Delts"], s: ["Triceps","Core"], eq: ["barbell"] },
+  "Overhead Tricep Ext":                         { p: ["Triceps"], s: [], eq: ["dumbbell","cable"] },
+  "Overhead Tricep Extension":                   { p: ["Triceps"], s: [], eq: ["dumbbell","cable"] },
+  "Pec Dec / Cable Fly":                         { p: ["Chest"], s: ["Front Delts"], eq: ["machine","cable"] },
+  "Pelvic Tilts (lying)":                        { p: ["Core"], s: ["Lower Back","Mobility"], eq: ["bodyweight"] },
+  "Pendulum Swing":                              { p: ["Mobility"], s: ["Rotator Cuff"], eq: ["bodyweight"] },
+  "Pilates Ring Ankle Press":                    { p: ["Ankles"], s: ["Calves"], eq: ["pilates ring"] },
+  "Pilates Ring Chest Press (seated)":           { p: ["Chest"], s: ["Front Delts"], eq: ["pilates ring"] },
+  "Pilates Ring Inner Thigh Squeeze":            { p: ["Adductors"], s: ["Core"], eq: ["pilates ring"] },
+  "Pilates Ring Knee Squeeze (seated)":          { p: ["Adductors"], s: ["Core"], eq: ["pilates ring"] },
+  "Plank":                                       { p: ["Core"], s: ["Stabilizers"], eq: ["bodyweight"] },
+  "Plank Shoulder Taps":                         { p: ["Core"], s: ["Front Delts","Stabilizers"], eq: ["bodyweight"] },
+  "Power Clean":                                 { p: ["Full Body"], s: ["Glutes","Traps","Quads"], eq: ["barbell"] },
+  "Preacher Curl":                               { p: ["Biceps"], s: ["Forearms"], eq: ["barbell","bench"] },
+  "Prone Y-T-W Raises (no weight)":              { p: ["Rotator Cuff"], s: ["Rear Delts","Traps"], eq: ["bodyweight"] },
+  "Pull-ups":                                    { p: ["Lats"], s: ["Biceps","Core"], eq: ["pull-up bar"] },
+  "Pull-ups / Assisted Pull-ups":                { p: ["Lats"], s: ["Biceps","Core"], eq: ["pull-up bar","machine"] },
+  "Pull-ups / Lat Pulldown":                     { p: ["Lats"], s: ["Biceps","Core"], eq: ["pull-up bar","cable"] },
+  "Push-up Burpees":                             { p: ["Chest"], s: ["Quads","Core","Cardio"], eq: ["bodyweight"] },
+  "Push-ups":                                    { p: ["Chest"], s: ["Triceps","Core"], eq: ["bodyweight"] },
+  "Reverse Lunges":                              { p: ["Quads"], s: ["Glutes","Balance"], eq: ["bodyweight"] },
+  "Romanian Deadlift":                           { p: ["Hamstrings"], s: ["Glutes","Lower Back"], eq: ["barbell"] },
+  "Rowing Machine":                              { p: ["Cardio"], s: ["Mid Back","Quads"], eq: ["machine"] },
+  "Russian Twists":                              { p: ["Obliques"], s: ["Core"], eq: ["bodyweight"] },
+  "SS1A: Bench Press":                           { p: ["Chest"], s: ["Triceps","Front Delts"], eq: ["barbell","bench"] },
+  "SS1A: OHP":                                   { p: ["Delts"], s: ["Triceps","Core"], eq: ["barbell"] },
+  "SS1A: Squat":                                 { p: ["Quads"], s: ["Glutes","Core"], eq: ["barbell"] },
+  "SS1B: Barbell Row":                           { p: ["Mid Back"], s: ["Lats","Biceps","Rear Delts"], eq: ["barbell"] },
+  "SS1B: Leg Curl":                              { p: ["Hamstrings"], s: [], eq: ["machine"] },
+  "SS1B: Pull-ups":                              { p: ["Lats"], s: ["Biceps","Core"], eq: ["pull-up bar"] },
+  "SS2A: Barbell Curl":                          { p: ["Biceps"], s: ["Forearms"], eq: ["barbell"] },
+  "SS2A: Incline DB Press":                      { p: ["Upper Chest"], s: ["Front Delts","Triceps"], eq: ["dumbbell","bench"] },
+  "SS2A: Leg Press":                             { p: ["Quads"], s: ["Glutes"], eq: ["machine"] },
+  "SS2B: Lat Pulldown":                          { p: ["Lats"], s: ["Biceps"], eq: ["cable"] },
+  "SS2B: Romanian Deadlift":                     { p: ["Hamstrings"], s: ["Glutes","Lower Back"], eq: ["barbell"] },
+  "SS2B: Skull Crusher":                         { p: ["Triceps"], s: [], eq: ["barbell","bench"] },
+  "SS3A: Cable Fly":                             { p: ["Chest"], s: ["Front Delts"], eq: ["cable"] },
+  "SS3A: Lateral Raise":                         { p: ["Side Delts"], s: ["Traps"], eq: ["dumbbell"] },
+  "SS3A: Leg Extension":                         { p: ["Quads"], s: [], eq: ["machine"] },
+  "SS3B: Calf Raise":                            { p: ["Calves"], s: [], eq: ["bodyweight","machine"] },
+  "SS3B: Face Pull":                             { p: ["Rear Delts"], s: ["Rotator Cuff","Traps"], eq: ["cable"] },
+  "SS3B: Tricep Pushdown":                       { p: ["Triceps"], s: [], eq: ["cable"] },
+  "Scapular Squeeze":                            { p: ["Traps"], s: ["Rear Delts"], eq: ["bodyweight"] },
+  "Seated Band Shoulder Pull-Apart":             { p: ["Rear Delts"], s: ["Traps","Rotator Cuff"], eq: ["band"] },
+  "Seated Calf & Ankle Stretch":                 { p: ["Mobility"], s: ["Calves","Ankles"], eq: ["chair"] },
+  "Seated Calf Raise":                           { p: ["Calves"], s: [], eq: ["machine"] },
+  "Seated Chest Opener":                         { p: ["Mobility"], s: ["Chest","Front Delts"], eq: ["chair"] },
+  "Seated DB Overhead Press":                    { p: ["Delts"], s: ["Triceps"], eq: ["dumbbell","bench"] },
+  "Seated Deep Breathing":                       { p: ["Recovery"], s: [], eq: ["chair"] },
+  "Seated Hamstring Stretch":                    { p: ["Mobility"], s: ["Hamstrings"], eq: ["chair","bodyweight"] },
+  "Seated Knee Extensions (bodyweight)":         { p: ["Quads"], s: [], eq: ["bodyweight"] },
+  "Seated Marching":                             { p: ["Hip Flexors"], s: ["Core","Cardio"], eq: ["chair","bodyweight"] },
+  "Seated Resistance Band Row":                  { p: ["Mid Back"], s: ["Rear Delts","Biceps"], eq: ["band"] },
+  "Seated Shoulder Rolls":                       { p: ["Mobility"], s: ["Traps"], eq: ["bodyweight"] },
+  "Seated Torso Turns":                          { p: ["Mobility"], s: ["Obliques"], eq: ["chair","bodyweight"] },
+  "Shoulder Rolls":                              { p: ["Mobility"], s: ["Traps"], eq: ["bodyweight"] },
+  "Shoulder Rotations":                          { p: ["Mobility"], s: ["Traps"], eq: ["bodyweight"] },
+  "Shoulder Stretch":                            { p: ["Mobility"], s: ["Rear Delts"], eq: ["bodyweight"] },
+  "Single Leg Stand (hold support)":             { p: ["Balance"], s: ["Ankles","Glutes"], eq: ["bodyweight"] },
+  "Sit-to-Stand":                                { p: ["Quads"], s: ["Glutes","Balance"], eq: ["chair","bodyweight"] },
+  "Skull Crushers":                              { p: ["Triceps"], s: [], eq: ["barbell","bench"] },
+  "Slam Ball":                                   { p: ["Full Body"], s: ["Core","Cardio"], eq: ["slam ball"] },
+  "Sprint":                                      { p: ["Cardio"], s: ["Hamstrings","Glutes","Quads"], eq: ["none"] },
+  "Squat":                                       { p: ["Quads"], s: ["Glutes","Core"], eq: ["barbell"] },
+  "Standing Calf Raise":                         { p: ["Calves"], s: [], eq: ["machine","bodyweight"] },
+  "Standing Hip Circles (small)":                { p: ["Mobility"], s: ["Hip Flexors","Balance"], eq: ["bodyweight"] },
+  "Standing Quad Stretch":                       { p: ["Mobility"], s: ["Quads"], eq: ["bodyweight"] },
+  "Standing Quad Stretch (with support)":        { p: ["Mobility"], s: ["Quads"], eq: ["bodyweight"] },
+  "Standing Wall Push-ups":                      { p: ["Chest"], s: ["Triceps","Front Delts"], eq: ["wall","bodyweight"] },
+  "Stationary Bike or Light Walk":               { p: ["Cardio"], s: ["Quads"], eq: ["bike"] },
+  "Stationary Bike or Pool Walking":             { p: ["Cardio"], s: ["Quads"], eq: ["bike","pool"] },
+  "Step-ups":                                    { p: ["Quads"], s: ["Glutes","Balance"], eq: ["box","bodyweight"] },
+  "Step-ups (low step, controlled)":             { p: ["Quads"], s: ["Glutes","Balance"], eq: ["box","bodyweight"] },
+  "Stiff Leg Deadlift":                          { p: ["Hamstrings"], s: ["Glutes","Lower Back"], eq: ["barbell"] },
+  "Straight Arm Pulldown":                       { p: ["Lats"], s: ["Core"], eq: ["cable"] },
+  "Straight Leg Raises":                         { p: ["Quads"], s: ["Hip Flexors","Core"], eq: ["bodyweight"] },
+  "Straight Leg Raises (lying)":                 { p: ["Quads"], s: ["Hip Flexors","Core"], eq: ["bodyweight"] },
+  "Sumo Deadlift":                               { p: ["Glutes","Quads"], s: ["Lower Back","Adductors"], eq: ["barbell"] },
+  "Superman Hold":                               { p: ["Lower Back"], s: ["Glutes"], eq: ["bodyweight"] },
+  "Supine Figure-4 Glute Stretch":               { p: ["Mobility"], s: ["Glutes","Hip Abductors"], eq: ["bodyweight"] },
+  "T-Bar Row":                                   { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["barbell","machine"] },
+  "Thrusters (Barbell 42.5kg)":                  { p: ["Quads","Delts"], s: ["Glutes","Cardio"], eq: ["barbell"] },
+  "Thrusters (DB)":                              { p: ["Quads","Delts"], s: ["Glutes","Cardio"], eq: ["dumbbell"] },
+  "Torso Rotations":                             { p: ["Mobility"], s: ["Obliques"], eq: ["bodyweight"] },
+  "Tricep Dips":                                 { p: ["Triceps"], s: ["Chest","Front Delts"], eq: ["bodyweight"] },
+  "Tricep Dips (chair)":                         { p: ["Triceps"], s: ["Chest","Front Delts"], eq: ["chair","bodyweight"] },
+  "Tricep Pushdown":                             { p: ["Triceps"], s: [], eq: ["cable"] },
+  "Upper Trap Stretch":                          { p: ["Mobility"], s: ["Traps"], eq: ["bodyweight"] },
+  "Walking Lunges":                              { p: ["Quads"], s: ["Glutes","Balance"], eq: ["dumbbell","bodyweight"] },
+  "Wall Sit":                                    { p: ["Quads"], s: ["Glutes"], eq: ["wall","bodyweight"] },
+  "Wall Sit (shallow angle only)":               { p: ["Quads"], s: ["Glutes"], eq: ["wall","bodyweight"] },
+  "Wall Slides":                                 { p: ["Traps"], s: ["Rotator Cuff","Delts"], eq: ["wall"] },
+  "Wall Slides (small range)":                   { p: ["Traps"], s: ["Rotator Cuff","Delts"], eq: ["wall"] },
+  "Warm-up Jog":                                 { p: ["Cardio"], s: ["Mobility"], eq: ["none"] },
+  "Weighted Pull-ups":                           { p: ["Lats"], s: ["Biceps","Core"], eq: ["pull-up bar"] },
+  "Wrist Circles":                               { p: ["Mobility"], s: ["Forearms"], eq: ["bodyweight"] }
+};
+
+function getExerciseEquipment(name) {
+  const m = EXERCISE_META[name];
+  return m ? m.eq : [];
+}
+
 function getMuscleTargets(name) {
+  const m = EXERCISE_META[name];
+  if (m) {
+    return [
+      ...m.p.map((x) => [x, "primary"]),
+      ...m.s.map((x) => [x, "secondary"]),
+    ];
+  }
+
+  // Fallback for anything not in the table above.
   const l = (name || "").toLowerCase();
+  // Specific leg rules MUST stay above the generic curl/extension/press rules,
+  // otherwise "Leg Curl" matches "curl" and "Leg Extension" matches "extension".
+  if (l.includes("leg curl")) return [["Hamstrings", "primary"]];
+  if (l.includes("leg extension")) return [["Quads", "primary"]];
+  if (l.includes("leg press")) return [["Quads", "primary"], ["Glutes", "secondary"]];
   if (l.includes("squat") || l.includes("goblet") || l.includes("hack")) return [["Quads", "primary"], ["Glutes", "secondary"], ["Hamstrings", "secondary"]];
   if (l.includes("deadlift") || l.includes("rdl")) return [["Lower Back", "primary"], ["Glutes", "primary"], ["Hamstrings", "secondary"]];
   if (l.includes("bench") || l.includes("push-up") || l.includes("pushup") || l.includes("chest") || l.includes("fly") || l.includes("incline")) return [["Chest", "primary"], ["Triceps", "secondary"], ["Shoulders", "secondary"]];
@@ -1572,15 +1885,13 @@ function getMuscleTargets(name) {
   if (l.includes("press") && (l.includes("over") || l.includes("shoulder") || l.includes("military") || l.includes("arnold"))) return [["Delts", "primary"], ["Triceps", "secondary"], ["Core", "secondary"]];
   if (l.includes("lunge") || l.includes("step")) return [["Quads", "primary"], ["Glutes", "secondary"], ["Balance", "secondary"]];
   if (l.includes("plank") || l.includes("bird") || l.includes("dead bug") || l.includes("ab wheel")) return [["Core", "primary"], ["Stabilizers", "secondary"]];
+  if (l.includes("lateral raise")) return [["Side Delts", "primary"], ["Traps", "secondary"]];
+  if (l.includes("face pull")) return [["Rear Delts", "primary"], ["Rotator Cuff", "secondary"]];
   if (l.includes("curl") || l.includes("bicep")) return [["Biceps", "primary"], ["Forearms", "secondary"]];
   if (l.includes("tricep") || l.includes("extension") || l.includes("pushdown") || l.includes("skull") || l.includes("dip")) return [["Triceps", "primary"], ["Chest", "secondary"]];
   if (l.includes("calf")) return [["Calves", "primary"]];
   if (l.includes("glute") || l.includes("hip thrust")) return [["Glutes", "primary"], ["Hamstrings", "secondary"]];
-  if (l.includes("lateral raise")) return [["Side Delts", "primary"], ["Traps", "secondary"]];
-  if (l.includes("face pull")) return [["Rear Delts", "primary"], ["Rotator Cuff", "secondary"]];
-  if (l.includes("leg press")) return [["Quads", "primary"], ["Glutes", "secondary"]];
-  if (l.includes("leg curl")) return [["Hamstrings", "primary"]];
-  if (l.includes("leg extension")) return [["Quads", "primary"]];
+  if (l.includes("stretch") || l.includes("rotation") || l.includes("circle") || l.includes("swing")) return [["Mobility", "primary"]];
   return [["Full Body", "primary"]];
 }
 
@@ -1590,6 +1901,7 @@ const getVideoForExercise = (name) => { const n = (name||"").toLowerCase(); for 
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
   const muscles = getMuscleTargets(exercise.name);
+  const equipment = getExerciseEquipment(exercise.name);
   const ytSearchUrl = getYTSearchUrl(exercise.name);
 
   return (
@@ -1617,6 +1929,11 @@ function ExerciseCard({ exercise, color, lang }) {
         <div style={{ fontSize: 12, fontWeight: 700, color: G.text, marginBottom: 7, textAlign: "center", lineHeight: 1.3 }}>
           {exercise.name}
         </div>
+        {equipment.length > 0 && (
+          <div style={{ fontSize: 9.5, color: G.muted, textAlign: "center", marginTop: -3, marginBottom: 7, letterSpacing: 0.3 }}>
+            {equipment.join(" · ")}
+          </div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5, marginBottom: 8 }}>
           {[
             { l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: color },
@@ -1657,7 +1974,14 @@ function WorkoutSystemSelector({ client, onSelect, onClose, lang }) {
             style={{ padding: 14, border: sel === ws.id ? `2px solid ${ws.color}` : `1px solid ${G.border}`, textAlign: "left", cursor: "pointer" }}>
             <div style={{ fontSize: 22, marginBottom: 6 }}>{ws.emoji}</div>
             <div style={{ fontSize: 13, fontWeight: 700, color: sel === ws.id ? ws.color : G.text }}>{isAr ? ws.nameAr : ws.name}</div>
-            <div style={{ fontSize: 11, color: G.muted, marginTop: 3 }}>{ws.days.length} {isAr ? "أيام" : "days"}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 11, color: G.muted }}>{ws.days.length} {isAr ? "أيام" : "days"}</div>
+              {LEVEL_META[ws.level] && (
+                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.5, textTransform: "uppercase", padding: "2px 6px", borderRadius: 4, color: LEVEL_META[ws.level].color, background: `${LEVEL_META[ws.level].color}1f` }}>
+                  {isAr ? LEVEL_META[ws.level].labelAr : LEVEL_META[ws.level].label}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -1669,6 +1993,19 @@ function WorkoutSystemSelector({ client, onSelect, onClose, lang }) {
             <div style={{ background: `${ws.color}12`, border: `1px solid ${ws.color}30`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: ws.color, marginBottom: 8 }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
               <div style={{ fontSize: 12, color: G.muted, marginBottom: 14 }}>{isAr ? ws.descAr : ws.desc}</div>
+              {LEVEL_META[ws.level]?.warn && (
+                <div style={{ display: "flex", gap: 9, alignItems: "flex-start", background: `${LEVEL_META[ws.level].color}14`, border: `1px solid ${LEVEL_META[ws.level].color}45`, borderRadius: 8, padding: "10px 12px", marginBottom: 14 }}>
+                  <span style={{ fontSize: 14, lineHeight: 1.3 }}>⚠️</span>
+                  <span style={{ fontSize: 11.5, lineHeight: 1.5, color: G.text }}>
+                    {isAr ? LEVEL_META[ws.level].warnAr : LEVEL_META[ws.level].warn}
+                  </span>
+                </div>
+              )}
+              {(ws.warmup || ws.cooldown) && (
+                <div style={{ fontSize: 11, color: G.muted, marginBottom: 14, fontStyle: "italic" }}>
+                  {isAr ? "يستخدم هذا النظام إحماءً وتهدئة مخصصين له." : "This system uses its own warm-up and cool-down, not the standard one."}
+                </div>
+              )}
               {ws.days.map((day, di) => (
                 <div key={di} style={{ marginBottom: 18 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "6px 10px", background: `${ws.color}18`, borderRadius: 6 }}>{day.name}</div>
@@ -2181,6 +2518,7 @@ export default function App() {
   });
   const [lf, setLf] = useState({ u: "", p: "" });
   const [lErr, setLErr] = useState("");
+  const [lBusy, setLBusy] = useState(false);
   const [aTab, setATab] = useState("dashboard");
   const [cTab, setCTab] = useState("profile");
   const [showClientPlayer, setShowClientPlayer] = useState(false);
@@ -2236,16 +2574,34 @@ export default function App() {
     return <RegPage lang={lang} setLang={setLang} onSubmit={async (data) => { await dbAddReg(data); }} />;
   }
 
-  const login = () => {
+  // Client credentials are verified on the server (/api/client-login) against a
+  // scrypt hash. They are never compared in the browser, and the clients table
+  // is no longer needed on this screen to sign someone in.
+  const login = async () => {
     setLErr("");
     if (lf.u === ADMIN.u && lf.p === ADMIN.p) { setCurUser({ name: TRAINER.name }); setScreen("admin"); return; }
-    const c = clients.find(x => x.email === lf.u && x.password === lf.p);
-    if (c) { if (c.status !== "Active") { setLErr(t.accountDisabled); return; } setCurUser(c); setScreen("client"); return; }
-    setLErr(t.invalidCredentials);
+    if (lBusy) return;
+    setLBusy(true);
+    try {
+      const r = await fetch("/api/client-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: lf.u, password: lf.p }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.client) { setLErr(d.error || t.invalidCredentials); return; }
+      try { sessionStorage.setItem("pd_token", d.token || ""); } catch {}
+      setCurUser(d.client);
+      setScreen("client");
+    } catch {
+      setLErr(t.invalidCredentials);
+    } finally {
+      setLBusy(false);
+    }
   };
   const logout = () => {
     setScreen("login"); setCurUser(null); setLf({ u: "", p: "" });
-    try { sessionStorage.removeItem("pd_screen"); sessionStorage.removeItem("pd_user"); } catch {}
+    try { sessionStorage.removeItem("pd_screen"); sessionStorage.removeItem("pd_user"); sessionStorage.removeItem("pd_token"); } catch {}
   };
   const addClient = async () => {
     if (!form.name || !form.email) return;
@@ -2332,7 +2688,7 @@ export default function App() {
             <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{t.password}</div>
             <input className="inp" type="password" placeholder="••••••••" value={lf.p} onChange={e => setLf(p => ({ ...p, p: e.target.value }))} onKeyDown={e => e.key === "Enter" && login()} />
           </div>
-          <Btn ch={t.enter} v="gold" full onClick={login} sx={{ padding: "13px", fontSize: 15, letterSpacing: 1 }} />
+          <Btn ch={lBusy ? "…" : t.enter} v="gold" full onClick={login} sx={{ padding: "13px", fontSize: 15, letterSpacing: 1, opacity: lBusy ? 0.6 : 1, pointerEvents: lBusy ? "none" : "auto" }} />
           <div style={{ textAlign: "center", marginTop: 12 }}><a href="/register" style={{ fontSize: 13, color: G.gold, textDecoration: "none" }}>{t.newMember}</a></div>
         </div>
         <div style={{ marginTop: 20, textAlign: "center" }}>
