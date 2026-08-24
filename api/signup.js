@@ -15,6 +15,16 @@ import { hashPassword } from "./_lib/password.js";
 import { missingEnv, generatePassword } from "./_lib/admin.js";
 import { assignSystem, PARQ_QUESTIONS } from "./_lib/assign.js";
 
+// How the app refers to itself when it talks to a person signing up. One
+// place, so it can change without hunting through message strings.
+// A named human is used on the health-flagged path on purpose: someone who
+// has just reported chest pain is reassured by a coach looking at it, not by
+// "an administrator".
+const SUPPORT = {
+  team: "The Physical Definition team",
+  coach: "One of our coaches",
+};
+
 const EXPERIENCE = ["beginner", "intermediate", "advanced"];
 const EQUIPMENT = ["full_gym", "home_basic", "none"];
 const LIMITATION = ["none", "knee", "back", "shoulder"];
@@ -111,8 +121,8 @@ export default async function handler(req, res) {
       status: "needs_trainer",
       message:
         intake.parqFlags.length > 0
-          ? "Thanks — a few of your health answers mean we won't start you on a plan automatically. Rafi will contact you, and please speak to your doctor first."
-          : "Thanks — because of the discomfort you mentioned, Rafi will look at this himself and build you a plan rather than the app guessing.",
+          ? `Thanks — a few of your health answers mean we won't start you on a plan automatically. ${SUPPORT.coach} will get in touch, and please speak to your doctor first.`
+          : `Thanks — because of the discomfort you mentioned, ${SUPPORT.coach} will build your plan personally rather than the app guessing at it.`,
     });
   }
 

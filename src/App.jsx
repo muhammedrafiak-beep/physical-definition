@@ -2570,7 +2570,7 @@ function RegPage({ lang, setLang }) {
       ))}
       {result.needsReview && (
         <div style={{ fontSize: 12, color: G.amber, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 9, padding: "10px 12px", margin: "12px 0", lineHeight: 1.6 }}>
-          ⚠️ {isAr ? "سيتواصل معك رافي للتأكد من أن هذه الخطة مناسبة لك." : "Rafi will check in with you to make sure this plan suits you."}
+          ⚠️ {isAr ? "سيتواصل معك أحد مدربينا للتأكد من أن هذه الخطة مناسبة لك." : "One of our coaches will check in to make sure this plan suits you."}
         </div>
       )}
       <Btn ch={isAr ? "تسجيل الدخول" : "Sign in →"} v="gold" full onClick={() => { window.location.href = "/"; }} sx={{ padding: "13px", fontSize: 14, marginTop: 10 }} />
@@ -2587,7 +2587,7 @@ function RegPage({ lang, setLang }) {
       <div style={{ fontSize: 14, color: G.muted, lineHeight: 1.8 }}>{result.message}</div>
       <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
         style={{ display: "inline-block", marginTop: 18, padding: "10px 18px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 9, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
-        💬 {isAr ? "تواصل مع رافي" : "Message Rafi"}
+        💬 {isAr ? "تواصل معنا" : "Message us"}
       </a>
     </div>
   );
@@ -2664,7 +2664,7 @@ function RegPage({ lang, setLang }) {
       </div>
       {f.limitation !== "none" && (
         <div style={{ fontSize: 12, color: G.blue, background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.28)", borderRadius: 9, padding: "10px 12px", marginTop: 12, lineHeight: 1.6 }}>
-          {isAr ? "سيبني رافي خطتك بنفسه بدلاً من أن يخمّن التطبيق." : "Rafi will build your plan himself rather than have the app guess — pain is not something software should be assessing."}
+          {isAr ? "سيبني أحد مدربينا خطتك بنفسه بدلاً من أن يخمّن التطبيق." : "One of our coaches will build your plan personally rather than have the app guess — pain is not something software should be assessing."}
         </div>
       )}
       {nav(() => setStep(1), () => setStep(3), isAr ? "التالي" : "Next →", false)}
@@ -2679,7 +2679,7 @@ function RegPage({ lang, setLang }) {
       <div style={{ fontSize: 15, fontWeight: 700, color: G.text, marginBottom: 4 }}>{isAr ? "استبيان السلامة" : "Health check"}</div>
       <div style={{ fontSize: 12, color: G.muted, marginBottom: 16, lineHeight: 1.6 }}>
         {isAr ? "أجب بصدق. إذا كانت إجابتك نعم على أي سؤال، سيتواصل معك رافي بدلاً من إعطائك خطة تلقائياً."
-              : "Answer honestly. A yes to any of these means Rafi contacts you, instead of the app handing you a plan."}
+              : "Answer honestly. A yes to any of these means a coach contacts you, instead of the app handing you a plan."}
       </div>
       <div style={{ display: "grid", gap: 2 }}>
         {PARQ.map(q => (
@@ -2997,7 +2997,7 @@ export default function App() {
                     <div style={{ width: 40, height: 40, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#080600", fontSize: 14 }}>MR</div>
                     <div><div className="sf gd" style={{ fontSize: 15, fontWeight: 700 }}>{TRAINER.name}</div><div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div></div>
                   </div>
-                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi Coach Rafi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
+                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
                 </div>
               </div>
               {(liveC.workoutPlan || liveC.nutritionPlan) && (
