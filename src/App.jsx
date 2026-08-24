@@ -876,85 +876,71 @@ const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(SUPA_URL, SUPA_KEY);
 
 // DB helpers
-const dbGetClients = async () => {
-  const { data, error } = await supabase.from("clients").select("*").order("id");
-  if (error) { console.error("getClients:", error); return null; }
-  return data.map(r => ({
-    id: r.id, name: r.name, email: r.email, password: r.password,
-    age: r.age, weight: r.weight, height: r.height, gender: r.gender,
-    goal: r.goal, pal: r.pal, phone: r.phone,
-    joinDate: r.join_date, status: r.status,
-    workoutPlan: r.workout_plan, nutritionPlan: r.nutrition_plan,
-    workoutSystemId: r.workout_system_id, mealPlanId: r.meal_plan_id,
-    progress: r.progress || [],
-    dob: r.dob || "",
-    trainer_notes: r.trainer_notes || "",
-  }));
+// ── ADMIN DATA ─────────────────────────────────────────────
+// These used to query Supabase straight from the browser with the anon key,
+// which put the whole clients table — names, emails, phone numbers — one
+// devtools window away from anyone. They now go through /api/admin-data,
+// which checks the admin session token and uses the service role key
+// server-side. No password ever comes back from these calls.
+
+const adminPost = async (payload) => {
+  const r = await fetch("/api/admin-data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken()}` },
+    body: JSON.stringify(payload),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Request failed");
+  return d;
 };
 
+const dbGetClients = async () => {
+  try { return (await adminPost({ action: "list_clients" })).clients; }
+  catch (e) { console.error("getClients:", e.message); return null; }
+};
+
+// Returns { client, password } — the password is shown once and never stored
+// in readable form, so it cannot be looked up again later.
 const dbAddClient = async (c) => {
-  const { data, error } = await supabase.from("clients").insert([{
-    name: c.name, email: c.email, password: c.password,
-    age: c.age, weight: c.weight, height: c.height, gender: c.gender,
-    goal: c.goal, pal: c.pal, phone: c.phone,
-    join_date: c.joinDate, status: c.status,
-    workout_plan: c.workoutPlan, nutrition_plan: c.nutritionPlan,
-    workout_system_id: c.workoutSystemId, meal_plan_id: c.mealPlanId,
-    progress: c.progress || [],
-      trainer_notes: c.trainer_notes || "",
-      dob: c.dob || "",
-  }]).select().single();
-  if (error) { console.error("addClient:", error); return null; }
-  return { ...c, id: data.id };
+  try { return await adminPost({ action: "create_client", client: c }); }
+  catch (e) { console.error("addClient:", e.message); return null; }
 };
 
 const dbUpdateClient = async (c) => {
-  const patch = {
-    name: c.name, email: c.email, password: c.password,
-    age: c.age, weight: c.weight, height: c.height, gender: c.gender,
-    goal: c.goal, pal: c.pal, phone: c.phone, status: c.status,
-    workout_plan: c.workoutPlan, nutrition_plan: c.nutritionPlan,
-    workout_system_id: c.workoutSystemId, meal_plan_id: c.mealPlanId,
-    progress: c.progress || [],
-      trainer_notes: c.trainer_notes || "",
-      dob: c.dob || "",
-  };
-  // If a new plaintext password is being set here, the old hash has to go with
-  // it — otherwise login keeps verifying against the hash and the newly typed
-  // password silently never works. Clearing it puts the row back on the
-  // migrate-on-login path, so it is re-hashed at the client's next sign-in.
-  if (c.resetPasswordHash) patch.password_hash = null;
-
-  const { error } = await supabase.from("clients").update(patch).eq("id", c.id);
-  if (error) console.error("updateClient:", error);
+  try { await adminPost({ action: "update_client", client: c }); }
+  catch (e) { console.error("updateClient:", e.message); }
 };
 
 const dbDeleteClient = async (id) => {
-  const { error } = await supabase.from("clients").delete().eq("id", id);
-  if (error) console.error("deleteClient:", error);
+  try { await adminPost({ action: "delete_client", id }); }
+  catch (e) { console.error("deleteClient:", e.message); }
 };
 
 const dbGetRegs = async () => {
-  const { data, error } = await supabase.from("registrations").select("*").order("id");
-  if (error) { console.error("getRegs:", error); return null; }
-  return data.map(r => ({ ...r, submittedAt: r.submitted_at }));
+  try { return (await adminPost({ action: "list_registrations" })).registrations; }
+  catch (e) { console.error("getRegs:", e.message); return null; }
 };
 
+// PUBLIC — the sign-up form at /register is filled in by people who have no
+// account yet, so this one cannot carry a token.
 const dbAddReg = async (r) => {
-  const { error } = await supabase.from("registrations").insert([{
-    name: r.name, email: r.email, phone: r.phone,
-    age: r.age ? +r.age : null, weight: r.weight ? +r.weight : null,
-    height: r.height ? +r.height : null, gender: r.gender,
-    goal: r.goal, pal: r.pal,
-  }]);
-  if (error) console.error("addReg:", error);
+  try {
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(r),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.error || "Could not send your registration");
+    }
+  } catch (e) { console.error("addReg:", e.message); throw e; }
 };
 
 const dbDeleteReg = async (id) => {
-  const { error } = await supabase.from("registrations").delete().eq("id", id);
-  if (error) console.error("deleteReg:", error);
+  try { await adminPost({ action: "delete_registration", id }); }
+  catch (e) { console.error("deleteReg:", e.message); }
 };
-
 const ld = (k, fb) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch { return fb; } };
 const sv = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
@@ -973,7 +959,8 @@ const DEMO = [
   { id: 2, name: "Priya Nair", email: "priya@email.com", password: "client456", age: 32, weight: 65, height: 162, gender: "female", goal: "Muscle Gain", pal: "light", phone: "9123456780", joinDate: "2024-02-10", status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: "2024-02-10", weight: 65 }, { date: "2024-03-10", weight: 66.5 }, { date: "2024-04-10", weight: 68 }] },
 ];
 
-const genPwd = () => { const c = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!"; return Array.from({ length: 9 }, () => c[Math.floor(Math.random() * c.length)]).join(""); };
+// Passwords are generated on the server now (api/_lib/admin.js), using
+// crypto.randomInt rather than Math.random, which is not safe for this.
 
 // ── PDF GENERATOR ──────────────────────────────────────────
 function generatePDF(client, lang) {
@@ -2569,6 +2556,10 @@ export default function App() {
   // Load data from Supabase on mount
   useEffect(() => {
     const load = async () => {
+      // Only the trainer loads the client list. A signed-in client has no
+      // business fetching everyone else's details, and after this change the
+      // server would refuse anyway — their portal runs off their own record.
+      if (!adminToken()) { setLoading(false); return; }
       setLoading(true);
       const [cls, rgs] = await Promise.all([dbGetClients(), dbGetRegs()]);
       if (cls) setClients(cls); else setClients(ld(SK, DEMO));
@@ -2598,7 +2589,10 @@ export default function App() {
   }, [clients]);
 
   if (window.location.pathname === "/register") {
-    return <RegPage lang={lang} setLang={setLang} onSubmit={async (data) => { await dbAddReg(data); }} />;
+    return <RegPage lang={lang} setLang={setLang} onSubmit={async (data) => {
+      try { await dbAddReg(data); }
+      catch (e) { window.alert(e.message || "Could not send your registration. Try again."); throw e; }
+    }} />;
   }
 
   // Client credentials are verified on the server (/api/client-login) against a
@@ -2652,22 +2646,26 @@ export default function App() {
   };
   const addClient = async () => {
     if (!form.name || !form.email) return;
-    const pwd = form.password || genPwd();
     const fullPhone = form.phone ? `${addCountry} ${form.phone}` : "";
-    const c = { ...form, phone: fullPhone, password: pwd, age: +form.age || 25, weight: +form.weight || 70, height: +form.height || 170, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +form.weight || 70 }] };
+    // No password is generated here any more. The server makes one (unless the
+    // trainer typed one), stores only its hash, and hands the plaintext back
+    // once — below is the only place it is ever readable.
+    const c = { ...form, phone: fullPhone, age: +form.age || 25, weight: +form.weight || 70, height: +form.height || 170, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +form.weight || 70 }] };
     const saved = await dbAddClient(c);
-    if (saved) setClients(p => [...p, saved]);
-    setShowAdd(false); setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true); setForm(blank); setAddCountry("+974");
+    if (!saved) { window.alert("Could not add the client. Try again."); return; }
+    setClients(p => [...p, saved.client]);
+    setShowAdd(false); setShareD({ name: saved.client.name, email: saved.client.email, password: saved.password, phone: saved.client.phone }); setShowShare(true); setForm(blank); setAddCountry("+974");
   };
   const saveEdit = async () => {
     if (!editC) return;
     const fullPhone = form.phone ? `${editCountry} ${form.phone}` : editC.phone;
-    // A typed password here is a deliberate override, so the stored hash must
-    // be cleared alongside it (see dbUpdateClient).
-    const typedNewPassword = !!form.password && form.password !== editC.password;
-    const updated = { ...editC, name: form.name || editC.name, email: form.email || editC.email, password: form.password || editC.password, age: +form.age || editC.age, weight: +form.weight || editC.weight, height: +form.height || editC.height, gender: form.gender || editC.gender, goal: form.goal || editC.goal, pal: form.pal || editC.pal, phone: fullPhone, dob: form.dob || editC.dob || "", resetPasswordHash: typedNewPassword };
+    // An empty password field means "leave it alone". A typed one is hashed
+    // server-side and replaces whatever was there.
+    const updated = { ...editC, name: form.name || editC.name, email: form.email || editC.email, password: form.password || "", age: +form.age || editC.age, weight: +form.weight || editC.weight, height: +form.height || editC.height, gender: form.gender || editC.gender, goal: form.goal || editC.goal, pal: form.pal || editC.pal, phone: fullPhone, dob: form.dob || editC.dob || "" };
     await dbUpdateClient(updated);
-    setClients(p => p.map(c => c.id === editC.id ? updated : c));
+    // Never keep a password in React state.
+    const { password: _pw, ...stored } = updated;
+    setClients(p => p.map(c => c.id === editC.id ? stored : c));
     setShowEdit(false); setEditC(null); setForm(blank);
   };
   const openEdit = (c) => {
@@ -2676,17 +2674,19 @@ export default function App() {
     const knownCode = COUNTRIES.find(cc => cc.code === parts[0]);
     setEditCountry(knownCode ? parts[0] : "+974");
     const restNumber = knownCode ? parts.slice(1).join("") : (c.phone || "").replace(/\D/g, "");
-    setForm({ name: c.name, email: c.email, password: c.password, age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber, dob: c.dob || "" });
+    // Blank, not the current password — there is nothing to prefill. Passwords
+    // are stored as hashes, so this field can only ever SET a new one.
+    setForm({ name: c.name, email: c.email, password: "", age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber, dob: c.dob || "" });
     setShowEdit(true);
   };
   const approveReg = async (reg) => {
-    const pwd = genPwd();
-    const c = { name: reg.name, email: reg.email, password: pwd, age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170, gender: reg.gender || "male", goal: reg.goal || "General Fitness", pal: reg.pal || "moderate", phone: reg.phone, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +reg.weight || 70 }] };
+    const c = { name: reg.name, email: reg.email, age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170, gender: reg.gender || "male", goal: reg.goal || "General Fitness", pal: reg.pal || "moderate", phone: reg.phone, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +reg.weight || 70 }] };
     const saved = await dbAddClient(c);
-    if (saved) setClients(p => [...p, saved]);
+    if (!saved) { window.alert("Could not approve this registration. Try again."); return; }
+    setClients(p => [...p, saved.client]);
     await dbDeleteReg(reg.id);
     setRegs(p => p.filter(r => r.id !== reg.id));
-    setShareD({ name: c.name, email: c.email, password: pwd, phone: c.phone }); setShowShare(true);
+    setShareD({ name: saved.client.name, email: saved.client.email, password: saved.password, phone: saved.client.phone }); setShowShare(true);
   };
   const toggleStatus = async (id) => {
     const c = clients.find(x => x.id === id);
