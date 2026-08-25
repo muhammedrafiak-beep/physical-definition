@@ -182,6 +182,63 @@ export default async function handler(req, res) {
         return res.status(200).json({ logs: data || [] });
       }
 
+      // ── Assessments ───────────────────────────────────────
+      //
+      // Append only. An assessment is what a person could do on a given day;
+      // overwriting one destroys the only thing that makes the number worth
+      // taking, because progression is two rows compared.
+
+      case "list_assessments": {
+        const clientId = Number(body.clientId);
+        if (!Number.isFinite(clientId)) return res.status(400).json({ error: "clientId is required" });
+        const { data, error } = await db
+          .from("assessments")
+          .select("id, assessed_at, assessed_by, levels, tests, parq_answers, notes")
+          .eq("client_id", clientId)
+          .order("assessed_at", { ascending: false });
+        if (error) throw error;
+        return res.status(200).json({ assessments: data || [] });
+      }
+
+      case "save_assessment": {
+        const clientId = Number(body.clientId);
+        if (!Number.isFinite(clientId)) return res.status(400).json({ error: "clientId is required" });
+
+        const levels = isPlainObject(body.levels) ? body.levels : {};
+        const tests  = isPlainObject(body.tests)  ? body.tests  : {};
+        const parq   = isPlainObject(body.parqAnswers) ? body.parqAnswers : null;
+
+        const { data, error } = await db.from("assessments").insert([{
+          client_id: clientId,
+          assessed_at: /^\d{4}-\d{2}-\d{2}$/.test(body.assessedAt || "")
+            ? body.assessedAt
+            : new Date().toISOString().split("T")[0],
+          // Recorded by the trainer, because this endpoint requires his token.
+          assessed_by: "trainer",
+          levels,
+          tests,
+          parq_answers: parq,
+          notes: body.notes ? String(body.notes).slice(0, 2000) : null,
+        }]).select("id, assessed_at").single();
+        if (error) throw error;
+
+        // The assessment row is the record of the day. The client row carries
+        // the CURRENT state, which is what the rest of the app reads — so a
+        // PAR-Q taken here also closes the screening gap on the client.
+        if (parq) {
+          const anyYes = Object.values(parq).some(Boolean);
+          const patch = { parq_answers: parq };
+          // parq_cleared_at means "screened and clear", not "screened". A YES
+          // must not set it, or a flagged client would look cleared.
+          if (!anyYes) patch.parq_cleared_at = new Date().toISOString();
+          else patch.needs_review = true;
+          const { error: cErr } = await db.from("clients").update(patch).eq("id", clientId);
+          if (cErr) console.error("save_assessment: client patch failed -", cErr.message);
+        }
+
+        return res.status(200).json({ assessment: data });
+      }
+
       case "delete_registration": {
         if (!body.id) return res.status(400).json({ error: "id is required" });
         const { error } = await db.from("registrations").delete().eq("id", body.id);
@@ -200,4 +257,10 @@ export default async function handler(req, res) {
 
 function safeJson(s) {
   try { return JSON.parse(s); } catch { return {}; }
+}
+
+// Arrays are objects too, and an array reaching a jsonb column that the app
+// reads back as a map is a bug that only shows up much later.
+function isPlainObject(v) {
+  return !!v && typeof v === "object" && !Array.isArray(v);
 }

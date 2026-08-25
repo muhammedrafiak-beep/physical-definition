@@ -1293,6 +1293,22 @@ const Logo = ({ s = 32 }) => (<svg width={s} height={s} viewBox="0 0 48 48"><rec
 const Av = ({ name = "?", sz = 38 }) => (<div style={{ width: sz, height: sz, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontSize: sz * 0.33, fontWeight: 800, color: "#080600", flexShrink: 0 }}>{(name || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>);
 const VV = { gold: { background: G.grad, color: "#080600", fontWeight: 700, borderRadius: 10 }, ghost: { background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", color: G.gold, borderRadius: 8 }, danger: { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", borderRadius: 8 }, green: { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: G.green, borderRadius: 8 }, amber: { background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: G.amber, borderRadius: 8 }, blue: { background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: G.blue, borderRadius: 8 } };
 const Btn = ({ ch, v = "gold", onClick, full, sx = {} }) => (<button className="btn" onClick={onClick} style={{ padding: "9px 14px", fontSize: 13, fontWeight: 600, width: full ? "100%" : undefined, ...VV[v], ...sx }}>{ch}</button>);
+// Every exercise a client's programme actually puts in front of them, so the
+// assessment can show which of them the levels just recorded allow. Warm-up
+// and cool-down are left out: those are chosen by the player at run time and
+// are supported movements anyway.
+function systemExerciseNames(systemId) {
+  const sys = WORKOUT_SYSTEMS.find(w => w.id === systemId);
+  if (!sys || !Array.isArray(sys.days)) return [];
+  const seen = [];
+  for (const day of sys.days) {
+    for (const ex of day.exercises || []) {
+      if (ex?.name && !seen.includes(ex.name)) seen.push(ex.name);
+    }
+  }
+  return seen;
+}
+
 const Ovl = ({ show, close, ch, mw = 520 }) => { if (!show) return null; return (<div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", backdropFilter: "blur(8px)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 1000, padding: 16, overflowY: "auto" }} onClick={close}><div className="card" style={{ width: "100%", maxWidth: mw, padding: 22, border: `1px solid ${G.borderHi}`, marginTop: 20, marginBottom: 20 }} onClick={e => e.stopPropagation()}>{ch}</div></div>); };
 const LangBtn = ({ lang, setLang }) => (<button className="btn" onClick={() => setLang(lang === "en" ? "ar" : "en")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 20, color: G.gold, fontSize: 12, fontWeight: 700 }}><span style={{ fontSize: 14 }}>{lang === "en" ? "🇸🇦" : "🇬🇧"}</span><span>{lang === "en" ? "العربية" : "English"}</span></button>);
 const FF = ({ label, value, onChange, type = "text", ph, opts, dir = "ltr" }) => (<div><div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>{opts ? <select className="inp" value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }}>{opts.map(o => <option key={typeof o === "object" ? o.id : o} value={typeof o === "object" ? o.id : o} style={{ background: G.surf2 }}>{typeof o === "object" ? o.label : o}</option>)}</select> : <input className="inp" type={type} placeholder={ph} value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }} />}</div>);
@@ -1704,6 +1720,7 @@ function HumanAnim({ exerciseId, accentColor, size=120 }) {
 // EXERCISE_META and getExerciseEquipment now live in ./exerciseMeta.js — the
 // workout player needs the same table to know whether an exercise is loaded.
 import { EXERCISE_META, getExerciseEquipment } from "./exerciseMeta";
+import { AssessmentForm } from "./AssessmentForm";
 
 
 function getMuscleTargets(name) {
@@ -2590,6 +2607,8 @@ export default function App() {
   const [selC, setSelC] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  // The client currently being assessed. Null when the overlay is closed.
+  const [assessC, setAssessC] = useState(null);
   const [editC, setEditC] = useState(null);
   const [notesDraft, setNotesDraft] = useState({});
   const [showShare, setShowShare] = useState(false);
@@ -2627,6 +2646,14 @@ export default function App() {
     load();
     return () => { cancelled = true; };
   }, [screen]);
+
+  // Pull the list again after something outside this file changed a client —
+  // saving an assessment writes parq_answers and needs_review, and the card
+  // should reflect that immediately rather than at the next screen change.
+  const reloadClients = useCallback(async () => {
+    const cls = await dbGetClients();
+    if (cls) setClients(cls);
+  }, []);
 
   // Persist lang
   useEffect(() => { sv(LK, lang); }, [lang]);
@@ -3153,7 +3180,12 @@ export default function App() {
                     <div style={{ flex: 1, background: G.surf2, borderRadius: 7, padding: "6px", textAlign: "center", border: `1px solid ${c.workoutPlan ? "rgba(34,197,94,0.2)" : G.border}`, fontSize: 11, color: c.workoutPlan ? G.green : G.dim }}>⚡ {c.workoutPlan ? "✓" : "—"}</div>
                     <div style={{ flex: 1, background: G.surf2, borderRadius: 7, padding: "6px", textAlign: "center", border: `1px solid ${c.nutritionPlan ? "rgba(34,197,94,0.2)" : G.border}`, fontSize: 11, color: c.nutritionPlan ? G.green : G.dim }}>🥗 {c.nutritionPlan ? "✓" : "—"}</div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5, marginBottom: 9 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 5, marginBottom: 9 }}>
+                    {/* Assessment. Sits with the other per-client actions
+                        because it belongs to the person, not to a programme —
+                        what they can do decides what they are given, not the
+                        other way round. */}
+                    <Btn ch="📏" v={c.parq_answers ? "ghost" : "amber"} onClick={() => setAssessC(c)} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="✏️" v="ghost" onClick={() => openEdit(c)} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="📋" v="ghost" onClick={() => { setSelC(c); setATab("plans"); }} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="📄" v="blue" onClick={() => generatePDF(c, lang)} sx={{ padding: "6px", fontSize: 12 }} />
@@ -3298,6 +3330,21 @@ export default function App() {
       } />
 
       {/* EDIT CLIENT */}
+      {/* Assessment. Wider than the other overlays because it is a screen, not
+          a dialog — the trainer works through it with the client present. */}
+      <Ovl show={!!assessC} close={() => setAssessC(null)} mw={560} ch={
+        assessC ? (
+          <AssessmentForm
+            client={assessC}
+            G={G}
+            parq={PARQ}
+            exercises={systemExerciseNames(assessC.workoutSystemId)}
+            onClose={() => setAssessC(null)}
+            onSaved={reloadClients}
+          />
+        ) : null
+      } />
+
       <Ovl show={showEdit} close={() => { setShowEdit(false); setEditC(null); }} mw={480} ch={
         <div dir={isAr ? "rtl" : "ltr"}>
           <div className="sf gd" style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>✏️ {t.edit}</div>
