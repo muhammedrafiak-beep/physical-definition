@@ -485,6 +485,9 @@ export function WorkoutPlayer({
 
   const handleSkipExercise = () => {
     clearTimeout(timerRef.current);
+    // Being on the rest screen means the previous set was finished. Whichever
+    // way someone leaves from there, that set is real and must be kept.
+    if (phase === "rest") saveCurrentSet();
     if (exIdx < queue.length - 1) {
       setExIdx((i) => i + 1);
       setSetIdx(1);
@@ -497,6 +500,9 @@ export function WorkoutPlayer({
 
   const handleEndEarly = () => {
     clearTimeout(timerRef.current);
+    // Same here, and this is the one that actually bites: people stop training
+    // right AFTER a hard set, with the numbers still on screen.
+    if (phase === "rest") saveCurrentSet();
     logWorkout(exIdx);
     onClose();
   };
