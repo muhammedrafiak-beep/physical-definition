@@ -1798,6 +1798,7 @@ function HumanAnim({ exerciseId, accentColor, size=120 }) {
 import { EXERCISE_META, getExerciseEquipment, getExerciseRequirement } from "./exerciseMeta";
 import { meetsRequirement, blockedBy } from "./assessment";
 import { AssessmentForm } from "./AssessmentForm";
+import { AssessmentProgress } from "./AssessmentProgress";
 
 
 function getMuscleTargets(name) {
@@ -2686,6 +2687,10 @@ export default function App() {
   const [showEdit, setShowEdit] = useState(false);
   // The client currently being assessed. Null when the overlay is closed.
   const [assessC, setAssessC] = useState(null);
+  // Which half of the assessment overlay is showing. Progress is the
+  // default: a number taken without looking at the last one is not
+  // progression, it is just a number.
+  const [assessTab, setAssessTab] = useState("progress");
   const [editC, setEditC] = useState(null);
   const [notesDraft, setNotesDraft] = useState({});
   const [showShare, setShowShare] = useState(false);
@@ -3297,7 +3302,7 @@ export default function App() {
                         because it belongs to the person, not to a programme —
                         what they can do decides what they are given, not the
                         other way round. */}
-                    <Btn ch="📏" v={c.parq_answers ? "ghost" : "amber"} onClick={() => setAssessC(c)} sx={{ padding: "6px", fontSize: 12 }} />
+                    <Btn ch="📏" v={c.parq_answers ? "ghost" : "amber"} onClick={() => { setAssessTab("progress"); setAssessC(c); }} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="✏️" v="ghost" onClick={() => openEdit(c)} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="📋" v="ghost" onClick={() => { setSelC(c); setATab("plans"); }} sx={{ padding: "6px", fontSize: 12 }} />
                     <Btn ch="📄" v="blue" onClick={() => generatePDF(c, lang)} sx={{ padding: "6px", fontSize: 12 }} />
@@ -3446,14 +3451,39 @@ export default function App() {
           a dialog — the trainer works through it with the client present. */}
       <Ovl show={!!assessC} close={() => setAssessC(null)} mw={560} ch={
         assessC ? (
-          <AssessmentForm
-            client={assessC}
-            G={G}
-            parq={PARQ}
-            exercises={systemExerciseNames(assessC)}
-            onClose={() => setAssessC(null)}
-            onSaved={reloadClients}
-          />
+          <div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+              {[["progress", "↗ Progress"], ["new", "📏 New assessment"]].map(([id, label]) => {
+                const on = assessTab === id;
+                return (
+                  <button key={id} type="button" className="btn" onClick={() => setAssessTab(id)}
+                    style={{
+                      flex: 1, padding: "9px", borderRadius: 9, fontSize: 12, fontWeight: 700,
+                      background: on ? "rgba(212,175,55,0.14)" : G.surf2,
+                      color: on ? G.gold : G.muted,
+                      border: `1px solid ${on ? G.borderHi : G.border}`,
+                    }}>{label}</button>
+                );
+              })}
+            </div>
+            {assessTab === "progress" ? (
+              <AssessmentProgress
+                client={assessC}
+                G={G}
+                exercises={systemExerciseNames(assessC)}
+                onTakeNew={() => setAssessTab("new")}
+              />
+            ) : (
+              <AssessmentForm
+                client={assessC}
+                G={G}
+                parq={PARQ}
+                exercises={systemExerciseNames(assessC)}
+                onClose={() => setAssessC(null)}
+                onSaved={reloadClients}
+              />
+            )}
+          </div>
         ) : null
       } />
 
