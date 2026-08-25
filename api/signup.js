@@ -151,7 +151,6 @@ export default async function handler(req, res) {
   const { data, error } = await db.from("clients").insert([{
     ...shared,
     password_hash,
-    password: null,
     join_date: today,
     status: "Active",
     workout_system_id: decision.systemId,

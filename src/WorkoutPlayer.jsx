@@ -196,16 +196,28 @@ function suggestFromLast(lastEntry, repsVal) {
   };
 }
 
-// "42.5kg x 12, 12, 10"
+// "42.5kg x 12, 12, 10", or "45s, 45s" for timed work.
+//
+// Decides by what is actually in the rows rather than by what the exercise is
+// supposed to be, and returns null when there is nothing worth saying. An
+// earlier version printed "Last time: 0, 0 reps" for a Wall Sit — a line that
+// is worse than no line, because it looks like a record of failing.
 function describeLast(lastEntry) {
   const sets = lastEntry?.sets || [];
   if (!sets.length) return null;
-  if (sets[0].duration_sec != null && sets[0].weight_kg == null) {
-    return sets.map(s => `${s.duration_sec}s`).join(", ");
-  }
-  const w = sets.map(s => Number(s.weight_kg)).filter(n => Number.isFinite(n) && n > 0);
-  const reps = sets.map(s => (s.reps_done == null ? "?" : s.reps_done)).join(", ");
-  return w.length ? `${Math.max(...w)}kg x ${reps}` : `${reps} reps`;
+
+  const real = (v) => {
+    const n = v === null || v === undefined ? NaN : Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const durations = sets.map(s => real(s.duration_sec)).filter(Boolean);
+  const reps      = sets.map(s => real(s.reps_done)).filter(Boolean);
+  const weights   = sets.map(s => real(s.weight_kg)).filter(Boolean);
+
+  if (!reps.length) return durations.length ? durations.map(d => `${d}s`).join(", ") : null;
+
+  const line = reps.join(", ");
+  return weights.length ? `${Math.max(...weights)}kg x ${line}` : `${line} reps`;
 }
 
 export function WorkoutPlayer({

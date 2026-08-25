@@ -70,6 +70,11 @@ function parseDataUrl(image) {
 }
 
 function num(v, lo, hi) {
+  // The explicit null check is load-bearing. Number(null) is 0, and 0 sits
+  // inside most of the ranges here — so without this, "this field does not
+  // apply" arrived as a real zero. That is how a Wall Sit ended up recorded as
+  // "0 reps" and a Glute Bridge as "0.00 kg" instead of leaving both blank.
+  if (v === null || v === undefined || v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
 }
