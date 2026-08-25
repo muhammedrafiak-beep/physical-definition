@@ -14,6 +14,7 @@ import { createClient } from "@supabase/supabase-js";
 import { hashPassword } from "./_lib/password.js";
 import { missingEnv, generatePassword } from "./_lib/admin.js";
 import { assignSystem, PARQ_QUESTIONS } from "./_lib/assign.js";
+import { rateLimit, bucket, clientIp, tooMany } from "./_lib/ratelimit.js";
 
 // How the app refers to itself when it talks to a person signing up. One
 // place, so it can change without hunting through message strings.
@@ -63,6 +64,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Name and a valid email are required" });
   }
 
+  const db = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  // This endpoint writes real rows to a real table with no human approving
+  // them, so it is the one worth guarding hardest. Checked before any work is
+  // done, so a flood costs a count query and nothing else.
+  //
+  // Signing up is a once-in-a-lifetime action for a person, so these numbers
+  // can be tight and still never inconvenience anyone real. They are per
+  // address rather than per email because the email is free to change.
+  const ip = clientIp(req);
+  const limited = await rateLimit(db, [
+    { key: bucket("signup", "ip", ip), limit: 5, windowSec: 60 * 60 },
+    // ...and a daily cap, because a slow drip stays under the hourly line
+    // forever. Five an hour is 120 a day; fifteen is the real ceiling.
+    { key: bucket("signup", "ip-day", ip), limit: 15, windowSec: 24 * 60 * 60 },
+  ]);
+  if (!limited.ok) return tooMany(res, limited.retryAfter);
+
   const age = num(body.age, 10, 100, 30);
   const intake = {
     age,
@@ -80,10 +101,6 @@ export default async function handler(req, res) {
   for (const q of PARQ_QUESTIONS) parqAnswers[q.id] = !!(body.parq && body.parq[q.id]);
 
   const decision = assignSystem(intake);
-
-  const db = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 
   // Already registered? Don't create a second account, and don't confirm to a
   // stranger that this address exists — just point them at signing in.

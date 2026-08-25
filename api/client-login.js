@@ -16,6 +16,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { hashPassword, verifyPassword, isHashed } from "./_lib/password.js";
 import { createSession } from "./_lib/session.js";
+import { checkLimit, recordHit, bucket, clientIp, tooMany } from "./_lib/ratelimit.js";
 
 // Fields the browser is allowed to receive. Anything not listed here stays
 // on the server — most importantly `password` and `password_hash`.
@@ -89,6 +90,29 @@ export default async function handler(req, res) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  // Two limits, because they stop different attacks.
+  //
+  //   by IP    — one machine working through a list of stolen email addresses.
+  //   by email — a botnet working through passwords for ONE account, which the
+  //              per-IP limit would never see.
+  //
+  // Only WRONG passwords are counted (see recordFailure below), so a whole gym
+  // of real clients signing in from one address spends nothing. That is why
+  // these numbers can be this tight without ever getting in anyone's way.
+  //
+  // The trade-off in the email limit: someone who knows a client's address can
+  // burn those 10 attempts and make that client wait 15 minutes. Annoying, and
+  // far better than leaving the account guessable.
+  const ip = clientIp(req);
+  const limitRules = [
+    { key: bucket("client-login", "ip", ip), limit: 25, windowSec: 15 * 60 },
+    { key: bucket("client-login", "email", email), limit: 10, windowSec: 15 * 60 },
+  ];
+  const recordFailure = () => recordHit(admin, limitRules);
+
+  const limited = await checkLimit(admin, limitRules);
+  if (!limited.ok) return tooMany(res, limited.retryAfter);
+
   const { data: rows, error } = await admin
     .from("clients")
     .select("*")
@@ -106,7 +130,7 @@ export default async function handler(req, res) {
 
   const row = rows && rows.length === 1 ? rows[0] : null;
   if (!row) {
-    await burnTime();
+    await Promise.all([recordFailure(), burnTime()]);
     return res.status(401).json(DENIED);
   }
 
@@ -122,7 +146,9 @@ export default async function handler(req, res) {
   }
 
   if (!ok) {
-    await burnTime();
+    // Wrong password. This is the one case worth counting, and the reason the
+    // limits above can stay tight without troubling anyone real.
+    await Promise.all([recordFailure(), burnTime()]);
     return res.status(401).json(DENIED);
   }
 
@@ -197,8 +223,9 @@ function timingSafeString(a, b) {
   return diff === 0;
 }
 
-// Flatten the timing difference between "no such user" and "wrong password",
-// and slow down trivial brute force. Not a substitute for real rate limiting.
+// Flatten the timing difference between "no such user" and "wrong password".
+// Rate limiting (above) is what actually stops brute force; this only keeps
+// the two failure cases from being distinguishable by a stopwatch.
 function burnTime() {
   return new Promise((r) => setTimeout(r, 250 + Math.floor(Math.random() * 150)));
 }
