@@ -28,7 +28,7 @@ const CLIENT_COLUMNS =
   // programme they got — and, for an approved registration, they are the only
   // surviving record that PAR-Q screening happened at all.
   "experience, days_per_week, equipment, limitation, parq_answers, " +
-  "assigned_reason, needs_review, signup_source";
+  "assigned_reason, needs_review, signup_source, capability_levels";
 
 function toClient(r) {
   return {
@@ -49,6 +49,7 @@ function toClient(r) {
     assigned_reason: r.assigned_reason || null,
     needs_review: !!r.needs_review,
     signup_source: r.signup_source || null,
+    capability_levels: r.capability_levels || null,
   };
 }
 
@@ -223,8 +224,18 @@ export default async function handler(req, res) {
         if (error) throw error;
 
         // The assessment row is the record of the day. The client row carries
-        // the CURRENT state, which is what the rest of the app reads — so a
-        // PAR-Q taken here also closes the screening gap on the client.
+        // the CURRENT state, which is what the rest of the app reads — the
+        // workout player included, so a session built after this one reflects
+        // what the person was just measured doing.
+        {
+          const patch = {};
+          if (Object.keys(levels).length) patch.capability_levels = levels;
+          if (Object.keys(patch).length) {
+            const { error: lErr } = await db.from("clients").update(patch).eq("id", clientId);
+            if (lErr) console.error("save_assessment: levels patch failed -", lErr.message);
+          }
+        }
+
         if (parq) {
           const anyYes = Object.values(parq).some(Boolean);
           const patch = { parq_answers: parq };

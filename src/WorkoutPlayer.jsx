@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { AIFormCheck } from "./AIFormCheck";
-import { usesExternalLoad } from "./exerciseMeta";
+import { usesExternalLoad, getExerciseRequirement } from "./exerciseMeta";
+import { meetsRequirement } from "./assessment";
 
 // No Supabase client here any more. This file used to insert straight into
 // workout_logs with the anon key, which is public — it ships in this bundle —
@@ -121,8 +122,23 @@ function resolveCooldown(workoutSystem) {
   return Array.isArray(c) && c.length ? c : COOLDOWN_EXERCISES;
 }
 
-function flattenWorkout(workoutSystem, dayFilter) {
+// `levels` are what this person was last measured able to do. Anything the
+// assessment says they are not ready for is left out of the session.
+//
+// THE GUARD MATTERS AS MUCH AS THE FILTER. With no assessment on file, levels
+// is null and NOTHING is filtered — the programme runs exactly as authored.
+// Gating an unmeasured person would quietly strip every standing and floor
+// movement out of their workout on the strength of a measurement nobody took.
+//
+// Warm-up and cool-down are never filtered: they are the supported, seated,
+// gentle end of the library, and they are what a person who cannot yet do the
+// main work most needs to keep doing.
+function flattenWorkout(workoutSystem, dayFilter, levels) {
   if (!workoutSystem || !workoutSystem.days) return [];
+  const gate = levels && Object.keys(levels).length
+    ? (ex) => meetsRequirement(levels, getExerciseRequirement(ex.name))
+    : () => true;
+
   const list = [];
   resolveWarmup(workoutSystem).forEach(ex => list.push({ dayName: "🔥 Warm-up", exercise: ex }));
   const days = dayFilter
@@ -130,11 +146,26 @@ function flattenWorkout(workoutSystem, dayFilter) {
     : workoutSystem.days;
   days.forEach((day) => {
     (day.exercises || []).forEach((ex) => {
-      list.push({ dayName: day.name, exercise: ex });
+      if (gate(ex)) list.push({ dayName: day.name, exercise: ex });
     });
   });
   resolveCooldown(workoutSystem).forEach(ex => list.push({ dayName: "🧘 Cool-down", exercise: ex }));
   return list;
+}
+
+// How many of the day's movements the assessment held back. Shown rather than
+// hidden: a session that is quietly three exercises shorter looks like a bug,
+// and the trainer should be able to see the gate working.
+function countHeldBack(workoutSystem, dayFilter, levels) {
+  if (!workoutSystem || !workoutSystem.days || !levels || !Object.keys(levels).length) return 0;
+  const days = dayFilter ? workoutSystem.days.filter(d => d.name === dayFilter) : workoutSystem.days;
+  let n = 0;
+  for (const day of days) {
+    for (const ex of day.exercises || []) {
+      if (!meetsRequirement(levels, getExerciseRequirement(ex.name))) n++;
+    }
+  }
+  return n;
 }
 
 // Rough MET-based calorie estimate for resistance training (~6 MET average)
@@ -227,7 +258,9 @@ export function WorkoutPlayer({
   onClose,
   accentColor = "#d4af37",
 }) {
-  const queue = useRef(flattenWorkout(workoutSystem, dayName)).current;
+  const levels = client?.capabilityLevels || client?.capability_levels || null;
+  const queue = useRef(flattenWorkout(workoutSystem, dayName, levels)).current;
+  const heldBack = useRef(countHeldBack(workoutSystem, dayName, levels)).current;
   const startTimeRef = useRef(Date.now());
 
   const [exIdx, setExIdx] = useState(0);
@@ -545,7 +578,13 @@ export function WorkoutPlayer({
           <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
           <h2 style={{ color: "#fff", margin: "0 0 8px" }}>Workout Complete!</h2>
           <p style={{ color: "#aaa", marginBottom: 4 }}>{queue.length} exercises &middot; {fmtClock(elapsed)} min</p>
-          <p style={{ color: accentColor, fontWeight: 700, marginBottom: 20 }}>≈ {calories} kcal burned</p>
+          <p style={{ color: accentColor, fontWeight: 700, marginBottom: heldBack ? 12 : 20 }}>≈ {calories} kcal burned</p>
+          {heldBack > 0 && (
+            <p style={{ color: "#888", fontSize: 12, marginBottom: 18, lineHeight: 1.6 }}>
+              {heldBack} {heldBack === 1 ? "movement is" : "movements are"} not in this session yet —
+              they open up at the next assessment.
+            </p>
+          )}
           {saving && <p style={{ color: "#666", fontSize: 12, marginBottom: 10 }}>Saving...</p>}
           <button onClick={onClose} style={closeBtnStyle(accentColor)}>Finish</button>
         </div>

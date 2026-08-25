@@ -24,6 +24,9 @@ const CLIENT_FIELDS = [
   "id", "name", "email", "age", "weight", "height", "gender", "goal", "pal",
   "phone", "join_date", "status", "workout_plan", "nutrition_plan",
   "workout_system_id", "meal_plan_id", "progress",
+  // What this person was last measured able to do. The workout player uses it
+  // to leave out movements they are not ready for.
+  "capability_levels",
 ];
 
 function toPublicClient(row) {
@@ -50,6 +53,7 @@ function toPublicClient(row) {
     workoutSystemId: out.workout_system_id,
     mealPlanId: out.meal_plan_id,
     progress: out.progress || [],
+    capabilityLevels: out.capability_levels || null,
   };
 }
 
