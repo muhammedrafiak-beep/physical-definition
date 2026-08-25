@@ -177,9 +177,16 @@ export function AssessmentForm({ client, G, parq: PARQ = [], exercises = [], onC
         <div key={t.id} style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{t.name}</div>
           <div style={{ fontSize: 10, color: G.muted, marginTop: 2 }}>{t.unit}</div>
-          <ul style={{ margin: "6px 0 8px 16px", padding: 0 }}>
+          {/* The protocol is the most important text on this screen and must
+              not be the faintest. A chair-stand count taken from the wrong
+              chair, or with hands pushing off, cannot be compared to the
+              published ranges at all — the number becomes decoration. */}
+          <ul style={{
+            margin: "7px 0 9px", padding: "8px 12px 8px 26px", listStyle: "disc",
+            background: G.surf2, borderRadius: 8, border: `1px solid ${G.border}`,
+          }}>
             {t.protocol.map((line, i) => (
-              <li key={i} style={{ fontSize: 10, color: G.dim, lineHeight: 1.6 }}>{line}</li>
+              <li key={i} style={{ fontSize: 11, color: G.text, lineHeight: 1.65, opacity: 0.85 }}>{line}</li>
             ))}
           </ul>
           <input className="inp" type="number" inputMode="decimal" placeholder="—"
