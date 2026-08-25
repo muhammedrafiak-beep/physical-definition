@@ -863,35 +863,78 @@ const apiResetClientPassword = async (clientId) => {
 };
 const SK = "pd_v7_clients"; const RK = "pd_v7_regs"; const LK = "pd_v7_lang";
 
-// Progress photos helpers
-const dbGetPhotos = async (clientId) => {
-  const { data, error } = await supabase.from("progress_photos").select("*").eq("client_id", clientId).order("taken_at", { ascending: false });
-  if (error) { console.error("getPhotos:", error); return []; }
-  return data;
-};
-const dbAddPhoto = async (clientId, file, weight, notes) => {
-  const ext = file.name.split(".").pop();
-  const path = `${clientId}/${Date.now()}.${ext}`;
-  const { error: upErr } = await supabase.storage.from("progress-photos").upload(path, file);
-  if (upErr) { console.error("upload:", upErr); return null; }
-  const { data: { publicUrl } } = supabase.storage.from("progress-photos").getPublicUrl(path);
-  const { data, error } = await supabase.from("progress_photos").insert([{ client_id: clientId, photo_url: publicUrl, weight: weight ? +weight : null, notes, taken_at: new Date().toISOString().split("T")[0] }]).select().single();
-  if (error) { console.error("addPhoto:", error); return null; }
-  return data;
-};
-const dbDeletePhoto = async (id, photoUrl) => {
-  const path = photoUrl.split("/progress-photos/")[1];
-  if (path) await supabase.storage.from("progress-photos").remove([path]);
-  await supabase.from("progress_photos").delete().eq("id", id);
+// ── CLIENT DATA ──────────────────────────────────────────
+// Progress photos and workout logs used to go straight to Supabase from here
+// with the anon key. That key is public — it is inside this very bundle — so
+// anyone could read every client's progress photos, weights and notes. They
+// now go through /api/client-data, which takes the client id from the signed
+// session token and never from anything the browser sends. A client can only
+// reach their own rows.
+const clientToken = () => {
+  try { return sessionStorage.getItem("pd_token") || ""; } catch { return ""; }
 };
 
-// ── SUPABASE ───────────────────────────────────────────────
-import { createClient } from "@supabase/supabase-js";
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPA_URL, SUPA_KEY);
+const clientPost = async (payload) => {
+  const r = await fetch("/api/client-data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken()}` },
+    body: JSON.stringify(payload),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "That didn't work. Try again.");
+  return d;
+};
 
-// DB helpers
+// Phone cameras produce 3-5 MB photos. Stored raw, a few hundred of them fill
+// the entire free storage tier, and every one has to travel over a phone
+// connection. A progress photo loses nothing visible at 1000px, and shrinks to
+// roughly 150 KB. Modern browsers apply the EXIF rotation when drawing an
+// <img>, so a photo taken sideways stays the right way up.
+const PHOTO_MAX_EDGE = 1000;
+
+const resizeImage = (file) =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, PHOTO_MAX_EDGE / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("That file could not be read as a photo."));
+    };
+    img.src = url;
+  });
+
+// No clientId argument any more, on any of these — it comes from the token.
+// Passing one would have been the bug: it is exactly the number an attacker
+// would change.
+const dbGetPhotos = async () => {
+  const d = await clientPost({ action: "photos.list" });
+  return d.photos || [];
+};
+const dbAddPhoto = async (file, weight, notes) => {
+  const image = await resizeImage(file);
+  const d = await clientPost({ action: "photos.add", image, weight, notes });
+  return d.photo;
+};
+const dbDeletePhoto = async (id) => {
+  await clientPost({ action: "photos.delete", id });
+};
+
+// No Supabase client in this file any more. Every read and write now goes
+// through an authenticated endpoint — /api/admin-data for the trainer,
+// /api/client-data for a client — so App.jsx never holds a database key at
+// all. Only the exercise photo and video URLs above are still Supabase, and
+// those are public artwork by design.
+
 // ── ADMIN DATA ─────────────────────────────────────────────
 // These used to query Supabase straight from the browser with the anon key,
 // which put the whole clients table — names, emails, phone numbers — one
@@ -2328,11 +2371,18 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
   const [newFile, setNewFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  // Uploads can now fail for reasons a person needs to hear about — an expired
+  // session, a photo that will not decode, the daily cap. Swallowing those
+  // into console.error left the screen looking like nothing had happened.
+  const [photoErr, setPhotoErr] = useState("");
   const fileRef = useCallback(node => {}, []);
 
   useEffect(() => {
     if (!client?.id) return;
-    dbGetPhotos(client.id).then(p => { setPhotos(p); setLoadingPhotos(false); });
+    dbGetPhotos()
+      .then(p => setPhotos(p))
+      .catch(e => setPhotoErr(e.message))
+      .finally(() => setLoadingPhotos(false));
   }, [client?.id]);
 
   const handleFile = (e) => {
@@ -2345,6 +2395,7 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
   const addEntry = async () => {
     if (!newWeight && !newFile) return;
     setUploading(true);
+    setPhotoErr("");
     // Update weight in progress array
     if (newWeight) {
       const entry = { date: new Date().toISOString().split("T")[0], weight: +newWeight };
@@ -2353,10 +2404,17 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
       await dbUpdateClient(updated);
       setClients(p => p.map(c => c.id === client.id ? updated : c));
     }
-    // Upload photo
+    // Upload photo. Resized in the browser and posted to /api/client-data,
+    // which stores it under this client's id — taken from the session token.
     if (newFile) {
-      const photo = await dbAddPhoto(client.id, newFile, newWeight, newNotes);
-      if (photo) setPhotos(p => [photo, ...p]);
+      try {
+        const photo = await dbAddPhoto(newFile, newWeight, newNotes);
+        if (photo) setPhotos(p => [photo, ...p]);
+      } catch (e) {
+        setPhotoErr(e.message);
+        setUploading(false);
+        return;   // keep the form open with what they typed still in it
+      }
     }
     setNewWeight(""); setNewNotes(""); setNewFile(null); setPreviewUrl(null);
     setShowAdd(false); setUploading(false);
@@ -2444,6 +2502,11 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
       {/* Progress Photos */}
       <div>
         <div style={{ fontSize: 11, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 10 }}>{isAr ? "صور التقدم" : "Progress Photos"}</div>
+        {photoErr && (
+          <div className="card" style={{ padding: "10px 12px", marginBottom: 10, border: `1px solid ${G.red}`, color: G.red, fontSize: 12 }}>
+            {photoErr}
+          </div>
+        )}
         {loadingPhotos ? (
           <div style={{ textAlign: "center", padding: 20 }}><div className="sp" style={{ margin: "0 auto" }} /></div>
         ) : photos.length === 0 ? (
@@ -2481,6 +2544,20 @@ const PARQ = [
   { id: "surgery",   en: "Have you had surgery in the last 6 months?", ar: "هل أجريت عملية جراحية خلال الأشهر الستة الماضية؟" },
   { id: "other",     en: "Is there any other reason you should not do physical activity?", ar: "هل هناك أي سبب آخر يمنعك من ممارسة النشاط البدني؟" },
 ];
+
+// Short forms of the same questions, for the trainer's screen. A registration
+// is only waiting there because the app REFUSED to hand out a programme — the
+// reason it refused is the one thing that screen must not hide.
+const PARQ_SHORT = {
+  heart: "Heart condition diagnosed",
+  chestPain: "Chest pain on exertion or at rest",
+  dizzy: "Dizziness or fainting",
+  bonejoint: "Bone or joint problem",
+  bp: "On blood pressure / heart medication",
+  pregnancy: "Pregnant or gave birth in last 6 months",
+  surgery: "Surgery in last 6 months",
+  other: "Other reason not to exercise",
+};
 
 function YesNo({ value, onChange, isAr }) {
   const opt = (v, label, color) => (
@@ -2877,14 +2954,57 @@ export default function App() {
     setForm({ name: c.name, email: c.email, password: "", age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber, dob: c.dob || "" });
     setShowEdit(true);
   };
+  const parqFlags = (reg) =>
+    Object.entries(reg?.parq_answers || {}).filter(([, yes]) => yes).map(([id]) => id);
+
   const approveReg = async (reg) => {
-    const c = { name: reg.name, email: reg.email, age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170, gender: reg.gender || "male", goal: reg.goal || "General Fitness", pal: reg.pal || "moderate", phone: reg.phone, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +reg.weight || 70 }] };
+    // Everyone in this list is here because the app declined to start them
+    // automatically. For a health flag that is not a formality — approving is
+    // saying you have spoken to this person. One deliberate click, not a
+    // reflex on a green button.
+    const flags = parqFlags(reg);
+    if (flags.length) {
+      const list = flags.map(id => `  - ${PARQ_SHORT[id] || id}`).join("\n");
+      const ok = window.confirm(
+        `${reg.name} answered YES to:\n\n${list}\n\n` +
+        `Only approve if you have spoken to them and they have medical clearance.\n\nCreate the account?`
+      );
+      if (!ok) return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const c = {
+      name: reg.name, email: reg.email,
+      age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170,
+      gender: reg.gender || "male", goal: reg.goal || "General Fitness",
+      pal: reg.pal || "moderate", phone: reg.phone,
+      joinDate: today, status: "Active",
+      workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null,
+      progress: [{ date: today, weight: +reg.weight || 70 }],
+      // Carry the intake across. Without this everything they told the form —
+      // and the record that PAR-Q screening happened at all — is thrown away
+      // the moment the registration row is deleted below.
+      experience: reg.experience, daysPerWeek: reg.days_per_week,
+      equipment: reg.equipment, limitation: reg.limitation,
+      parqAnswers: reg.parq_answers || null,
+      assignedReason: `Approved by the trainer — ${reg.blocked_reason || "no automatic programme"}`,
+      needsReview: true,
+      signupSource: "trainer_approved",
+    };
     const saved = await dbAddClient(c);
     if (!saved) { window.alert("Could not approve this registration. Try again."); return; }
     setClients(p => [...p, saved.client]);
     await dbDeleteReg(reg.id);
     setRegs(p => p.filter(r => r.id !== reg.id));
     setShareD({ name: saved.client.name, email: saved.client.email, password: saved.password, phone: saved.client.phone }); setShowShare(true);
+  };
+
+  // Reject used to only drop the row out of React state, so it came straight
+  // back on the next refresh and sat in the table for ever.
+  const rejectReg = async (reg) => {
+    if (!window.confirm(`Delete ${reg.name}'s request? This cannot be undone.`)) return;
+    await dbDeleteReg(reg.id);
+    setRegs(p => p.filter(r => r.id !== reg.id));
   };
   const toggleStatus = async (id) => {
     const c = clients.find(x => x.id === id);
@@ -3324,9 +3444,45 @@ export default function App() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 11 }}>
                     {[{ l: t.goal, v: reg.goal }, { l: t.weight, v: `${reg.weight || "—"}kg` }, { l: t.activityLevel, v: PAL.find(p => p.id === reg.pal)?.[isAr ? "ar" : "en"] || "—" }].map(x => (<div key={x.l} style={{ background: G.surf2, borderRadius: 6, padding: 7, textAlign: "center" }}><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 11, fontWeight: 700 }}>{x.v}</div></div>))}
                   </div>
+
+                  {/* WHY this person is waiting for you. Nobody lands in this
+                      list by accident: the app refused to start them, either
+                      because of a PAR-Q answer or because they reported pain.
+                      Showing the name and goal but not the reason is how a
+                      chest-pain answer gets a one-click approval. */}
+                  {reg.blocked_reason && (
+                    <div style={{ background: "rgba(239,68,68,0.08)", border: `1px solid ${G.red}`, borderRadius: 8, padding: "9px 11px", marginBottom: 11 }}>
+                      <div style={{ fontSize: 10, color: G.red, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 700, marginBottom: 5 }}>
+                        ⚠ Not started automatically
+                      </div>
+                      <div style={{ fontSize: 12, color: G.text, marginBottom: parqFlags(reg).length ? 7 : 0 }}>{reg.blocked_reason}</div>
+                      {parqFlags(reg).map(id => (
+                        <div key={id} style={{ fontSize: 11, color: G.red, marginTop: 3 }}>• {PARQ_SHORT[id] || id}</div>
+                      ))}
+                      <div style={{ fontSize: 10, color: G.muted, marginTop: 7, lineHeight: 1.5 }}>
+                        Speak to them first. Approving creates the account with no programme attached — you pick one yourself.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* What they told the intake form. It is thrown away if you
+                      do not look at it now. */}
+                  {(reg.experience || reg.equipment || reg.limitation || reg.days_per_week) && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 11 }}>
+                      {[
+                        reg.experience && `${reg.experience}`,
+                        reg.days_per_week && `${reg.days_per_week} days/week`,
+                        reg.equipment && `${String(reg.equipment).replace("_", " ")}`,
+                        reg.limitation && reg.limitation !== "none" && `${reg.limitation} discomfort`,
+                      ].filter(Boolean).map(x => (
+                        <span key={x} style={{ background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 20, padding: "4px 10px", fontSize: 10, color: G.muted }}>{x}</span>
+                      ))}
+                    </div>
+                  )}
+
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     <Btn ch={`✓ ${t.approve}`} v="green" onClick={() => approveReg(reg)} sx={{ padding: "10px", fontSize: 13, fontWeight: 700 }} />
-                    <Btn ch={`✕ ${t.reject}`} v="danger" onClick={() => setRegs(p => p.filter(r => r.id !== reg.id))} sx={{ padding: "10px", fontSize: 13, fontWeight: 700 }} />
+                    <Btn ch={`✕ ${t.reject}`} v="danger" onClick={() => rejectReg(reg)} sx={{ padding: "10px", fontSize: 13, fontWeight: 700 }} />
                   </div>
                 </div>
               ))}
