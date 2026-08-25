@@ -27,6 +27,9 @@ const CLIENT_FIELDS = [
   // What this person was last measured able to do. The workout player uses it
   // to leave out movements they are not ready for.
   "capability_levels",
+  // How many days a week they train. A system may be authored in more than one
+  // shape; without this the client would always be handed the default one.
+  "days_per_week",
 ];
 
 function toPublicClient(row) {
@@ -54,6 +57,7 @@ function toPublicClient(row) {
     mealPlanId: out.meal_plan_id,
     progress: out.progress || [],
     capabilityLevels: out.capability_levels || null,
+    days_per_week: out.days_per_week ?? null,
   };
 }
 

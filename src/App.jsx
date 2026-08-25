@@ -532,6 +532,50 @@ const WORKOUT_SYSTEMS = [
       { name: "Seated Chest Opener", sets: "1", reps: "20 sec", rest: "10s", notes: "Hands behind, gentle — opens posture" },
       { name: "Neck Side Stretch", sets: "1", reps: "20 sec each", rest: "0s", notes: "Ear toward shoulder, no pulling" },
     ],
+    // Two supervised days a week, for a client whose schedule is fixed at that
+    // — Rafi's home-PT client trains Monday and Thursday.
+    //
+    // NOT the three-day programme with a day dropped. Run that way, half of
+    // this work would reach the person once every ten days, which is under the
+    // benchmark for anyone and further under it at eighty, where muscle is
+    // lost quickly and rebuilt slowly. So each day covers the whole body, and
+    // BALANCE APPEARS ON BOTH — falls are the risk being trained against, and
+    // it is not the thing to halve.
+    //
+    // The massage and release work stays in the session. Rafi does it himself
+    // in the room; it is part of what he delivers, not homework. Only the
+    // stretching goes home, because that is safe to do alone.
+    schedules: {
+      2: [
+        {
+          name: "Day A — Power, Pull & Balance",
+          exercises: [
+            { name: "Sit-to-Stand (stand up quickly)", sets: "3", reps: "8", rest: "60s", notes: "Stand FAST, sit down slow — speed matters more than load at this age" },
+            { name: "Seated Resistance Band Row", sets: "3", reps: "10-12", rest: "60s", notes: "Light band — improves posture" },
+            { name: "Standing Wall Push-ups", sets: "2", reps: "8-10", rest: "60s", notes: "Hands on wall, gentle chest/arm work" },
+            { name: "Band Lateral Walk", sets: "2", reps: "10 steps each", rest: "60s", notes: "Loop band around ankles, hold support if needed" },
+            { name: "Single Leg Stand (hold support)", sets: "3", reps: "20 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
+            { name: "Tandem Walk (heel-to-toe)", sets: "3", reps: "10 steps", rest: "45s", notes: "Along a wall — dynamic balance, which is what actually prevents falls" },
+            { name: "Foam Roller Calf Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Slow, gentle rolling — no pain" },
+            { name: "Hand Massage / Self Massage (forearms, hands)", sets: "1", reps: "3-5 min", rest: "0s", notes: "Improves circulation, very relaxing" },
+          ]
+        },
+        {
+          name: "Day B — Squat, Press & Balance",
+          exercises: [
+            { name: "Chair-Assisted Mini Squats", sets: "3", reps: "8", rest: "60s", notes: "Hold chair back for support" },
+            { name: "Seated Band Shoulder Pull-Apart", sets: "3", reps: "10", rest: "45s", notes: "Posture + shoulder mobility" },
+            { name: "Pilates Ring Chest Press (seated)", sets: "3", reps: "10", rest: "45s", notes: "Squeeze ring between palms" },
+            { name: "Band Seated Leg Extension", sets: "2", reps: "10 each", rest: "45s", notes: "Light tension band around ankle" },
+            { name: "Single Leg Stand (hold support)", sets: "3", reps: "20 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
+            { name: "Tandem Walk (heel-to-toe)", sets: "3", reps: "10 steps", rest: "45s", notes: "Along a wall — the second dose this week, on purpose" },
+            { name: "Pilates Ring Ankle Press", sets: "2", reps: "10 each", rest: "30s", notes: "Ankle strength, seated" },
+            { name: "Foam Roller Upper Back Release", sets: "1", reps: "60 sec", rest: "0s", notes: "Gentle, supported by floor or bed" },
+            { name: "Hand-held Massager — Lower Back & Legs", sets: "1", reps: "5-8 min", rest: "0s", notes: "Use on low setting, avoid joints directly" },
+          ]
+        },
+      ],
+    },
     days: [
       {
         name: "Day 1 — Seated & Standing Mobility",
@@ -1015,7 +1059,7 @@ function generatePDF(client, lang) {
   const fat = Math.round((target * 0.25) / 9);
   const carbs = Math.round((target - protein * 4 - fat * 9) / 4);
   const bmi = (client.weight / ((client.height / 100) ** 2)).toFixed(1);
-  const workoutSystem = WORKOUT_SYSTEMS.find(w => w.id === client.workoutSystemId);
+  const workoutSystem = systemFor(client);
   const mealPlanRaw = MEALS.find(m => m.id === client.mealPlanId);
   const mealPlan = mealPlanRaw ? scaleMealPlan(mealPlanRaw, target) : null;
 
@@ -1293,12 +1337,44 @@ const Logo = ({ s = 32 }) => (<svg width={s} height={s} viewBox="0 0 48 48"><rec
 const Av = ({ name = "?", sz = 38 }) => (<div style={{ width: sz, height: sz, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontSize: sz * 0.33, fontWeight: 800, color: "#080600", flexShrink: 0 }}>{(name || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>);
 const VV = { gold: { background: G.grad, color: "#080600", fontWeight: 700, borderRadius: 10 }, ghost: { background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", color: G.gold, borderRadius: 8 }, danger: { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", borderRadius: 8 }, green: { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: G.green, borderRadius: 8 }, amber: { background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: G.amber, borderRadius: 8 }, blue: { background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: G.blue, borderRadius: 8 } };
 const Btn = ({ ch, v = "gold", onClick, full, sx = {} }) => (<button className="btn" onClick={onClick} style={{ padding: "9px 14px", fontSize: 13, fontWeight: 600, width: full ? "100%" : undefined, ...VV[v], ...sx }}>{ch}</button>);
+// A system's days for a particular client.
+//
+// A programme is authored for a number of days a week. Run at a different
+// number it stops being that programme: three days done twice a week reaches
+// some muscles once every ten days, which is under the benchmark the audit
+// already caught PPL and Full Body failing. So a system may carry variants,
+// and the client's own days_per_week picks one.
+//
+// Variants are AUTHORED, never derived. Deciding which exercise goes on which
+// day is programming, and the audit is the record of what happens when that is
+// got wrong — a heavy squat and a heavy deadlift stacked on one day. Software
+// repacking a clinical programme is not a thing this app does.
+//
+// No variant for that number → the system as written. Nothing breaks.
+function daysFor(system, daysPerWeek) {
+  const n = Number(daysPerWeek);
+  const variant = system?.schedules && Number.isFinite(n) ? system.schedules[n] : null;
+  return Array.isArray(variant) && variant.length ? variant : (system?.days || []);
+}
+
+// Resolve the system ONCE, here, with its days already matched to the client.
+// Everything downstream — the list, the day picker, the player, the PDF —
+// then reads `.days` and is simply right, with no idea any of this happened.
+function systemFor(client) {
+  const sys = WORKOUT_SYSTEMS.find(w => w.id === client?.workoutSystemId);
+  if (!sys) return null;
+  // Both spellings, because the admin list and the client login return the
+  // client in slightly different shapes and this must not depend on which.
+  const days = daysFor(sys, client?.days_per_week ?? client?.daysPerWeek);
+  return days === sys.days ? sys : { ...sys, days };
+}
+
 // Every exercise a client's programme actually puts in front of them, so the
 // assessment can show which of them the levels just recorded allow. Warm-up
 // and cool-down are left out: those are chosen by the player at run time and
 // are supported movements anyway.
-function systemExerciseNames(systemId) {
-  const sys = WORKOUT_SYSTEMS.find(w => w.id === systemId);
+function systemExerciseNames(client) {
+  const sys = systemFor(client);
   if (!sys || !Array.isArray(sys.days)) return [];
   const seen = [];
   for (const day of sys.days) {
@@ -2018,7 +2094,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
     setShowMeal(false);
   };
 
-  const ws = sc ? WORKOUT_SYSTEMS.find(w => w.id === sc.workoutSystemId) : null;
+  const ws = sc ? systemFor(sc) : null;
 
   return (
     <div className="fd" dir={isAr ? "rtl" : "ltr"}>
@@ -2949,7 +3025,7 @@ export default function App() {
               </div>
               {cTab === "workout" ? (
                 (() => {
-                  const ws = WORKOUT_SYSTEMS.find(w => w.id === liveC.workoutSystemId);
+                  const ws = systemFor(liveC);
                   if (ws) {
                     return (
                       <div>
@@ -3197,7 +3273,7 @@ export default function App() {
             </div>
             {clients.map(c => {
               const disabled = c.status === "Disabled";
-              const ws = WORKOUT_SYSTEMS.find(w => w.id === c.workoutSystemId);
+              const ws = systemFor(c);
               return (
                 <div key={c.id} className="card" style={{ padding: 13, marginBottom: 9, opacity: disabled ? 0.6 : 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 9 }}>
@@ -3374,7 +3450,7 @@ export default function App() {
             client={assessC}
             G={G}
             parq={PARQ}
-            exercises={systemExerciseNames(assessC.workoutSystemId)}
+            exercises={systemExerciseNames(assessC)}
             onClose={() => setAssessC(null)}
             onSaved={reloadClients}
           />
