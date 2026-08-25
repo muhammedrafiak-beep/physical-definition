@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { AIFormCheck } from "./AIFormCheck";
+import { usesExternalLoad } from "./exerciseMeta";
 
 // No Supabase client here any more. This file used to insert straight into
 // workout_logs with the anon key, which is public — it ships in this bundle —
@@ -241,6 +242,10 @@ export function WorkoutPlayer({
   const [lastByExercise, setLastByExercise] = useState({});
   const [entry, setEntry] = useState({ weight: "", reps: "" });
   const [progressed, setProgressed] = useState(false);
+  // Bodyweight movements hide the weight box, but some people do load them —
+  // a dumbbell on the hips for a glute bridge, ankle weights, a vest. This
+  // lets them ask for the box back, per exercise.
+  const [forceWeight, setForceWeight] = useState(false);
   const savedRef = useRef(new Set());       // "exIdx:setIdx" already written
 
   // The session row is created lazily, on the first set actually logged. Held
@@ -374,6 +379,7 @@ export function WorkoutPlayer({
   // exercise the boxes keep whatever was entered for the previous set, which
   // is almost always right and means most sets need no typing at all.
   useEffect(() => {
+    setForceWeight(false);
     const item = queue[exIdx];
     if (!item || isWarmupOrCooldown(item)) { setProgressed(false); return; }
     const s = suggestFromLast(lastByExercise[item.exercise.name], item.exercise.reps);
@@ -537,6 +543,10 @@ export function WorkoutPlayer({
 
   const loggable = !isWarmupOrCooldown(current) && !isTimedExercise(current.exercise.reps) && !!client;
   const showLogger = phase === "rest" && loggable;
+  // A weight box in front of a Glute Bridge is noise, and noise is what stops
+  // people logging at all. Show it only where there is a load to record —
+  // unless this person has said there is one.
+  const showWeight = forceWeight || usesExternalLoad(current.exercise.name);
   const lastLine = isWarmupOrCooldown(current) ? null : describeLast(lastByExercise[current.exercise.name]);
 
   const videoFile = getVideoForExercise(current.exercise.name);
@@ -625,15 +635,26 @@ export function WorkoutPlayer({
                     SET {setIdx} - ADJUST IF IT WAS DIFFERENT
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
-                    <NumField
-                      label="WEIGHT (KG)" value={entry.weight} step={2.5} accent={accentColor}
-                      onChange={(v) => setEntry(e => ({ ...e, weight: v }))}
-                    />
+                    {showWeight && (
+                      <NumField
+                        label="WEIGHT (KG)" value={entry.weight} step={2.5} accent={accentColor}
+                        onChange={(v) => setEntry(e => ({ ...e, weight: v }))}
+                      />
+                    )}
                     <NumField
                       label="REPS" value={entry.reps} step={1} accent={accentColor}
                       onChange={(v) => setEntry(e => ({ ...e, reps: v }))}
                     />
                   </div>
+                  {!showWeight && (
+                    <button
+                      type="button"
+                      onClick={() => setForceWeight(true)}
+                      style={{ display: "block", margin: "10px auto 0", background: "none", border: "none", color: "#777", fontSize: 11, cursor: "pointer", textDecoration: "underline" }}
+                    >
+                      + add weight
+                    </button>
+                  )}
                   {progressed && (
                     <div style={{ marginTop: 10, textAlign: "center", fontSize: 11, color: "#22c55e", fontWeight: 700 }}>
                       You hit the top of the range last time - this is a step up
