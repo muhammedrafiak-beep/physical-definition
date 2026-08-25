@@ -2813,7 +2813,10 @@ export default function App() {
         setScreen("admin");
         return;
       }
-      if (ar.status === 500) {
+      // 500 = misconfigured server, 429 = rate limited. Both are real answers
+      // and must be shown. Falling through to the client endpoint would tell
+      // the admin "invalid email or password", which is simply untrue.
+      if (ar.status === 500 || ar.status === 429) {
         const ad = await ar.json().catch(() => ({}));
         setLErr(ad.error || t.invalidCredentials);
         return;
