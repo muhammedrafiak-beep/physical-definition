@@ -14,7 +14,7 @@
 //   SESSION_SECRET               any long random string, e.g. `openssl rand -hex 32`
 
 import { createClient } from "@supabase/supabase-js";
-import { hashPassword, verifyPassword, isHashed } from "./_lib/password.js";
+import { verifyPassword, isHashed } from "./_lib/password.js";
 import { createSession } from "./_lib/session.js";
 import { checkLimit, recordHit, bucket, clientIp, tooMany } from "./_lib/ratelimit.js";
 
@@ -134,16 +134,13 @@ export default async function handler(req, res) {
     return res.status(401).json(DENIED);
   }
 
-  let ok = false;
-  let needsMigration = false;
-
-  if (isHashed(row.password_hash)) {
-    ok = await verifyPassword(password, row.password_hash);
-  } else if (typeof row.password === "string" && row.password.length > 0) {
-    // Legacy plaintext row: verify against it once, then upgrade it in place.
-    ok = timingSafeString(password, row.password);
-    needsMigration = ok;
-  }
+  // Hash or nothing. Every client row was migrated to a scrypt hash, verified
+  // to hold no plaintext, and the `password` column is dropped once this ships
+  // — so the legacy branch that verified against plaintext and upgraded the
+  // row in place has no rows left to serve. See the git history if you ever
+  // need to know how that migration worked; it is worth reading, because a
+  // NOT NULL constraint once made it fail silently.
+  const ok = isHashed(row.password_hash) && await verifyPassword(password, row.password_hash);
 
   if (!ok) {
     // Wrong password. This is the one case worth counting, and the reason the
@@ -156,71 +153,16 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "This account is disabled. Contact your trainer." });
   }
 
-  // migrate-on-login: hash the password, then clear the plaintext copy.
-  //
-  // These are two separate writes on purpose. Done as one update, a failure on
-  // either half rolls back BOTH — which is how a NOT NULL constraint on
-  // `password` silently left every row unhashed while logins kept succeeding.
-  // Writing the hash first means that even if clearing the plaintext fails,
-  // every future login for this client already goes through the hashed path.
-  let migrationOk = null; // null = not attempted
-  if (needsMigration) {
-    migrationOk = false;
-    try {
-      const password_hash = await hashPassword(password);
-
-      const { error: hashErr } = await admin
-        .from("clients")
-        .update({ password_hash })
-        .eq("id", row.id);
-
-      if (hashErr) {
-        console.error("client-login: could not write password_hash for client", row.id, "-", hashErr.message);
-      } else {
-        const { error: clearErr } = await admin
-          .from("clients")
-          .update({ password: null })
-          .eq("id", row.id);
-
-        if (clearErr) {
-          // Hash landed, plaintext did not clear. Not fatal, but it means the
-          // plaintext is still sitting in the table — surface it loudly.
-          console.error("client-login: password_hash written but plaintext NOT cleared for client", row.id, "-", clearErr.message);
-        } else {
-          migrationOk = true;
-        }
-      }
-    } catch (e) {
-      console.error("client-login: migration threw for client", row.id, "-", e && e.message);
-    }
-
-    if (!migrationOk) {
-      console.error(
-        "client-login: MIGRATION INCOMPLETE for client", row.id,
-        "— this client's password is still stored in plaintext. Check the clients table."
-      );
-    }
-  }
-
   const token = createSession({ sub: String(row.id), role: "client" }, SESSION_SECRET);
 
   return res.status(200).json({
     token,
     client: toPublicClient(row),
-    migrated: migrationOk === true,
   });
 }
 
 function safeJson(s) {
   try { return JSON.parse(s); } catch { return {}; }
-}
-
-// Constant-time-ish comparison for the legacy plaintext path.
-function timingSafeString(a, b) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
 }
 
 // Flatten the timing difference between "no such user" and "wrong password".

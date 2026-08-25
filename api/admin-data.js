@@ -133,7 +133,6 @@ export default async function handler(req, res) {
           ...toRow(c),
           join_date: c.joinDate,
           password_hash,
-          password: null,
         }]).select(CLIENT_COLUMNS).single();
         if (error) throw error;
 
@@ -149,7 +148,6 @@ export default async function handler(req, res) {
         // leftover plaintext, so login uses the new one immediately.
         if (c.password) {
           patch.password_hash = await hashPassword(String(c.password));
-          patch.password = null;
         }
 
         const { error } = await db.from("clients").update(patch).eq("id", c.id);
