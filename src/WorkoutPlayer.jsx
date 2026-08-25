@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { AIFormCheck } from "./AIFormCheck";
+import { usesExternalLoad } from "./exerciseMeta";
 
 // No Supabase client here any more. This file used to insert straight into
 // workout_logs with the anon key, which is public — it ships in this bundle —
@@ -9,6 +10,17 @@ import { AIFormCheck } from "./AIFormCheck";
 const clientToken = () => {
   try { return sessionStorage.getItem("pd_token") || ""; } catch { return ""; }
 };
+
+async function post(payload) {
+  const r = await fetch("/api/client-data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken()}` },
+    body: JSON.stringify(payload),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "That didn't work.");
+  return d;
+}
 
 const VIDEO_BASE = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos";
 const DEFAULT_VIDEO = "workout_all.mp4";
@@ -131,6 +143,71 @@ function estimateCalories(durationMinutes, weightKg = 75) {
   return Math.round(MET * weightKg * (durationMinutes / 60));
 }
 
+// ── Set logging ──────────────────────────────────────────────
+//
+// parseExerciseDurationSeconds above returns a number for rep-based work too
+// (it estimates time under tension). This asks the narrower question: is the
+// prescription itself a duration? A plank is logged in seconds; a bench press
+// is logged in kilos and reps, and asking for the wrong pair is how a logging
+// screen gets ignored.
+function isTimedExercise(repsVal) {
+  const s = String(repsVal || "").toLowerCase();
+  return /\d+\s*(min|sec|s)\b/.test(s) || s.includes("hold");
+}
+
+// "8-12" -> { lo: 8, hi: 12 }.  "10" -> { lo: 10, hi: 10 }.
+function parseRepRange(repsVal) {
+  const m = String(repsVal || "").match(/(\d+)\s*(?:-\s*(\d+))?/);
+  if (!m) return { lo: null, hi: null };
+  const lo = parseInt(m[1], 10);
+  const hi = m[2] ? parseInt(m[2], 10) : lo;
+  return { lo, hi };
+}
+
+// Double progression, the plainest version of it: stay at a weight until you
+// can complete every set at the TOP of the rep range, then add the smallest
+// jump and start again at the bottom.
+//
+// Deliberately conservative. It suggests a number and pre-fills the box; the
+// person lifting decides. Nothing here overrides how they actually feel.
+const WEIGHT_STEP_KG = 2.5;
+
+function suggestFromLast(lastEntry, repsVal) {
+  const sets = lastEntry?.sets || [];
+  if (!sets.length) return null;
+
+  const { lo, hi } = parseRepRange(repsVal);
+  const weights = sets.map(s => Number(s.weight_kg)).filter(n => Number.isFinite(n) && n > 0);
+  const baseWeight = weights.length ? Math.max(...weights) : 0;
+
+  const hitTop =
+    hi != null &&
+    sets.length > 1 &&
+    sets.every(s => Number.isFinite(Number(s.reps_done)) && Number(s.reps_done) >= hi);
+
+  if (hitTop && baseWeight > 0) {
+    return { weight: +(baseWeight + WEIGHT_STEP_KG).toFixed(1), reps: lo ?? hi, progressed: true };
+  }
+  const lastReps = Number(sets[sets.length - 1].reps_done);
+  return {
+    weight: baseWeight || "",
+    reps: Number.isFinite(lastReps) && lastReps > 0 ? lastReps : (lo ?? ""),
+    progressed: false,
+  };
+}
+
+// "42.5kg x 12, 12, 10"
+function describeLast(lastEntry) {
+  const sets = lastEntry?.sets || [];
+  if (!sets.length) return null;
+  if (sets[0].duration_sec != null && sets[0].weight_kg == null) {
+    return sets.map(s => `${s.duration_sec}s`).join(", ");
+  }
+  const w = sets.map(s => Number(s.weight_kg)).filter(n => Number.isFinite(n) && n > 0);
+  const reps = sets.map(s => (s.reps_done == null ? "?" : s.reps_done)).join(", ");
+  return w.length ? `${Math.max(...w)}kg x ${reps}` : `${reps} reps`;
+}
+
 export function WorkoutPlayer({
   workoutSystem,
   dayName = null,        // if provided, only play this day's exercises
@@ -157,6 +234,40 @@ export function WorkoutPlayer({
   const videoRef = useRef(null);
   const timerRef = useRef(null);
   const stopwatchRef = useRef(null);
+
+  // ── Set logging state ──────────────────────────────────────
+  // lastByExercise: what this person did the last time they trained each
+  // movement. Fetched once when the player opens so the answer is already
+  // there the moment a set ends — nobody waits for a spinner mid-workout.
+  const [lastByExercise, setLastByExercise] = useState({});
+  const [entry, setEntry] = useState({ weight: "", reps: "" });
+  const [progressed, setProgressed] = useState(false);
+  // Bodyweight movements hide the weight box, but some people do load them —
+  // a dumbbell on the hips for a glute bridge, ankle weights, a vest. This
+  // lets them ask for the box back, per exercise.
+  const [forceWeight, setForceWeight] = useState(false);
+  const savedRef = useRef(new Set());       // "exIdx:setIdx" already written
+
+  // The session row is created lazily, on the first set actually logged. Held
+  // as a PROMISE, not an id: two sets saved in quick succession would
+  // otherwise each start their own session.
+  const sessionPromise = useRef(null);
+
+  const isWarmupOrCooldown = (item) =>
+    !!item && (item.dayName === "\ud83d\udd25 Warm-up" || item.dayName === "\ud83e\uddd8 Cool-down");
+
+  useEffect(() => {
+    const names = [...new Set(
+      queue.filter(q => !isWarmupOrCooldown(q)).map(q => q.exercise.name)
+    )];
+    if (!names.length || !client) return;
+    let cancelled = false;
+    post({ action: "sets.last", exercises: names })
+      .then(d => { if (!cancelled) setLastByExercise(d.last || {}); })
+      .catch(e => console.error("last sets:", e.message));
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client?.id]);
     // Pause/play video based on phase
     useEffect(() => {
       if (!videoRef.current) return;
@@ -236,30 +347,108 @@ export function WorkoutPlayer({
       // client_id and client_name are NOT sent. The server fills both in from
       // the session token, so a workout can only ever be filed against the
       // person who is actually signed in.
-      const r = await fetch("/api/client-data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken()}` },
-        body: JSON.stringify({
+      const totals = {
+        exercises_completed: exercisesCompleted,
+        total_exercises: queue.length,
+        duration_minutes: Math.round(durationMinutes * 10) / 10,
+        estimated_calories: calories,
+      };
+
+      // If any set was logged, a session row already exists — finish it rather
+      // than writing a second one. If none was (a warm-up-only session, or
+      // every exercise skipped) there is nothing to finish, so create the row
+      // the way this always used to.
+      if (sessionPromise.current) {
+        const sessionId = await sessionPromise.current;
+        await post({ action: "logs.finish", sessionId, ...totals });
+      } else {
+        await post({
           action: "logs.add",
           day_name: dayName || "Full Workout",
           workout_system_id: workoutSystem?.id || null,
-          exercises_completed: exercisesCompleted,
-          total_exercises: queue.length,
-          duration_minutes: Math.round(durationMinutes * 10) / 10,
-          estimated_calories: calories,
-        }),
-      });
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({}));
-        console.error("Failed to log workout:", d.error || r.status);
+          ...totals,
+        });
       }
     } catch (e) {
-      console.error("Failed to log workout:", e);
+      console.error("Failed to log workout:", e.message || e);
     }
     setSaving(false);
   }, [client, dayName, workoutSystem, queue.length, elapsed]);
 
+  // Pre-fill when a NEW EXERCISE comes up — not on every set. Within an
+  // exercise the boxes keep whatever was entered for the previous set, which
+  // is almost always right and means most sets need no typing at all.
+  useEffect(() => {
+    setForceWeight(false);
+    const item = queue[exIdx];
+    if (!item || isWarmupOrCooldown(item)) { setProgressed(false); return; }
+    const s = suggestFromLast(lastByExercise[item.exercise.name], item.exercise.reps);
+    if (s) {
+      setEntry({ weight: s.weight === "" ? "" : String(s.weight), reps: s.reps === "" ? "" : String(s.reps) });
+      setProgressed(!!s.progressed);
+    } else {
+      const { lo } = parseRepRange(item.exercise.reps);
+      setEntry({ weight: "", reps: lo != null ? String(lo) : "" });
+      setProgressed(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exIdx, lastByExercise]);
+
+  // One session row per workout, created the first time a set is actually
+  // logged. Kept as a promise so simultaneous saves share it.
+  const getSessionId = useCallback(() => {
+    if (!sessionPromise.current) {
+      sessionPromise.current = post({
+        action: "logs.start",
+        day_name: dayName || "Full Workout",
+        workout_system_id: workoutSystem?.id || null,
+        total_exercises: queue.length,
+      }).then(d => d.sessionId);
+    }
+    return sessionPromise.current;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayName, workoutSystem, queue.length]);
+
+  // Called when a completed set is left behind. Fire-and-forget on purpose:
+  // a slow network must never hold up the rest timer. A failed write is logged
+  // and the workout carries on — losing one set is bad, stalling mid-workout
+  // is worse.
+  const saveCurrentSet = useCallback(() => {
+    const item = queue[exIdx];
+    if (!item || !client || isWarmupOrCooldown(item)) return;
+
+    const key = `${exIdx}:${setIdx}`;
+    if (savedRef.current.has(key)) return;
+
+    const timed = isTimedExercise(item.exercise.reps);
+    const weight = timed ? null : parseFloat(entry.weight);
+    const reps = timed ? null : parseInt(entry.reps, 10);
+
+    // Nothing worth recording for a weighted set with no numbers in it.
+    if (!timed && !Number.isFinite(weight) && !Number.isFinite(reps)) return;
+
+    savedRef.current.add(key);
+
+    getSessionId()
+      .then(sessionId => post({
+        action: "sets.add",
+        sessionId,
+        exercise_name: item.exercise.name,
+        set_no: setIdx,
+        weight_kg: Number.isFinite(weight) ? weight : null,
+        reps_done: Number.isFinite(reps) ? reps : null,
+        duration_sec: timed ? parseExerciseDurationSeconds(item.exercise.reps) : null,
+        is_warmup: false,
+      }))
+      .catch(e => {
+        savedRef.current.delete(key);
+        console.error("save set:", e.message);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exIdx, setIdx, entry, client, getSessionId]);
+
   const advanceAfterRest = useCallback(() => {
+    saveCurrentSet();
     if (setIdx < totalSets) {
       setSetIdx((s) => s + 1);
       setPhase("exercise");
@@ -274,7 +463,7 @@ export function WorkoutPlayer({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setIdx, totalSets, exIdx, queue.length, logWorkout]);
+  }, [setIdx, totalSets, exIdx, queue.length, logWorkout, saveCurrentSet]);
 
   const MOTIVATIONS = ["💪 Great Set!", "🔥 Keep Going!", "⚡ Crushing It!", "🎯 Perfect Form!", "🏆 Beast Mode!"];
   const handleSetDone = () => {
@@ -285,6 +474,9 @@ export function WorkoutPlayer({
     setTimeout(() => setMotivation(null), 1500);
     const isLastSetOfLastExercise = setIdx >= totalSets && exIdx >= queue.length - 1;
     if (isLastSetOfLastExercise) {
+      // The final set goes straight to the done screen and never passes
+      // through advanceAfterRest, so it has to be saved here or it is lost.
+      saveCurrentSet();
       logWorkout(queue.length);
       setTimeout(() => setPhase("done"), 1500);
       return;
@@ -299,6 +491,9 @@ export function WorkoutPlayer({
 
   const handleSkipExercise = () => {
     clearTimeout(timerRef.current);
+    // Being on the rest screen means the previous set was finished. Whichever
+    // way someone leaves from there, that set is real and must be kept.
+    if (phase === "rest") saveCurrentSet();
     if (exIdx < queue.length - 1) {
       setExIdx((i) => i + 1);
       setSetIdx(1);
@@ -311,6 +506,9 @@ export function WorkoutPlayer({
 
   const handleEndEarly = () => {
     clearTimeout(timerRef.current);
+    // Same here, and this is the one that actually bites: people stop training
+    // right AFTER a hard set, with the numbers still on screen.
+    if (phase === "rest") saveCurrentSet();
     logWorkout(exIdx);
     onClose();
   };
@@ -342,6 +540,14 @@ export function WorkoutPlayer({
       </div>
     );
   }
+
+  const loggable = !isWarmupOrCooldown(current) && !isTimedExercise(current.exercise.reps) && !!client;
+  const showLogger = phase === "rest" && loggable;
+  // A weight box in front of a Glute Bridge is noise, and noise is what stops
+  // people logging at all. Show it only where there is a load to record —
+  // unless this person has said there is one.
+  const showWeight = forceWeight || usesExternalLoad(current.exercise.name);
+  const lastLine = isWarmupOrCooldown(current) ? null : describeLast(lastByExercise[current.exercise.name]);
 
   const videoFile = getVideoForExercise(current.exercise.name);
   const videoSrc = videoFile ? `${VIDEO_BASE}/${videoFile}` : null;
@@ -414,9 +620,48 @@ export function WorkoutPlayer({
             </div>
           )}
           {phase === "rest" && (
-            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111" }}>
-              <div style={{ fontSize: 13, color: "#999", fontWeight: 700, letterSpacing: 2, marginBottom: 8 }}>REST</div>
-              <div style={{ fontSize: 56, color: accentColor, fontWeight: 800 }}>{restRemaining}s</div>
+            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111", padding: 16 }}>
+              <div style={{ fontSize: 13, color: "#999", fontWeight: 700, letterSpacing: 2, marginBottom: 6 }}>REST</div>
+              <div style={{ fontSize: 48, color: accentColor, fontWeight: 800, marginBottom: showLogger ? 18 : 0 }}>{restRemaining}s</div>
+
+              {/* Logging the set happens HERE, while resting — the set is
+                  fresh, the hands are free, and nothing is being interrupted.
+                  The boxes are already filled in with what the suggestion says,
+                  so the common case is to touch nothing at all: whatever is on
+                  screen is saved when the rest ends. */}
+              {showLogger && (
+                <div style={{ width: "100%", maxWidth: 320 }}>
+                  <div style={{ fontSize: 11, color: "#777", textAlign: "center", marginBottom: 8, letterSpacing: 1 }}>
+                    SET {setIdx} - ADJUST IF IT WAS DIFFERENT
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {showWeight && (
+                      <NumField
+                        label="WEIGHT (KG)" value={entry.weight} step={2.5} accent={accentColor}
+                        onChange={(v) => setEntry(e => ({ ...e, weight: v }))}
+                      />
+                    )}
+                    <NumField
+                      label="REPS" value={entry.reps} step={1} accent={accentColor}
+                      onChange={(v) => setEntry(e => ({ ...e, reps: v }))}
+                    />
+                  </div>
+                  {!showWeight && (
+                    <button
+                      type="button"
+                      onClick={() => setForceWeight(true)}
+                      style={{ display: "block", margin: "10px auto 0", background: "none", border: "none", color: "#777", fontSize: 11, cursor: "pointer", textDecoration: "underline" }}
+                    >
+                      + add weight
+                    </button>
+                  )}
+                  {progressed && (
+                    <div style={{ marginTop: 10, textAlign: "center", fontSize: 11, color: "#22c55e", fontWeight: 700 }}>
+                      You hit the top of the range last time - this is a step up
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -428,6 +673,13 @@ export function WorkoutPlayer({
             <Pill label={`Reps: ${current.exercise.reps}`} color="#22c55e" />
             <Pill label={`Rest: ${current.exercise.rest}`} color="#3b82f6" />
           </div>
+          {/* The one line that turns a workout list into training: what this
+              person actually did the last time they stood here. */}
+          {lastLine && (
+            <div style={{ marginTop: -6, marginBottom: 14, fontSize: 12, color: "#8a8a8a" }}>
+              Last time: <span style={{ color: "#ccc", fontWeight: 700 }}>{lastLine}</span>
+            </div>
+          )}
         </div>
 
         {motivation && (
@@ -451,6 +703,40 @@ export function WorkoutPlayer({
           )}
           <button onClick={handleSkipExercise} style={secondaryBtnStyle}>Skip</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// A number box with big +/- buttons either side. Thumbs, not keyboards: this
+// is used mid-workout, one-handed, often with chalk on your hands.
+function NumField({ label, value, step, accent, onChange }) {
+  const bump = (dir) => {
+    const n = parseFloat(value);
+    const base = Number.isFinite(n) ? n : 0;
+    const next = Math.max(0, +(base + dir * step).toFixed(2));
+    onChange(String(next));
+  };
+  const btn = {
+    width: 40, height: 44, flexShrink: 0, borderRadius: 8, cursor: "pointer",
+    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+    color: "#fff", fontSize: 20, fontWeight: 700, lineHeight: 1,
+  };
+  return (
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 9, color: "#777", letterSpacing: 1.2, textAlign: "center", marginBottom: 5 }}>{label}</div>
+      <div style={{ display: "flex", gap: 5 }}>
+        <button type="button" onClick={() => bump(-1)} style={btn}>-</button>
+        <input
+          type="number" inputMode="decimal" value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            flex: 1, minWidth: 0, height: 44, textAlign: "center", borderRadius: 8,
+            background: "rgba(0,0,0,0.4)", border: `1px solid ${accent}55`,
+            color: "#fff", fontSize: 19, fontWeight: 800,
+          }}
+        />
+        <button type="button" onClick={() => bump(1)} style={btn}>+</button>
       </div>
     </div>
   );

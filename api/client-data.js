@@ -73,6 +73,14 @@ function num(v, lo, hi) {
   const n = Number(v);
   return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
 }
+
+// workout_logs.id is a uuid. Validating it as a number — which an earlier
+// draft of this file did — silently rejected every real session id.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function uuid(v) {
+  const s = typeof v === "string" ? v.trim() : "";
+  return UUID_RE.test(s) ? s : null;
+}
 function clean(v, max) {
   if (v === undefined || v === null) return null;
   const s = String(v).trim();
@@ -196,6 +204,118 @@ export default async function handler(req, res) {
           .limit(50);
         if (error) throw error;
         return res.status(200).json({ logs: data || [] });
+      }
+
+      // ── Per-set logging ───────────────────────────────────
+      //
+      // This is the part of the app that gives someone a reason to open it a
+      // second time. A session row says "you trained on Tuesday"; these rows
+      // say "you pressed 42.5 kg for 10, and last month it was 37.5".
+
+      case "sets.last": {
+        // "What did I lift last time?" — asked once when the player opens, for
+        // every exercise in the workout, so the answer is already on screen
+        // when the set is over.
+        const names = (Array.isArray(body.exercises) ? body.exercises : [])
+          .filter((n) => typeof n === "string" && n.trim())
+          .map((n) => n.trim().slice(0, 120))
+          .slice(0, 80);
+        if (!names.length) return res.status(200).json({ last: {} });
+
+        const { data, error } = await db
+          .from("workout_sets")
+          .select("exercise_name, session_id, set_no, weight_kg, reps_done, duration_sec, created_at")
+          .eq("client_id", String(me.id))
+          .in("exercise_name", names)
+          .eq("is_warmup", false)
+          .order("created_at", { ascending: false })
+          .limit(600);
+        if (error) throw error;
+
+        // Keep only the most recent SESSION per exercise. Mixing sets from two
+        // different days would read as one workout that never happened.
+        const last = {};
+        for (const row of data || []) {
+          const cur = last[row.exercise_name];
+          if (!cur) { last[row.exercise_name] = { session_id: row.session_id, when: row.created_at, sets: [row] }; continue; }
+          if (cur.session_id === row.session_id) cur.sets.push(row);
+        }
+        for (const k of Object.keys(last)) {
+          last[k].sets.sort((a, b) => a.set_no - b.set_no);
+        }
+        return res.status(200).json({ last });
+      }
+
+      case "logs.start": {
+        // Created lazily, on the first set actually logged — not when the
+        // player opens. Otherwise every abandoned tap leaves a phantom session
+        // in the client's history.
+        const { data: who, error: whoErr } = await db
+          .from("clients").select("name").eq("id", me.id).maybeSingle();
+        if (whoErr) throw whoErr;
+        if (!who) return res.status(404).json({ error: "Please sign in again." });
+
+        const { data, error } = await db.from("workout_logs").insert([{
+          client_id: String(me.id),
+          client_name: who.name,
+          day_name: clean(body.day_name, 80) || "Full Workout",
+          workout_system_id: clean(body.workout_system_id, 40),
+          exercises_completed: 0,
+          total_exercises: num(body.total_exercises, 0, 500) ?? 0,
+          duration_minutes: 0,
+          estimated_calories: 0,
+        }]).select("id").single();
+        if (error) throw error;
+
+        return res.status(200).json({ sessionId: data.id });
+      }
+
+      case "sets.add": {
+        const sessionId = uuid(body.sessionId);
+        const name = clean(body.exercise_name, 120);
+        const setNo = num(body.set_no, 1, 30);
+        if (!sessionId || !name || !setNo) {
+          return res.status(400).json({ error: "sessionId, exercise_name and set_no are required" });
+        }
+
+        // The session must belong to whoever is signed in. Without this check a
+        // client could write sets into someone else's workout.
+        const { data: owns, error: ownErr } = await db
+          .from("workout_logs").select("id")
+          .eq("id", sessionId).eq("client_id", String(me.id)).maybeSingle();
+        if (ownErr) throw ownErr;
+        if (!owns) return res.status(403).json({ error: "That workout is not yours." });
+
+        // upsert, not insert: a flaky phone connection retrying the same set
+        // should correct the row, not fail on the unique constraint.
+        const { error } = await db.from("workout_sets").upsert([{
+          session_id: sessionId,
+          client_id: String(me.id),
+          exercise_name: name,
+          set_no: setNo,
+          weight_kg: num(body.weight_kg, 0, 999),
+          reps_done: num(body.reps_done, 0, 500),
+          duration_sec: num(body.duration_sec, 0, 100000),
+          is_warmup: !!body.is_warmup,
+        }], { onConflict: "session_id,exercise_name,set_no" });
+        if (error) throw error;
+
+        return res.status(200).json({ ok: true });
+      }
+
+      case "logs.finish": {
+        const sessionId = uuid(body.sessionId);
+        if (!sessionId) return res.status(400).json({ error: "sessionId is required" });
+
+        const { error } = await db.from("workout_logs").update({
+          exercises_completed: num(body.exercises_completed, 0, 500) ?? 0,
+          total_exercises: num(body.total_exercises, 0, 500) ?? 0,
+          duration_minutes: num(body.duration_minutes, 0, 600) ?? 0,
+          estimated_calories: num(body.estimated_calories, 0, 20000) ?? 0,
+        }).eq("id", sessionId).eq("client_id", String(me.id));
+        if (error) throw error;
+
+        return res.status(200).json({ ok: true });
       }
 
       case "logs.add": {
