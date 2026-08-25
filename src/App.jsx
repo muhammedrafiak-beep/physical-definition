@@ -1719,7 +1719,8 @@ function HumanAnim({ exerciseId, accentColor, size=120 }) {
 // them in one table for now avoids touching all 215 entries at once.
 // EXERCISE_META and getExerciseEquipment now live in ./exerciseMeta.js — the
 // workout player needs the same table to know whether an exercise is loaded.
-import { EXERCISE_META, getExerciseEquipment } from "./exerciseMeta";
+import { EXERCISE_META, getExerciseEquipment, getExerciseRequirement } from "./exerciseMeta";
+import { meetsRequirement, blockedBy } from "./assessment";
 import { AssessmentForm } from "./AssessmentForm";
 
 
@@ -2965,11 +2966,46 @@ export default function App() {
                               <span>📅 {day.name}</span>
                               <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} style={{ background: ws.color, color: "#000", border: "none", borderRadius: 6, padding: "5px 12px", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>▶ Start</button>
                             </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                              {day.exercises.map((ex, ei) => (
-                                <ExerciseCard key={ei} exercise={ex} color={ws.color} lang={lang} />
-                              ))}
-                            </div>
+                            {/* The list has to match the session. If the player
+                                leaves a movement out because of the assessment,
+                                showing it here would read as the app losing
+                                exercises. Held-back ones are shown separately
+                                and explained, not silently dropped — someone
+                                working towards them should be able to see them. */}
+                            {(() => {
+                              const lv = liveC.capabilityLevels || liveC.capability_levels || null;
+                              const gated = lv && Object.keys(lv).length;
+                              const ready = [], notYet = [];
+                              for (const ex of day.exercises) {
+                                if (!gated || meetsRequirement(lv, getExerciseRequirement(ex.name))) ready.push(ex);
+                                else notYet.push(ex);
+                              }
+                              return (
+                                <>
+                                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                                    {ready.map((ex, ei) => (
+                                      <ExerciseCard key={ei} exercise={ex} color={ws.color} lang={lang} />
+                                    ))}
+                                  </div>
+                                  {notYet.length > 0 && (
+                                    <div style={{ marginTop: 10, padding: "10px 12px", background: G.surf2, border: `1px dashed ${G.border}`, borderRadius: 10 }}>
+                                      <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 700 }}>
+                                        Working towards
+                                      </div>
+                                      {notYet.map((ex, ei) => {
+                                        const why = blockedBy(lv, getExerciseRequirement(ex.name))[0];
+                                        return (
+                                          <div key={ei} style={{ marginTop: 7 }}>
+                                            <div style={{ fontSize: 12, color: G.text }}>{ex.name}</div>
+                                            {why && <div style={{ fontSize: 10.5, color: G.muted, marginTop: 1 }}>{why.name} — {why.neededLabel}</div>}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         ))}
                         {showClientDayPicker && ws && (
