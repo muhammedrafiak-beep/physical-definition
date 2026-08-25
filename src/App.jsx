@@ -2545,6 +2545,20 @@ const PARQ = [
   { id: "other",     en: "Is there any other reason you should not do physical activity?", ar: "هل هناك أي سبب آخر يمنعك من ممارسة النشاط البدني؟" },
 ];
 
+// Short forms of the same questions, for the trainer's screen. A registration
+// is only waiting there because the app REFUSED to hand out a programme — the
+// reason it refused is the one thing that screen must not hide.
+const PARQ_SHORT = {
+  heart: "Heart condition diagnosed",
+  chestPain: "Chest pain on exertion or at rest",
+  dizzy: "Dizziness or fainting",
+  bonejoint: "Bone or joint problem",
+  bp: "On blood pressure / heart medication",
+  pregnancy: "Pregnant or gave birth in last 6 months",
+  surgery: "Surgery in last 6 months",
+  other: "Other reason not to exercise",
+};
+
 function YesNo({ value, onChange, isAr }) {
   const opt = (v, label, color) => (
     <button type="button" onClick={() => onChange(v)}
@@ -2940,14 +2954,57 @@ export default function App() {
     setForm({ name: c.name, email: c.email, password: "", age: String(c.age), weight: String(c.weight), height: String(c.height), gender: c.gender || "male", goal: c.goal, pal: c.pal || "moderate", phone: restNumber, dob: c.dob || "" });
     setShowEdit(true);
   };
+  const parqFlags = (reg) =>
+    Object.entries(reg?.parq_answers || {}).filter(([, yes]) => yes).map(([id]) => id);
+
   const approveReg = async (reg) => {
-    const c = { name: reg.name, email: reg.email, age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170, gender: reg.gender || "male", goal: reg.goal || "General Fitness", pal: reg.pal || "moderate", phone: reg.phone, joinDate: new Date().toISOString().split("T")[0], status: "Active", workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null, progress: [{ date: new Date().toISOString().split("T")[0], weight: +reg.weight || 70 }] };
+    // Everyone in this list is here because the app declined to start them
+    // automatically. For a health flag that is not a formality — approving is
+    // saying you have spoken to this person. One deliberate click, not a
+    // reflex on a green button.
+    const flags = parqFlags(reg);
+    if (flags.length) {
+      const list = flags.map(id => `  - ${PARQ_SHORT[id] || id}`).join("\n");
+      const ok = window.confirm(
+        `${reg.name} answered YES to:\n\n${list}\n\n` +
+        `Only approve if you have spoken to them and they have medical clearance.\n\nCreate the account?`
+      );
+      if (!ok) return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const c = {
+      name: reg.name, email: reg.email,
+      age: +reg.age || 25, weight: +reg.weight || 70, height: +reg.height || 170,
+      gender: reg.gender || "male", goal: reg.goal || "General Fitness",
+      pal: reg.pal || "moderate", phone: reg.phone,
+      joinDate: today, status: "Active",
+      workoutPlan: null, nutritionPlan: null, workoutSystemId: null, mealPlanId: null,
+      progress: [{ date: today, weight: +reg.weight || 70 }],
+      // Carry the intake across. Without this everything they told the form —
+      // and the record that PAR-Q screening happened at all — is thrown away
+      // the moment the registration row is deleted below.
+      experience: reg.experience, daysPerWeek: reg.days_per_week,
+      equipment: reg.equipment, limitation: reg.limitation,
+      parqAnswers: reg.parq_answers || null,
+      assignedReason: `Approved by the trainer — ${reg.blocked_reason || "no automatic programme"}`,
+      needsReview: true,
+      signupSource: "trainer_approved",
+    };
     const saved = await dbAddClient(c);
     if (!saved) { window.alert("Could not approve this registration. Try again."); return; }
     setClients(p => [...p, saved.client]);
     await dbDeleteReg(reg.id);
     setRegs(p => p.filter(r => r.id !== reg.id));
     setShareD({ name: saved.client.name, email: saved.client.email, password: saved.password, phone: saved.client.phone }); setShowShare(true);
+  };
+
+  // Reject used to only drop the row out of React state, so it came straight
+  // back on the next refresh and sat in the table for ever.
+  const rejectReg = async (reg) => {
+    if (!window.confirm(`Delete ${reg.name}'s request? This cannot be undone.`)) return;
+    await dbDeleteReg(reg.id);
+    setRegs(p => p.filter(r => r.id !== reg.id));
   };
   const toggleStatus = async (id) => {
     const c = clients.find(x => x.id === id);
@@ -3387,9 +3444,45 @@ export default function App() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 11 }}>
                     {[{ l: t.goal, v: reg.goal }, { l: t.weight, v: `${reg.weight || "—"}kg` }, { l: t.activityLevel, v: PAL.find(p => p.id === reg.pal)?.[isAr ? "ar" : "en"] || "—" }].map(x => (<div key={x.l} style={{ background: G.surf2, borderRadius: 6, padding: 7, textAlign: "center" }}><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 11, fontWeight: 700 }}>{x.v}</div></div>))}
                   </div>
+
+                  {/* WHY this person is waiting for you. Nobody lands in this
+                      list by accident: the app refused to start them, either
+                      because of a PAR-Q answer or because they reported pain.
+                      Showing the name and goal but not the reason is how a
+                      chest-pain answer gets a one-click approval. */}
+                  {reg.blocked_reason && (
+                    <div style={{ background: "rgba(239,68,68,0.08)", border: `1px solid ${G.red}`, borderRadius: 8, padding: "9px 11px", marginBottom: 11 }}>
+                      <div style={{ fontSize: 10, color: G.red, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 700, marginBottom: 5 }}>
+                        ⚠ Not started automatically
+                      </div>
+                      <div style={{ fontSize: 12, color: G.text, marginBottom: parqFlags(reg).length ? 7 : 0 }}>{reg.blocked_reason}</div>
+                      {parqFlags(reg).map(id => (
+                        <div key={id} style={{ fontSize: 11, color: G.red, marginTop: 3 }}>• {PARQ_SHORT[id] || id}</div>
+                      ))}
+                      <div style={{ fontSize: 10, color: G.muted, marginTop: 7, lineHeight: 1.5 }}>
+                        Speak to them first. Approving creates the account with no programme attached — you pick one yourself.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* What they told the intake form. It is thrown away if you
+                      do not look at it now. */}
+                  {(reg.experience || reg.equipment || reg.limitation || reg.days_per_week) && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 11 }}>
+                      {[
+                        reg.experience && `${reg.experience}`,
+                        reg.days_per_week && `${reg.days_per_week} days/week`,
+                        reg.equipment && `${String(reg.equipment).replace("_", " ")}`,
+                        reg.limitation && reg.limitation !== "none" && `${reg.limitation} discomfort`,
+                      ].filter(Boolean).map(x => (
+                        <span key={x} style={{ background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 20, padding: "4px 10px", fontSize: 10, color: G.muted }}>{x}</span>
+                      ))}
+                    </div>
+                  )}
+
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     <Btn ch={`✓ ${t.approve}`} v="green" onClick={() => approveReg(reg)} sx={{ padding: "10px", fontSize: 13, fontWeight: 700 }} />
-                    <Btn ch={`✕ ${t.reject}`} v="danger" onClick={() => setRegs(p => p.filter(r => r.id !== reg.id))} sx={{ padding: "10px", fontSize: 13, fontWeight: 700 }} />
+                    <Btn ch={`✕ ${t.reject}`} v="danger" onClick={() => rejectReg(reg)} sx={{ padding: "10px", fontSize: 13, fontWeight: 700 }} />
                   </div>
                 </div>
               ))}

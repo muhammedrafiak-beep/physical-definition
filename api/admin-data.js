@@ -23,7 +23,12 @@ import { requireAdmin, missingEnv, generatePassword } from "./_lib/admin.js";
 const CLIENT_COLUMNS =
   "id, name, email, age, weight, height, gender, goal, pal, phone, join_date, " +
   "status, workout_plan, nutrition_plan, workout_system_id, meal_plan_id, " +
-  "progress, dob, trainer_notes";
+  "progress, dob, trainer_notes, " +
+  // Intake answers. The trainer needs these to understand why someone got the
+  // programme they got — and, for an approved registration, they are the only
+  // surviving record that PAR-Q screening happened at all.
+  "experience, days_per_week, equipment, limitation, parq_answers, " +
+  "assigned_reason, needs_review, signup_source";
 
 function toClient(r) {
   return {
@@ -36,13 +41,21 @@ function toClient(r) {
     progress: r.progress || [],
     dob: r.dob || "",
     trainer_notes: r.trainer_notes || "",
+    experience: r.experience || null,
+    days_per_week: r.days_per_week || null,
+    equipment: r.equipment || null,
+    limitation: r.limitation || null,
+    parq_answers: r.parq_answers || null,
+    assigned_reason: r.assigned_reason || null,
+    needs_review: !!r.needs_review,
+    signup_source: r.signup_source || null,
   };
 }
 
 // Only these fields can be written from the browser. Anything else in the
 // payload — password_hash above all — is ignored.
 function toRow(c) {
-  return {
+  const row = {
     name: c.name, email: c.email,
     age: c.age, weight: c.weight, height: c.height, gender: c.gender,
     goal: c.goal, pal: c.pal, phone: c.phone,
@@ -53,6 +66,24 @@ function toRow(c) {
     dob: c.dob || "",
     trainer_notes: c.trainer_notes || "",
   };
+
+  // Intake answers ride along only when the caller actually has them —
+  // approving a registration does, editing a client's weight does not. Writing
+  // them unconditionally would wipe a client's PAR-Q record every time the
+  // trainer saved an unrelated edit.
+  const intake = {
+    experience: c.experience,
+    days_per_week: c.daysPerWeek,
+    equipment: c.equipment,
+    limitation: c.limitation,
+    parq_answers: c.parqAnswers,
+    assigned_reason: c.assignedReason,
+    needs_review: c.needsReview,
+    signup_source: c.signupSource,
+  };
+  for (const [k, v] of Object.entries(intake)) if (v !== undefined) row[k] = v;
+
+  return row;
 }
 
 export default async function handler(req, res) {
