@@ -141,6 +141,18 @@ export default async function handler(req, res) {
         });
       }
 
+      case "list_workout_logs": {
+        // The trainer's view of everyone's training. Read-only: logs are
+        // written by clients through /api/client-data, never from here.
+        const { data, error } = await db
+          .from("workout_logs")
+          .select("*")
+          .order("completed_at", { ascending: false })
+          .limit(200);
+        if (error) throw error;
+        return res.status(200).json({ logs: data || [] });
+      }
+
       case "delete_registration": {
         if (!body.id) return res.status(400).json({ error: "id is required" });
         const { error } = await db.from("registrations").delete().eq("id", body.id);

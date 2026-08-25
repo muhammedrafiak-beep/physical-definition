@@ -1,9 +1,25 @@
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPA_URL, SUPA_KEY);
+// No Supabase client here any more. Both views used to read workout_logs
+// straight from the browser with the anon key, which is public — so anyone
+// could read every client's training history. They now go through an
+// authenticated endpoint: the admin view through /api/admin-data with the
+// admin token, the client view through /api/client-data, which scopes the
+// query to whoever the session token says is signed in.
+const token = (key) => {
+  try { return sessionStorage.getItem(key) || ""; } catch { return ""; }
+};
+
+async function post(url, key, payload) {
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token(key)}` },
+    body: JSON.stringify(payload),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Could not load workout history");
+  return d;
+}
 
 function fmtDate(ts) {
   if (!ts) return "";
@@ -29,12 +45,12 @@ export function AdminWorkoutHistory({ clients = [] }) {
 
   async function fetchLogs() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("workout_logs")
-      .select("*")
-      .order("completed_at", { ascending: false })
-      .limit(200);
-    if (!error) setLogs(data || []);
+    try {
+      const d = await post("/api/admin-data", "pd_admin_token", { action: "list_workout_logs" });
+      setLogs(d.logs || []);
+    } catch (e) {
+      console.error("workout history (admin):", e.message);
+    }
     setLoading(false);
   }
 
@@ -142,13 +158,14 @@ export function ClientWorkoutHistory({ clientId, accentColor = "#d4af37" }) {
 
   async function fetchLogs() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("workout_logs")
-      .select("*")
-      .eq("client_id", String(clientId))
-      .order("completed_at", { ascending: false })
-      .limit(50);
-    if (!error) setLogs(data || []);
+    try {
+      // No clientId is sent. The server scopes this to the signed-in client,
+      // so one client cannot ask for another's history by changing a number.
+      const d = await post("/api/client-data", "pd_token", { action: "logs.list" });
+      setLogs(d.logs || []);
+    } catch (e) {
+      console.error("workout history:", e.message);
+    }
     setLoading(false);
   }
 

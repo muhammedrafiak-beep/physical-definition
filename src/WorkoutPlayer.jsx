@@ -1,11 +1,14 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { AIFormCheck } from "./AIFormCheck";
-import { createClient } from "@supabase/supabase-js";
 
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPA_URL, SUPA_KEY);
+// No Supabase client here any more. This file used to insert straight into
+// workout_logs with the anon key, which is public — it ships in this bundle —
+// so anyone could file a workout under anyone's name. Logging now goes through
+// /api/client-data, which takes the client id from the signed session token.
+const clientToken = () => {
+  try { return sessionStorage.getItem("pd_token") || ""; } catch { return ""; }
+};
 
 const VIDEO_BASE = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos";
 const DEFAULT_VIDEO = "workout_all.mp4";
@@ -230,16 +233,26 @@ export function WorkoutPlayer({
     const durationMinutes = elapsed / 60;
     const calories = estimateCalories(durationMinutes, client.weight || 75);
     try {
-      await supabase.from("workout_logs").insert([{
-        client_id: String(client.id),
-        client_name: client.name,
-        day_name: dayName || "Full Workout",
-        workout_system_id: workoutSystem?.id || null,
-        exercises_completed: exercisesCompleted,
-        total_exercises: queue.length,
-        duration_minutes: Math.round(durationMinutes * 10) / 10,
-        estimated_calories: calories,
-      }]);
+      // client_id and client_name are NOT sent. The server fills both in from
+      // the session token, so a workout can only ever be filed against the
+      // person who is actually signed in.
+      const r = await fetch("/api/client-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken()}` },
+        body: JSON.stringify({
+          action: "logs.add",
+          day_name: dayName || "Full Workout",
+          workout_system_id: workoutSystem?.id || null,
+          exercises_completed: exercisesCompleted,
+          total_exercises: queue.length,
+          duration_minutes: Math.round(durationMinutes * 10) / 10,
+          estimated_calories: calories,
+        }),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        console.error("Failed to log workout:", d.error || r.status);
+      }
     } catch (e) {
       console.error("Failed to log workout:", e);
     }

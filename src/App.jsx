@@ -863,35 +863,78 @@ const apiResetClientPassword = async (clientId) => {
 };
 const SK = "pd_v7_clients"; const RK = "pd_v7_regs"; const LK = "pd_v7_lang";
 
-// Progress photos helpers
-const dbGetPhotos = async (clientId) => {
-  const { data, error } = await supabase.from("progress_photos").select("*").eq("client_id", clientId).order("taken_at", { ascending: false });
-  if (error) { console.error("getPhotos:", error); return []; }
-  return data;
-};
-const dbAddPhoto = async (clientId, file, weight, notes) => {
-  const ext = file.name.split(".").pop();
-  const path = `${clientId}/${Date.now()}.${ext}`;
-  const { error: upErr } = await supabase.storage.from("progress-photos").upload(path, file);
-  if (upErr) { console.error("upload:", upErr); return null; }
-  const { data: { publicUrl } } = supabase.storage.from("progress-photos").getPublicUrl(path);
-  const { data, error } = await supabase.from("progress_photos").insert([{ client_id: clientId, photo_url: publicUrl, weight: weight ? +weight : null, notes, taken_at: new Date().toISOString().split("T")[0] }]).select().single();
-  if (error) { console.error("addPhoto:", error); return null; }
-  return data;
-};
-const dbDeletePhoto = async (id, photoUrl) => {
-  const path = photoUrl.split("/progress-photos/")[1];
-  if (path) await supabase.storage.from("progress-photos").remove([path]);
-  await supabase.from("progress_photos").delete().eq("id", id);
+// ── CLIENT DATA ──────────────────────────────────────────
+// Progress photos and workout logs used to go straight to Supabase from here
+// with the anon key. That key is public — it is inside this very bundle — so
+// anyone could read every client's progress photos, weights and notes. They
+// now go through /api/client-data, which takes the client id from the signed
+// session token and never from anything the browser sends. A client can only
+// reach their own rows.
+const clientToken = () => {
+  try { return sessionStorage.getItem("pd_token") || ""; } catch { return ""; }
 };
 
-// ── SUPABASE ───────────────────────────────────────────────
-import { createClient } from "@supabase/supabase-js";
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPA_URL, SUPA_KEY);
+const clientPost = async (payload) => {
+  const r = await fetch("/api/client-data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken()}` },
+    body: JSON.stringify(payload),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "That didn't work. Try again.");
+  return d;
+};
 
-// DB helpers
+// Phone cameras produce 3-5 MB photos. Stored raw, a few hundred of them fill
+// the entire free storage tier, and every one has to travel over a phone
+// connection. A progress photo loses nothing visible at 1000px, and shrinks to
+// roughly 150 KB. Modern browsers apply the EXIF rotation when drawing an
+// <img>, so a photo taken sideways stays the right way up.
+const PHOTO_MAX_EDGE = 1000;
+
+const resizeImage = (file) =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, PHOTO_MAX_EDGE / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("That file could not be read as a photo."));
+    };
+    img.src = url;
+  });
+
+// No clientId argument any more, on any of these — it comes from the token.
+// Passing one would have been the bug: it is exactly the number an attacker
+// would change.
+const dbGetPhotos = async () => {
+  const d = await clientPost({ action: "photos.list" });
+  return d.photos || [];
+};
+const dbAddPhoto = async (file, weight, notes) => {
+  const image = await resizeImage(file);
+  const d = await clientPost({ action: "photos.add", image, weight, notes });
+  return d.photo;
+};
+const dbDeletePhoto = async (id) => {
+  await clientPost({ action: "photos.delete", id });
+};
+
+// No Supabase client in this file any more. Every read and write now goes
+// through an authenticated endpoint — /api/admin-data for the trainer,
+// /api/client-data for a client — so App.jsx never holds a database key at
+// all. Only the exercise photo and video URLs above are still Supabase, and
+// those are public artwork by design.
+
 // ── ADMIN DATA ─────────────────────────────────────────────
 // These used to query Supabase straight from the browser with the anon key,
 // which put the whole clients table — names, emails, phone numbers — one
@@ -2328,11 +2371,18 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
   const [newFile, setNewFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  // Uploads can now fail for reasons a person needs to hear about — an expired
+  // session, a photo that will not decode, the daily cap. Swallowing those
+  // into console.error left the screen looking like nothing had happened.
+  const [photoErr, setPhotoErr] = useState("");
   const fileRef = useCallback(node => {}, []);
 
   useEffect(() => {
     if (!client?.id) return;
-    dbGetPhotos(client.id).then(p => { setPhotos(p); setLoadingPhotos(false); });
+    dbGetPhotos()
+      .then(p => setPhotos(p))
+      .catch(e => setPhotoErr(e.message))
+      .finally(() => setLoadingPhotos(false));
   }, [client?.id]);
 
   const handleFile = (e) => {
@@ -2345,6 +2395,7 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
   const addEntry = async () => {
     if (!newWeight && !newFile) return;
     setUploading(true);
+    setPhotoErr("");
     // Update weight in progress array
     if (newWeight) {
       const entry = { date: new Date().toISOString().split("T")[0], weight: +newWeight };
@@ -2353,10 +2404,17 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
       await dbUpdateClient(updated);
       setClients(p => p.map(c => c.id === client.id ? updated : c));
     }
-    // Upload photo
+    // Upload photo. Resized in the browser and posted to /api/client-data,
+    // which stores it under this client's id — taken from the session token.
     if (newFile) {
-      const photo = await dbAddPhoto(client.id, newFile, newWeight, newNotes);
-      if (photo) setPhotos(p => [photo, ...p]);
+      try {
+        const photo = await dbAddPhoto(newFile, newWeight, newNotes);
+        if (photo) setPhotos(p => [photo, ...p]);
+      } catch (e) {
+        setPhotoErr(e.message);
+        setUploading(false);
+        return;   // keep the form open with what they typed still in it
+      }
     }
     setNewWeight(""); setNewNotes(""); setNewFile(null); setPreviewUrl(null);
     setShowAdd(false); setUploading(false);
@@ -2444,6 +2502,11 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
       {/* Progress Photos */}
       <div>
         <div style={{ fontSize: 11, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 10 }}>{isAr ? "صور التقدم" : "Progress Photos"}</div>
+        {photoErr && (
+          <div className="card" style={{ padding: "10px 12px", marginBottom: 10, border: `1px solid ${G.red}`, color: G.red, fontSize: 12 }}>
+            {photoErr}
+          </div>
+        )}
         {loadingPhotos ? (
           <div style={{ textAlign: "center", padding: 20 }}><div className="sp" style={{ margin: "0 auto" }} /></div>
         ) : photos.length === 0 ? (
