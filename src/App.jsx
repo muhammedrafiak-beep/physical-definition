@@ -1330,6 +1330,22 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
   html{font-size:15px;}
   .inp{padding:11px 12px;}
 }
+
+/* ── PAR-Q answer buttons ────────────────────────────────────
+   Measured at 390px: these were 41x26 and 46x26, five pixels apart —
+   the smallest buttons in the app, and the ones that record whether
+   somebody gets chest pain. Everything else here can be mis-tapped and
+   corrected on the next screen; a health answer is written down and
+   believed. On a phone they now take the full width, one above the
+   other, at 48px. */
+.parq-row{display:flex;gap:12px;align-items:flex-start;}
+.parq-btns{display:flex;gap:8px;flex-shrink:0;}
+.parq-btn{min-width:62px;min-height:44px;border-radius:9px;font-size:13px;font-weight:700;}
+@media(max-width:480px){
+  .parq-row{flex-direction:column;align-items:stretch;}
+  .parq-btns{width:100%;}
+  .parq-btn{flex:1;min-height:48px;font-size:14px;}
+}
 `;
 
 
@@ -1386,7 +1402,7 @@ function systemExerciseNames(client) {
 }
 
 const Ovl = ({ show, close, ch, mw = 520 }) => { if (!show) return null; return (<div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", backdropFilter: "blur(8px)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 1000, padding: 16, overflowY: "auto" }} onClick={close}><div className="card" style={{ width: "100%", maxWidth: mw, padding: 22, border: `1px solid ${G.borderHi}`, marginTop: 20, marginBottom: 20 }} onClick={e => e.stopPropagation()}>{ch}</div></div>); };
-const LangBtn = ({ lang, setLang }) => (<button className="btn" onClick={() => setLang(lang === "en" ? "ar" : "en")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 20, color: G.gold, fontSize: 12, fontWeight: 700 }}><span style={{ fontSize: 14 }}>{lang === "en" ? "🇸🇦" : "🇬🇧"}</span><span>{lang === "en" ? "العربية" : "English"}</span></button>);
+const LangBtn = ({ lang, setLang }) => (<button className="btn" onClick={() => setLang(lang === "en" ? "ar" : "en")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 13px", minHeight: 40, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 20, color: G.gold, fontSize: 12, fontWeight: 700 }}><span style={{ fontSize: 14 }}>{lang === "en" ? "🇸🇦" : "🇬🇧"}</span><span>{lang === "en" ? "العربية" : "English"}</span></button>);
 const FF = ({ label, value, onChange, type = "text", ph, opts, dir = "ltr" }) => (<div><div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>{opts ? <select className="inp" value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }}>{opts.map(o => <option key={typeof o === "object" ? o.id : o} value={typeof o === "object" ? o.id : o} style={{ background: G.surf2 }}>{typeof o === "object" ? o.label : o}</option>)}</select> : <input className="inp" type={type} placeholder={ph} value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }} />}</div>);
 
 const PhoneField = ({ label, country, setCountry, phone, setPhone }) => (
@@ -3016,7 +3032,7 @@ export default function App() {
         <style>{CSS}</style>
         <div style={{ background: G.surf, borderBottom: `1px solid ${G.border}`, padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 54, position: "sticky", top: 0, zIndex: 100 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}><Logo s={26} /><div className="sf gd" style={{ fontSize: 13, fontWeight: 700 }}>{t.appName}</div></div>
-          <div style={{ display: "flex", gap: 7 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="danger" onClick={logout} sx={{ padding: "5px 12px", fontSize: 12 }} /></div>
+          <div style={{ display: "flex", gap: 7 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="danger" onClick={logout} sx={{ padding: "9px 13px", fontSize: 12, minHeight: 40 }} /></div>
         </div>
         <div style={{ padding: 14, maxWidth: 600, margin: "0 auto", paddingBottom: 80 }}>
           {cTab === "profile" && (
@@ -3270,7 +3286,7 @@ export default function App() {
       <style>{CSS}</style>
       <div style={{ background: G.surf, borderBottom: `1px solid ${G.border}`, padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 54, position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}><Logo s={26} /><div className="sf gd" style={{ fontSize: 13, fontWeight: 700 }}>{t.appName}</div></div>
-        <div style={{ display: "flex", gap: 7 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="danger" onClick={logout} sx={{ padding: "5px 12px", fontSize: 12 }} /></div>
+        <div style={{ display: "flex", gap: 7 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="danger" onClick={logout} sx={{ padding: "9px 13px", fontSize: 12, minHeight: 40 }} /></div>
       </div>
       <div style={{ background: G.surf, borderBottom: `1px solid ${G.border}`, display: "flex", overflowX: "auto" }}>
         {NAV.map(n => (<button key={n.id} className="btn" onClick={() => setATab(n.id)} style={{ padding: "11px 12px", background: "none", fontSize: 12, fontWeight: 600, color: aTab === n.id ? G.gold : G.muted, borderBottom: aTab === n.id ? `2px solid ${G.gold}` : "2px solid transparent", whiteSpace: "nowrap" }}>{n.i} {n.l}</button>))}
@@ -3309,7 +3325,7 @@ export default function App() {
           <div className="fd">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
               <div><div className="sf gd" style={{ fontSize: 22, fontWeight: 700 }}>{t.clients}</div><div style={{ fontSize: 11, color: G.muted, marginTop: 2 }}>{clients.length} · {activeCount} {t.active}</div></div>
-              <Btn ch={t.addClient} v="gold" onClick={() => { setForm(blank); setShowAdd(true); }} sx={{ padding: "8px 16px", fontSize: 13 }} />
+              <Btn ch={t.addClient} v="gold" onClick={() => { setForm(blank); setShowAdd(true); }} sx={{ padding: "10px 18px", fontSize: 13, minHeight: 42 }} />
             </div>
             {clients.map(c => {
               const disabled = c.status === "Disabled";
@@ -3337,12 +3353,12 @@ export default function App() {
                         because it belongs to the person, not to a programme —
                         what they can do decides what they are given, not the
                         other way round. */}
-                    <Btn ch="📏" v={c.parq_answers ? "ghost" : "amber"} onClick={() => { setAssessTab("progress"); setAssessC(c); }} sx={{ padding: "6px", fontSize: 12 }} />
-                    <Btn ch="✏️" v="ghost" onClick={() => openEdit(c)} sx={{ padding: "6px", fontSize: 12 }} />
-                    <Btn ch="📋" v="ghost" onClick={() => { setSelC(c); setATab("plans"); }} sx={{ padding: "6px", fontSize: 12 }} />
-                    <Btn ch="📄" v="blue" onClick={() => generatePDF(c, lang)} sx={{ padding: "6px", fontSize: 12 }} />
-                    <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "6px", fontSize: 12 }} />
-                    <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) deleteClient(c.id); }} sx={{ padding: "6px", fontSize: 12 }} />
+                    <Btn ch="📏" v={c.parq_answers ? "ghost" : "amber"} onClick={() => { setAssessTab("progress"); setAssessC(c); }} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
+                    <Btn ch="✏️" v="ghost" onClick={() => openEdit(c)} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
+                    <Btn ch="📋" v="ghost" onClick={() => { setSelC(c); setATab("plans"); }} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
+                    <Btn ch="📄" v="blue" onClick={() => generatePDF(c, lang)} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
+                    <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
+                    <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) deleteClient(c.id); }} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
                   </div>
                     <div style={{ marginTop:10,padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,border:`1px solid ${G.border}` }}>
                       <div style={{ fontSize:11,color:G.muted,marginBottom:5,fontWeight:600 }}>📝 {isAr?"ملاحظات المدرب":"Trainer Notes"}</div>

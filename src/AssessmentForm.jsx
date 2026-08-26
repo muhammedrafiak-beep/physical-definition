@@ -184,14 +184,17 @@ export function AssessmentForm({
       {PARQ.map(q => {
         const v = parqAns[q.id];
         return (
-          <div key={q.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "9px 0", borderBottom: `1px solid ${G.border}` }}>
-            <div style={{ flex: 1, fontSize: 12, lineHeight: 1.5, color: v === true ? G.red : G.text }}>{q.en}</div>
-            <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
+          // Full-width answers on a phone, stacked under the question. These
+          // used to be 41x26 with five pixels between them — the smallest
+          // buttons in the app, recording the answers that decide whether
+          // somebody trains at all. See the .parq-* rules in App.jsx.
+          <div key={q.id} className="parq-row" style={{ padding: "11px 0", borderBottom: `1px solid ${G.border}` }}>
+            <div style={{ flex: 1, fontSize: 12.5, lineHeight: 1.55, color: v === true ? G.red : G.text }}>{q.en}</div>
+            <div className="parq-btns">
               {[["No", false], ["Yes", true]].map(([label, val]) => (
-                <button key={label} type="button" className="btn"
+                <button key={label} type="button" className="btn parq-btn"
                   onClick={() => setParqAns(p => ({ ...p, [q.id]: val }))}
                   style={{
-                    padding: "5px 12px", borderRadius: 7, fontSize: 11, fontWeight: 700,
                     background: v === val ? (val ? G.red : G.green) : G.surf2,
                     color: v === val ? "#fff" : G.muted,
                     border: `1px solid ${v === val ? "transparent" : G.border}`,

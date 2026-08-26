@@ -196,7 +196,10 @@ export function PDScore({ client, onClose }) {
     if(timerRef.current) clearInterval(timerRef.current);
     if(plankRef.current) clearInterval(plankRef.current);
     const total = elapsedRef.current;
-    const score = Math.max(0, Math.round(1000 - total/0.6));
+    // Same formula as api/pd-score.js — shown here so the result is on screen
+    // instantly, stored there so it cannot be typed in. If one changes, change
+    // both, or the number a person sees will not be the number on the board.
+    const score = Math.min(1000, Math.round(360000 / Math.max(1, total)));
     setFinalScore({ total, score, tier: tier(total) });
     setScreen("done");
     setSaving(true);
@@ -338,7 +341,7 @@ export function PDScore({ client, onClose }) {
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Your score</div>
               <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65,marginBottom:10 }}>
-                PD Score = 1000 minus your total time in seconds divided by 0.6. Faster finish, higher score. Retest monthly to see real progress.
+                A 6:00 finish scores 1000. Halve your time and you double your score — 24:00 is 250, 12:00 is 500, 6:00 is 1000. There is no zero: however long it takes, finishing is a number, and the number moves every time you get faster. Retest monthly.
               </div>
               <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6 }}>
                 {[["Elite","<7m",G.red],["Advanced","7-11m","#f59e0b"],["Intermediate","11-16m",G.gold],["Beginner","16m+",G.muted]].map(x => (
