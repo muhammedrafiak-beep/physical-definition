@@ -20,7 +20,20 @@ import { rateLimit, bucket, tooMany } from "./_lib/ratelimit.js";
 // Must match the formula the app shows on screen. It lives here because this
 // is the copy that decides what is stored; PDScore.jsx displays the same
 // number so the person sees their result immediately, without waiting.
-const scoreFor = (totalSeconds) => Math.max(0, Math.round(1000 - totalSeconds / 0.6));
+//
+// INVERSE TIME, not subtraction. The original was `1000 - seconds/0.6`, which
+// reaches zero at ten minutes — while the app's own tier table calls anything
+// up to sixteen minutes "Intermediate". Every Intermediate and every Beginner
+// therefore scored exactly 0, which is the group a leaderboard is least
+// entitled to erase.
+//
+// Halving your time doubles your score, at every speed, which is what makes it
+// worth retesting: 24 min → 250, 12 min → 500, 6 min → 1000. The reference
+// time is a strong Elite finish, and the cap means beating it is not worth
+// more than beating it.
+const REFERENCE_SECONDS = 360;   // 6:00 — the score that equals 1000
+const scoreFor = (totalSeconds) =>
+  Math.min(1000, Math.round((1000 * REFERENCE_SECONDS) / Math.max(1, totalSeconds)));
 
 // A five-station circuit that a person physically performs. Under a minute is
 // not possible; over two hours is not the same test any more. Both ends are
