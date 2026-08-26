@@ -285,7 +285,7 @@ export function PDScore({ client, onClose }) {
       <div style={{ padding:16 }}>
         <div style={{ background:"#E8EEF8",border:`1px solid #D3E0F2`,borderRadius:14,padding:15,marginBottom:14 }}>
           <div style={{ fontSize:16,fontWeight:700,color:G.gold,marginBottom:5 }}>The Physical Definition 100</div>
-          <div style={{ fontSize:13,color:"#bbb",lineHeight:1.7 }}>
+          <div style={{ fontSize:13,color:G.muted,lineHeight:1.7 }}>
             Our own fitness benchmark — the one test every Physical Definition client is measured by. 100 reps across 5 movements, pure bodyweight, no equipment except a pull-up bar, done straight through for time.
           </div>
           <div style={{ display:"flex",gap:7,flexWrap:"wrap",marginTop:11 }}>
@@ -325,12 +325,12 @@ export function PDScore({ client, onClose }) {
           {showHow && (
             <div style={{ padding:"0 15px 15px",borderTop:`1px solid ${G.border}` }}>
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"13px 0 6px" }}>What it is</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.65 }}>
                 A single continuous bodyweight benchmark. Five stations, 100 total reps, done back to back for time. It tests every major movement pattern — squat, pull, push, full body and core — and every energy system, from explosive power through to endurance. Your time becomes a PD Score that ranks you against every other client.
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Before you start</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.85 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.85 }}>
                 1. Lean your phone against something at chest height.<br/>
                 2. Stand back 2 to 3 metres so your whole body — head to feet — is in frame.<br/>
                 3. Make sure the room is well lit and there is space behind you.<br/>
@@ -339,12 +339,12 @@ export function PDScore({ client, onClose }) {
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>During the test</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.85 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.85 }}>
                 The clock starts the moment the camera opens and never stops — rest counts against you. The AI counts each rep only when you hit full range of motion, so half reps will not register. When a station hits its target it moves you on automatically. Watch the form badge: if it turns red, fix your position before continuing.
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Your score</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65,marginBottom:10 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.65,marginBottom:10 }}>
                 A 6:00 finish scores 1000. Halve your time and you double your score — 24:00 is 250, 12:00 is 500, 6:00 is 1000. There is no zero: however long it takes, finishing is a number, and the number moves every time you get faster. Retest monthly.
               </div>
               <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6 }}>
@@ -357,7 +357,7 @@ export function PDScore({ client, onClose }) {
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Privacy</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.65 }}>
                 Nothing is recorded. The camera runs entirely on your own device and only body position points are read. No video leaves your phone.
               </div>
             </div>
@@ -434,14 +434,14 @@ export function PDScore({ client, onClose }) {
         <div style={{ height:4,width:`${(station/5)*100 + (reps/st.reps)*20}%`,background:G.gold,transition:"width .3s" }}/>
       </div>
 
-      <div style={{ position:"relative",flex:1,background:"#111",overflow:"hidden" }}>
+      <div style={{ position:"relative",flex:1,background:"#0A1727",overflow:"hidden" }}>
         {hiddenVideo}
         <canvas ref={canvasRef} style={{ width:"100%",height:"100%",objectFit:"cover" }} />
         <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:16,pointerEvents:"none" }}>
           <div style={{ background:"rgba(0,0,0,0.62)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",width:"fit-content",border:`1px solid ${G.border}` }}>
             <div style={{ fontSize:11,color:"#C8D6EA",letterSpacing:1.5,textTransform:"uppercase" }}>{st.name}</div>
             <div className="sf" style={{ fontSize:58,color:"#FCFCFD",lineHeight:1 }}>
-              {st.isTime ? plankSec : reps}<span style={{ fontSize:22,color:"#666" }}>/{st.reps}</span>
+              {st.isTime ? plankSec : reps}<span style={{ fontSize:22,color:"#8FA3BE" }}>/{st.reps}</span>
             </div>
           </div>
           <div>
@@ -451,7 +451,7 @@ export function PDScore({ client, onClose }) {
             <div style={{ padding:"9px 15px",borderRadius:22,fontSize:13,fontWeight:600,width:"fit-content",background:good?"#12795A":"#A63A3A",color:"#FCFCFD",marginBottom:8,display:"flex",alignItems:"center",gap:7 }}>
               <Icon n={good ? "check" : "alert"} s={14} c="#FCFCFD" /> {good ? "Good form" : "Fix form"}
             </div>
-            <div style={{ background:"rgba(0,0,0,0.72)",padding:"10px 14px",borderRadius:12,fontSize:13,color:"#e5e5e5",border:`1px solid ${G.border}`,maxWidth:280 }}>{tip}</div>
+            <div style={{ background:"rgba(0,0,0,0.72)",padding:"10px 14px",borderRadius:12,fontSize:13,color:"#C8D6EA",border:`1px solid ${G.border}`,maxWidth:280 }}>{tip}</div>
             <div style={{ fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:6 }}>© Physical Definition · {client?.name||""}</div>
           </div>
         </div>

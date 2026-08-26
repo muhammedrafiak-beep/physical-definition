@@ -20,8 +20,8 @@ import { Icon } from "./Icons";
 // ── TRANSLATIONS ──────────────────────────────────────────
 const T = {
   en: {
-    appName: "PHYSICAL DEFINITION", tagline: "Your Fitness Journey Starts Here",
-    enter: "ENTER →", email: "Email / Username", password: "Password",
+    appName: "Physical Definition", tagline: "Training that follows what you can actually do today",
+    enter: "Sign in", email: "Email / Username", password: "Password",
     newMember: "New member? Register here →", welcome: "Welcome",
     profile: "Profile", workout: "Workout", nutrition: "Nutrition", progress: "Progress",
     dashboard: "Dashboard", clients: "Clients", aiTools: "AI Tools", plans: "Plans", requests: "Requests",
@@ -922,7 +922,7 @@ const COUNTRIES = [
   { code: "+63", flag: "🇵🇭", name: "Philippines" }, { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
 ];
 
-const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://www.physicaldefinition.com" };
+const TRAINER = { name: "Muhammed Rafi", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://www.physicaldefinition.com" };
 // The admin username and password used to live here, which meant they shipped
 // inside the browser bundle — anyone who opened devtools could read them.
 // They are now environment variables checked by /api/admin-login.
@@ -1559,24 +1559,27 @@ function TDEECard({ client, t, lang }) {
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <div style={{ flex: 1, background: G.surf2, borderRadius: 10, padding: "10px 12px" }}>
           <div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>{t.maintenance}</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: G.gold }}>{tdee}</div>
+          <div className="sf" style={{ fontSize: 26, lineHeight: 1, color: G.text }}>{tdee}</div>
           <div style={{ fontSize: 10, color: G.muted }}>kcal</div>
         </div>
-        <div style={{ flex: 1, background: G.surf2, borderRadius: 10, padding: "10px 12px", border: `1px solid ${G.gold}40` }}>
+        <div style={{ flex: 1, background: G.surf2, borderRadius: 10, padding: "10px 12px", border: `1px solid ${G.accentLine}` }}>
           <div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>{t.target}</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: surplus > 0 ? G.green : G.red }}>{target}</div>
+          <div className="sf" style={{ fontSize: 26, lineHeight: 1, color: G.text }}>{target}</div>
           <div style={{ fontSize: 10, color: surplus > 0 ? G.green : G.red }}>{surplus > 0 ? "+" : ""}{surplus} kcal</div>
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7, marginBottom: 10 }}>
-        {[{ l: "Protein", v: `${protein}g`, c: "#A63A3A" }, { l: "Carbs", v: `${carbs}g`, c: G.amber }, { l: "Fat", v: `${fat}g`, c: G.blue }].map(x => (
+        {/* Six figures in five colours is a chart, not a card: nothing can be
+            ranked, so nothing stands out. Only the surplus keeps a colour,
+            because only it carries a judgement. */}
+        {[{ l: "Protein", v: `${protein}g` }, { l: "Carbs", v: `${carbs}g` }, { l: "Fat", v: `${fat}g` }].map(x => (
           <div key={x.l} style={{ background: G.surf2, borderRadius: 7, padding: 8, textAlign: "center" }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: x.c }}>{x.v}</div>
+            <div className="sf" style={{ fontSize: 19, lineHeight: 1, color: G.text }}>{x.v}</div>
             <div style={{ fontSize: 9, color: G.muted, marginTop: 2 }}>{x.l}</div>
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 11, color: G.muted }}>{pal.icon} {isAr ? pal.ar : pal.en}</div>
+      <div style={{ fontSize: 11.5, color: G.muted }}>{isAr ? pal.ar : pal.en}</div>
     </div>
   );
 }
@@ -1997,10 +2000,10 @@ function ExerciseCard({ exercise, color, lang }) {
           {muscles.map(([m, type], i) => (
             <span key={i} style={{
               fontSize: 9, padding: "2px 7px", borderRadius: 20,
-              background: type === "primary" ? "#ff2d2d25" : "#1a1800",
-              color: type === "primary" ? "#ff6b6b" : G.muted,
-              fontWeight: type === "primary" ? 700 : 400,
-              border: `1px solid ${type === "primary" ? "#ff2d2d50" : "#2a2200"}`
+              background: type === "primary" ? G.accentSoft : G.soft,
+              color: type === "primary" ? G.accent : G.muted,
+              fontWeight: type === "primary" ? 700 : 500,
+              border: `1px solid ${type === "primary" ? G.accentLine : G.border}`
             }}>{m}</span>
           ))}
         </div>
@@ -2017,13 +2020,16 @@ function ExerciseCard({ exercise, color, lang }) {
         )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5, marginBottom: 8 }}>
           {[
-            { l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: color },
-            { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green },
-            { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber },
+            // Sets, reps and rest were three different colours, as if one of
+            // them were a warning. They are three facts of equal weight; the
+            // label under each is what tells them apart.
+            { l: isAr ? "مجموعات" : "Sets", v: exercise.sets },
+            { l: isAr ? "تكرار" : "Reps", v: exercise.reps },
+            { l: isAr ? "راحة" : "Rest", v: exercise.rest },
           ].map(x => (
-            <div key={x.l} style={{ background: G.surf, borderRadius: 6, padding: "5px 3px", textAlign: "center" }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: x.c }}>{x.v}</div>
-              <div style={{ fontSize: 8, color: G.muted, marginTop: 1 }}>{x.l}</div>
+            <div key={x.l} style={{ background: G.soft, borderRadius: 8, padding: "6px 3px", textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{x.v}</div>
+              <div style={{ fontSize: 8.5, color: G.muted, marginTop: 2 }}>{x.l}</div>
             </div>
           ))}
         </div>
@@ -2326,7 +2332,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
             </div>
           )}
           {showPlayer && ws && (
-            <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={sc} onClose={() => { setShowPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
+            <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={sc} onClose={() => { setShowPlayer(false); setActiveDay(null); }} accentColor={G.nAccent} />
           )}
 
           {/* NUTRITION */}
@@ -2522,7 +2528,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
                   onClick={() => setAnswers(p => ({ ...p, [q.id]: val }))}
                   style={{
                     background: v === val ? (val ? G.amber : G.green) : G.surf2,
-                    color: v === val ? "#000" : G.muted,
+                    color: v === val ? G.paper : G.muted,
                     border: `1px solid ${v === val ? "transparent" : G.border}`,
                   }}>{label}</button>
               ))}
@@ -3391,14 +3397,14 @@ export default function App() {
             <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{t.password}</div>
             <input className="inp" type="password" placeholder="••••••••" value={lf.p} onChange={e => setLf(p => ({ ...p, p: e.target.value }))} onKeyDown={e => e.key === "Enter" && login()} />
           </div>
-          <Btn ch={lBusy ? "…" : t.enter} v="gold" full onClick={login} sx={{ padding: "13px", fontSize: 15, letterSpacing: 1, opacity: lBusy ? 0.6 : 1, pointerEvents: lBusy ? "none" : "auto" }} />
+          <Btn ch={lBusy ? "…" : t.enter} v="gold" full onClick={login} sx={{ minHeight: 54, fontSize: 15, opacity: lBusy ? 0.6 : 1, pointerEvents: lBusy ? "none" : "auto" }} />
           <div style={{ textAlign: "center", marginTop: 12 }}><a href="/register" style={{ fontSize: 13, color: G.gold, textDecoration: "none" }}>{t.newMember}</a></div>
         </div>
         <div style={{ marginTop: 20, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 8 }}>
             <Av name={TRAINER.name} sz={40} />
             <div style={{ textAlign: isAr ? "right" : "left" }}>
-              <div className="sf gd" style={{ fontSize: 13, fontWeight: 700 }}>{TRAINER.name}</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{TRAINER.name}</div>
               <div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div>
             </div>
           </div>
@@ -3426,7 +3432,7 @@ export default function App() {
             <Logo s={34} />
             <div style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: ".01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.appName}</div>
           </div>
-          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="ghost" onClick={logout} sx={{ padding: "0 14px", fontSize: 13, minHeight: 44 }} /></div>
+          <LangBtn lang={lang} setLang={setLang} />
         </div>
         <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto", paddingBottom: 92 }}>
           {cTab === "profile" && (
@@ -3461,11 +3467,10 @@ export default function App() {
                   <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "#E6F2ED", border: "1px solid #C9E3D8", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
                 </div>
               </div>
-              {(liveC.workoutPlan || liveC.nutritionPlan) && (
-                <div style={{ marginTop: 12 }}>
-                  
-                </div>
-              )}
+              <button className="btn" onClick={logout}
+                style={{ width: "100%", marginTop: 18, minHeight: 50, background: "transparent", border: `1px solid ${G.border}`, borderRadius: 12, color: G.muted, fontSize: 14, fontWeight: 600 }}>
+                {t.logout}
+              </button>
             </div>
           )}
           {(cTab === "workout" || cTab === "nutrition") && (
@@ -3504,20 +3509,25 @@ export default function App() {
                       <div>
                         {gate}
                         {/* System header */}
-                        <div className="card" style={{ padding: "12px 14px", marginBottom: 14, border: `1px solid ${ws.color}30`, background: `${ws.color}08` }}>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: ws.color }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
-                          <div style={{ fontSize: 11, color: G.muted, marginTop: 3 }}>{isAr ? ws.descAr : ws.desc}</div>
+                        {/* A programme's colour used to tint this card, the day
+                            bar and both buttons, so Push/Pull/Legs arrived in
+                            red — which reads as an error, not a plan. The
+                            colour survives as a 3px rule on the day bar and
+                            nowhere else. */}
+                        <div className="card" style={{ padding: 18, marginBottom: 16 }}>
+                          <div className="sf" style={{ fontSize: 22, lineHeight: 1.2, color: G.text }}>{isAr ? ws.nameAr : ws.name}</div>
+                          <div style={{ fontSize: 12.5, color: G.muted, marginTop: 6, lineHeight: 1.55 }}>{isAr ? ws.descAr : ws.desc}</div>
                           <button onClick={() => setShowClientDayPicker(true)} disabled={scr.blocked}
                             title={scr.blocked ? (isAr ? "أكمل الفحص الصحي أولاً" : "Finish the health check first") : undefined}
-                            style={{ marginTop: 10, background: scr.blocked ? G.surf2 : G.gold, color: scr.blocked ? G.dim : "#FCFCFD", border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 8, padding: "11px 18px", fontWeight: 700, fontSize: 12, cursor: scr.blocked ? "not-allowed" : "pointer" }}>▶ Start Workout</button>
+                            style={{ marginTop: 15, width: "100%", minHeight: 52, background: scr.blocked ? G.soft : G.grad, color: scr.blocked ? G.muted : G.paper, border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 12, fontWeight: 600, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, cursor: scr.blocked ? "not-allowed" : "pointer" }}><Icon n="play" s={14} c={scr.blocked ? G.muted : G.paper} /> Start session</button>
                         </div>
                         {/* Days with exercise cards */}
                         {ws.days.map((day, di) => (
                           <div key={di} style={{ marginBottom: 20 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "7px 12px", background: `${ws.color}15`, borderRadius: 8 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 12, padding: "10px 12px", background: G.soft, borderRadius: 10, borderInlineStart: `3px solid ${ws.color}` }}>
                               <span>{day.name}</span>
                               <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} disabled={scr.blocked}
-                                style={{ background: scr.blocked ? G.surf2 : ws.color, color: scr.blocked ? G.dim : "#FCFCFD", border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 6, padding: "8px 12px", fontWeight: 700, fontSize: 11, cursor: scr.blocked ? "not-allowed" : "pointer" }}>▶ Start</button>
+                                style={{ background: scr.blocked ? "transparent" : G.grad, color: scr.blocked ? G.muted : G.paper, border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 10, minHeight: 40, padding: "0 16px", fontWeight: 600, fontSize: 12, flexShrink: 0, cursor: scr.blocked ? "not-allowed" : "pointer" }}>Start</button>
                             </div>
                             {/* The list has to match the session. If the player
                                 leaves a movement out because of the assessment,
@@ -3584,7 +3594,7 @@ export default function App() {
                             button is a hint, and a health gate should not
                             depend on one. */}
                         {showClientPlayer && !scr.blocked && (
-                          <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={liveC} onClose={() => { setShowClientPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
+                          <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={liveC} onClose={() => { setShowClientPlayer(false); setActiveDay(null); }} accentColor={G.nAccent} />
                         )}
                       </div>
                     );

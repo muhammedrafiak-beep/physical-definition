@@ -680,19 +680,21 @@ export function WorkoutPlayer({
   return (
     <div className="night" style={overlayStyle}>
       <div style={playerCardStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px" }}>
-          <span style={{ color: "#8FA3BE", fontSize: 13, fontWeight: 600 }}>
+        {/* At 390px this wrapped onto two lines and shoved the clock around.
+            The label truncates; the controls never move. */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "14px 16px" }}>
+          <span style={{ color: "#8FA3BE", fontSize: 12.5, fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {current.rounds > 1 && <span style={{ color: accentColor }}>Round {current.round}/{current.rounds} &middot; </span>}
             {current.dayName} &middot; Exercise {exIdx + 1}/{queue.length}
           </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             <span style={{ color: accentColor, fontSize: 13, fontWeight: 600, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontVariantNumeric: "tabular-nums" }}>
               {fmtClock(elapsed)}
             </span>
               {setStarted && phase === "exercise" && (
                 <button onClick={() => setIsPaused(p => !p)} aria-label={isPaused ? "Resume" : "Pause"} style={{ background:"#1B3350",border:"1px solid #24405F",borderRadius:10,color:"#FCFCFD",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n={isPaused ? "play" : "pause"} s={14} c="#FCFCFD" w={2} /></button>
               )}
-            <button onClick={() => setShowAI(true)} style={{ background:"rgba(143,180,234,0.14)",border:"1px solid #24405F",borderRadius:8,color:"#8FB4EA",padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700 }}>Form check</button>
+            <button onClick={() => setShowAI(true)} aria-label="Form check" title="Form check" style={{ background:"rgba(143,180,234,0.14)",border:"1px solid #24405F",borderRadius:10,color:"#8FB4EA",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n="ai" s={15} c="#8FB4EA" /></button>
             <button onClick={handleEndEarly} style={{ ...iconBtnStyle, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, border: "1px solid #24405F" }} aria-label="End workout"><Icon n="close" s={15} c="#8FA3BE" w={2} /></button>
           </div>
         </div>
@@ -822,9 +824,9 @@ export function WorkoutPlayer({
         <div style={{ padding: "18px 18px 0" }}>
           <h2 style={{ color: "#fff", margin: "0 0 6px", fontSize: 20 }}>{current.exercise.name}</h2>
           <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-            <Pill label={`Set ${setIdx}/${totalSets}`} color={accentColor} />
-            <Pill label={`Reps: ${current.exercise.reps}`} color="#4FBF97" />
-            <Pill label={`Rest: ${current.exercise.rest}`} color="#8FB4EA" />
+            <Pill label={`Set ${setIdx}/${totalSets}`} />
+            <Pill label={`Reps: ${current.exercise.reps}`} />
+            <Pill label={`Rest: ${current.exercise.rest}`} />
           </div>
           {/* The one line that turns a workout list into training: what this
               person actually did the last time they stood here. */}
@@ -895,9 +897,12 @@ function NumField({ label, value, step, accent, onChange }) {
   );
 }
 
-function Pill({ label, color }) {
+// Three pills in three colours, one of them a saturated green, over a dark
+// field: there is nothing to rank between them, and the green read as a
+// state rather than a fact. One style, three facts.
+function Pill({ label }) {
   return (
-    <span style={{ background: `${color}22`, color, fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>
+    <span style={{ background: "#1B3350", border: "1px solid #24405F", color: "#C8D6EA", fontSize: 12, fontWeight: 500, padding: "5px 11px", borderRadius: 20, whiteSpace: "nowrap" }}>
       {label}
     </span>
   );

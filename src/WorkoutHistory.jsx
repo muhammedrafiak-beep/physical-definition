@@ -91,7 +91,7 @@ export function AdminWorkoutHistory({ clients = [] }) {
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
         <button
           onClick={() => setSelectedClient("all")}
-          style={{ padding: "6px 12px", borderRadius: 20, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 12, background: selectedClient === "all" ? "#21509B" : "#E8EEF8", color: selectedClient === "all" ? "#000" : "#ccc" }}
+          style={{ padding: "6px 12px", borderRadius: 20, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 12, background: selectedClient === "all" ? "#21509B" : "#E8EEF8", color: selectedClient === "all" ? G.paper : G.muted }}
         >
           All Clients
         </button>
@@ -99,7 +99,7 @@ export function AdminWorkoutHistory({ clients = [] }) {
           <button
             key={c.id}
             onClick={() => setSelectedClient(String(c.id))}
-            style={{ padding: "6px 12px", borderRadius: 20, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 12, background: selectedClient === String(c.id) ? "#21509B" : "#E8EEF8", color: selectedClient === String(c.id) ? "#000" : "#ccc" }}
+            style={{ padding: "6px 12px", borderRadius: 20, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 12, background: selectedClient === String(c.id) ? "#21509B" : "#E8EEF8", color: selectedClient === String(c.id) ? G.paper : G.muted }}
           >
             {c.name.split(" ")[0]}
           </button>
@@ -108,9 +108,9 @@ export function AdminWorkoutHistory({ clients = [] }) {
 
       {/* Summary stats */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-        <StatCard label="Total Workouts" value={totalWorkouts} icon="train" color="#21509B" />
-        <StatCard label="Total Time" value={`${Math.round(totalMinutes)}m`} icon="clock" color="#21509B" />
-        <StatCard label="Calories Burned" value={`${Math.round(totalCalories)}`} icon="flame" color="#A63A3A" />
+        <StatCard label="Total Workouts" value={totalWorkouts} icon="train" color={G.accent} />
+        <StatCard label="Total Time" value={`${Math.round(totalMinutes)}m`} icon="clock" color={G.accent} />
+        <StatCard label="Calories Burned" value={`${Math.round(totalCalories)}`} icon="flame" color={G.accent} />
       </div>
 
       {/* Client leaderboard (all clients view) */}
@@ -189,10 +189,10 @@ export function ClientWorkoutHistory({ clientId, accentColor = "#21509B" }) {
 
       {/* Summary stats */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
-        <StatCard label="Total Sessions" value={totalWorkouts} icon="train" color={accentColor} />
-        <StatCard label="Current Streak" value={streak} icon="calendar" color="#9A6212" />
-        <StatCard label="Total Time" value={`${Math.round(totalMinutes)}m`} icon="clock" color="#21509B" />
-        <StatCard label="Calories Burned" value={`${Math.round(totalCalories)}`} icon="flame" color="#A63A3A" />
+        <StatCard label="Total Sessions" value={totalWorkouts} icon="train" color={G.accent} />
+        <StatCard label="Current Streak" value={streak} icon="calendar" color={G.accent} />
+        <StatCard label="Total Time" value={`${Math.round(totalMinutes)}m`} icon="clock" color={G.accent} />
+        <StatCard label="Calories Burned" value={`${Math.round(totalCalories)}`} icon="flame" color={G.accent} />
       </div>
 
       {loading ? (
@@ -235,7 +235,7 @@ function calcStreak(logs) {
 // emoji competing with it for the eye.
 function StatCard({ label, value, icon, color }) {
   return (
-    <div style={{ background: G.accentSoft, borderRadius: 12, padding: "13px 12px", textAlign: "center" }}>
+    <div style={{ background: "#fff", border: `1px solid ${G.line}`, borderRadius: 14, padding: "15px 12px", textAlign: "center" }}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}><Icon n={icon} s={15} c={color} /></div>
       <div className="sf" style={{ fontSize: 24, lineHeight: 1, color: G.text }}>{value}</div>
       <div style={{ fontSize: 10, color: G.muted, marginTop: 5, letterSpacing: ".05em" }}>{label}</div>
@@ -249,7 +249,7 @@ function LogCard({ log, showClient, accentColor = "#21509B" }) {
     : 100;
 
   return (
-    <div style={{ background: "#F3F6FA", borderRadius: 10, padding: "12px 14px", border: "1px solid #E8EEF8" }}>
+    <div style={{ background: "#fff", borderRadius: 12, padding: "13px 14px", border: "1px solid #E4E9F0" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
         <div>
           {showClient && (
