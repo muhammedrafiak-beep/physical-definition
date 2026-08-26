@@ -2,7 +2,7 @@
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { AIFormCheck } from "./AIFormCheck";
 import { Icon } from "./Icons";
-import { usesExternalLoad, getExerciseRequirement } from "./exerciseMeta";
+import { usesExternalLoad, getExerciseRequirement, getWarmupSets, rampStep, roundToPlate } from "./exerciseMeta";
 import { meetsRequirement } from "./assessment";
 
 // No Supabase client here any more. This file used to insert straight into
@@ -302,10 +302,15 @@ export function WorkoutPlayer({
   // drop it and show the illustration instead. Declared here with the other
   // hooks — below this component there are two early returns, and a hook
   // after one of them is a hook React stops counting.
+  // Build-up sets before the first working set of a heavy lift. Counted here
+  // rather than added to the queue: the queue drives "Exercise 15/43" and the
+  // progress bar, and a warm-up single is not an exercise. `rampDone` is how
+  // many have been finished for the exercise now on screen.
+  const [rampDone, setRampDone] = useState(0);
   const [videoFailed, setVideoFailed] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [motivation, setMotivation] = useState(null);
-  useEffect(() => { setVideoFailed(false); setVideoReady(false); }, [exIdx]);
+  useEffect(() => { setVideoFailed(false); setVideoReady(false); setRampDone(0); }, [exIdx]);
   const [elapsed, setElapsed] = useState(0); // overall stopwatch, seconds
   const [saving, setSaving] = useState(false);
   const videoRef = useRef(null);
@@ -367,7 +372,20 @@ export function WorkoutPlayer({
 
   const current = queue[exIdx];
   const totalSets = current ? parseSets(current.exercise.sets) : 1;
-    const restSeconds = current ? Math.max(parseRestSeconds(current.exercise.rest), 2) : 60;
+  // A ramp is run once per exercise, not once per round: nobody re-warms up
+  // for round two of a circuit, and the second round is the same weight.
+  const rampCount = current && !isWarmupOrCooldown(current) && (Number(current.round) || 1) === 1
+    ? getWarmupSets(current.exercise.name)
+    : 0;
+  const inRamp = rampCount > 0 && rampDone < rampCount;
+  const ramp = inRamp ? rampStep(rampCount, rampDone) : null;
+  // The working weight is already in the box — the suggestion from last time,
+  // or whatever was typed. A percentage of it is the build-up weight. If there
+  // is no number yet, the percentage is still worth saying.
+  const rampWeight = ramp ? roundToPlate(Number(entry.weight) * ramp.pct) : null;
+  // Build-up sets are short and light; the prescribed 90 seconds between them
+  // would turn a two-minute ramp into six.
+  const restSeconds = inRamp ? 45 : (current ? Math.max(parseRestSeconds(current.exercise.rest), 2) : 60);
   const exDurationSeconds = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
 
   // Overall stopwatch — runs continuously while player is open
@@ -390,14 +408,14 @@ export function WorkoutPlayer({
     }
       setSetStarted(exIdx > 0 || setIdx > 1);
       const autoStart = exIdx > 0 || setIdx > 1;
-      const d = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
+      const d = current ? parseExerciseDurationSeconds(inRamp ? `${ramp.reps} reps` : current.exercise.reps) : null;
       setExerciseRemaining(autoStart && d ? d : null);
-  }, [exIdx, setIdx, phase]);
+  }, [exIdx, setIdx, phase, rampDone]);
 
   // Start timer when user presses Start
   useEffect(() => {
     if (!setStarted || phase !== "exercise") return;
-    const dur = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
+    const dur = current ? parseExerciseDurationSeconds(inRamp ? `${ramp.reps} reps` : current.exercise.reps) : null;
     if (dur) setExerciseRemaining(dur);
     }, [setStarted, exIdx, setIdx, phase]);
 
@@ -506,6 +524,10 @@ export function WorkoutPlayer({
   const saveCurrentSet = useCallback(() => {
     const item = queue[exIdx];
     if (!item || !client || isWarmupOrCooldown(item)) return;
+    // A build-up set is not training volume, and the weight suggestion for
+    // next time is read straight back out of workout_sets. Writing 50% sets
+    // in there would drag every future suggestion down.
+    if (inRamp) return;
 
     const key = `${exIdx}:${setIdx}`;
     if (savedRef.current.has(key)) return;
@@ -552,9 +574,17 @@ export function WorkoutPlayer({
         console.error("save set:", e.message);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exIdx, setIdx, entry, rir, client, getSessionId]);
+  }, [exIdx, setIdx, entry, rir, client, getSessionId, inRamp]);
 
   const advanceAfterRest = useCallback(() => {
+    // Finishing a build-up set moves along the ramp and nothing else: no set
+    // is written, the set counter does not move, and the exercise does not
+    // change. The working sets start when the ramp runs out.
+    if (inRamp) {
+      setRampDone((d) => d + 1);
+      setPhase("exercise");
+      return;
+    }
     saveCurrentSet();
     if (setIdx < totalSets) {
       setSetIdx((s) => s + 1);
@@ -563,6 +593,7 @@ export function WorkoutPlayer({
       if (exIdx < queue.length - 1) {
         setExIdx((i) => i + 1);
         setSetIdx(1);
+        setRampDone(0);
         setPhase("exercise");
       } else {
         logWorkout(queue.length);
@@ -570,7 +601,7 @@ export function WorkoutPlayer({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setIdx, totalSets, exIdx, queue.length, logWorkout, saveCurrentSet]);
+  }, [setIdx, totalSets, exIdx, queue.length, logWorkout, saveCurrentSet, inRamp]);
 
   const MOTIVATIONS = ["Good set.", "Keep going.", "That is the one.", "Strong.", "Logged."];
   const handleSetDone = () => {
@@ -597,7 +628,9 @@ export function WorkoutPlayer({
     const msg = MOTIVATIONS[Math.floor(Math.random() * MOTIVATIONS.length)];
     setMotivation(msg);
     setTimeout(() => setMotivation(null), 1500);
-    const isLastSetOfLastExercise = setIdx >= totalSets && exIdx >= queue.length - 1;
+    // Without `!inRamp` a lift with a single working set, last in the session,
+    // would jump to the done screen from its first build-up set.
+    const isLastSetOfLastExercise = !inRamp && setIdx >= totalSets && exIdx >= queue.length - 1;
     if (isLastSetOfLastExercise) {
       // The final set goes straight to the done screen and never passes
       // through advanceAfterRest, so it has to be saved here or it is lost.
@@ -622,6 +655,7 @@ export function WorkoutPlayer({
     if (exIdx < queue.length - 1) {
       setExIdx((i) => i + 1);
       setSetIdx(1);
+      setRampDone(0);
       setPhase("exercise");
     } else {
       logWorkout(exIdx + 1);
@@ -672,7 +706,8 @@ export function WorkoutPlayer({
     );
   }
 
-  const loggable = !isWarmupOrCooldown(current) && !isTimedExercise(current.exercise.reps) && !!client;
+  // Nothing is logged during a build-up set, so nothing is asked either.
+  const loggable = !inRamp && !isWarmupOrCooldown(current) && !isTimedExercise(current.exercise.reps) && !!client;
   const showLogger = phase === "rest" && loggable;
   // A weight box in front of a Glute Bridge is noise, and noise is what stops
   // people logging at all. Show it only where there is a load to record —
@@ -844,10 +879,25 @@ export function WorkoutPlayer({
 
         <div style={{ padding: "18px 18px 0" }}>
           <h2 style={{ color: "#fff", margin: "0 0 6px", fontSize: 20 }}>{current.exercise.name}</h2>
+          {inRamp && (
+            <div style={{ color: "#8FA3BE", fontSize: 12.5, lineHeight: 1.5, marginBottom: 10 }}>
+              Building up to your working weight. This one is not counted.
+            </div>
+          )}
           <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-            <Pill label={`Set ${setIdx}/${totalSets}`} />
-            <Pill label={`Reps: ${current.exercise.reps}`} />
-            <Pill label={`Rest: ${current.exercise.rest}`} />
+            {inRamp ? (
+              <>
+                <Pill label={`Warm-up ${rampDone + 1} of ${rampCount}`} />
+                <Pill label={rampWeight ? `${rampWeight} kg` : `About ${Math.round(ramp.pct * 100)}%`} />
+                <Pill label={`${ramp.reps} reps`} />
+              </>
+            ) : (
+              <>
+                <Pill label={`Set ${setIdx}/${totalSets}`} />
+                <Pill label={`Reps: ${current.exercise.reps}`} />
+                <Pill label={`Rest: ${current.exercise.rest}`} />
+              </>
+            )}
           </div>
           {/* The one line that turns a workout list into training: what this
               person actually did the last time they stood here. */}
@@ -867,11 +917,11 @@ export function WorkoutPlayer({
           {phase === "exercise" ? (
             !setStarted ? (
               <button onClick={() => setSetStarted(true)} style={{ ...primaryBtnStyle(accentColor), fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
-                <Icon n="play" s={15} c="#0E2035" /> Start set {setIdx}
+                <Icon n="play" s={15} c="#0E2035" /> {inRamp ? `Start warm-up ${rampDone + 1}` : `Start set ${setIdx}`}
               </button>
             ) : (
               <button onClick={handleSetDone} style={primaryBtnStyle(accentColor)}>
-                {exerciseRemaining !== null ? "Finish early" : `Set ${setIdx} done`}
+                {inRamp ? "Warm-up done" : exerciseRemaining !== null ? "Finish early" : `Set ${setIdx} done`}
               </button>
             )
           ) : (

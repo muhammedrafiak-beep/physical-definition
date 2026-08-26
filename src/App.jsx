@@ -4,6 +4,10 @@ import { WorkoutPlayer } from "./WorkoutPlayer";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
 import { Icon } from "./Icons";
+import { programmeState } from "./programme";
+import { T } from "./i18n";
+import { WORKOUT_SYSTEMS, LEVEL_META } from "./workouts";
+import { MEALS, MEAL_PREP, MEAL_IMAGES, scaleMealPlan } from "./meals";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -16,890 +20,6 @@ import { Icon } from "./Icons";
    - Registration + Admin Approval
    - WhatsApp Share
 ═══════════════════════════════════════════════════════════ */
-
-// ── TRANSLATIONS ──────────────────────────────────────────
-const T = {
-  en: {
-    appName: "Physical Definition", tagline: "Training that follows what you can actually do today",
-    enter: "Sign in", email: "Email / Username", password: "Password",
-    newMember: "New member? Register here →", welcome: "Welcome",
-    profile: "Profile", workout: "Workout", nutrition: "Nutrition", progress: "Progress",
-    dashboard: "Dashboard", clients: "Clients", aiTools: "AI Tools", plans: "Plans", requests: "Requests",
-    addClient: "+ ADD", edit: "Edit", save: "Save", cancel: "Cancel", logout: "Sign Out",
-    age: "Age", weight: "Weight", height: "Height", goal: "Goal", gender: "Gender",
-    male: "Male", female: "Female", active: "Active", disabled: "Disabled",
-    shareLogin: "Share Login via WhatsApp", approve: "Approve", reject: "Reject",
-    noPlan: "No plan yet", trainerWillAdd: "Your trainer will add a plan soon",
-    chooseMeal: "🍽️ Choose", chooseWorkout: "🏋️ Choose Workout Type",
-    writeManual: "✏️ Write", memberSince: "Member since", yourTrainer: "Your Trainer",
-    bmi: "BMI", tdee: "Energy & Macros (TDEE)", maintenance: "Maintenance", target: "Target",
-    activityLevel: "Activity Level", fullName: "Full Name", phone: "WhatsApp",
-    passwordAuto: "Password (blank = auto)", addShare: "ADD & SHARE →",
-    credentialsSent: "Client Added!", shareDetails: "Share login details with",
-    sendWhatsapp: "💬 Send via WhatsApp", copyCredentials: "📋 Copy Credentials",
-    downloadPDF: "📄 Download Full PDF", close: "Close",
-    registrationLink: "Registration Link", copyLink: "📋 Copy",
-    pendingRequests: "Pending Requests", noRequests: "No pending requests",
-    invalidCredentials: "Invalid credentials. Please try again.",
-    accountDisabled: "Account disabled. Contact your trainer.",
-    regSubmitted: "Request Submitted!", regApproval: "You'll receive login details on WhatsApp after approval.",
-    joinUs: "JOIN US TODAY", submitRequest: "SUBMIT REQUEST →",
-    alreadyAccount: "Already have an account?", loginHere: "Login here",
-    goalsDistribution: "Goals Distribution", total: "Total", pending: "Pending",
-    selectClient: "Select a client", pdfTitle: "Training Plan",
-    workoutSystem: "Workout System", selectSystem: "Select Training System",
-    exercises: "Exercises", sets: "Sets", reps: "Reps", rest: "Rest",
-    addExercise: "+ Add Exercise", removeExercise: "Remove",
-    day: "Day", week: "Week", intensity: "Intensity",
-    shareRegLink: "Share Registration Link",
-  },
-  ar: {
-    appName: "فيزيكال ديفينيشن", tagline: "ابدأ رحلتك نحو اللياقة البدنية",
-    enter: "دخول ←", email: "البريد الإلكتروني", password: "كلمة المرور",
-    newMember: "عضو جديد؟ سجّل هنا ←", welcome: "أهلاً",
-    profile: "الملف الشخصي", workout: "تمارين", nutrition: "التغذية", progress: "التقدم",
-    dashboard: "لوحة التحكم", clients: "العملاء", aiTools: "أدوات الذكاء الاصطناعي", plans: "الخطط", requests: "الطلبات",
-    addClient: "+ إضافة", edit: "تعديل", save: "حفظ", cancel: "إلغاء", logout: "خروج",
-    age: "العمر", weight: "الوزن", height: "الطول", goal: "الهدف", gender: "الجنس",
-    male: "ذكر", female: "أنثى", active: "نشط", disabled: "معطّل",
-    shareLogin: "مشاركة بيانات الدخول", approve: "موافقة", reject: "رفض",
-    noPlan: "لا توجد خطة", trainerWillAdd: "سيضيف المدرب خطتك قريباً",
-    chooseMeal: "🍽️ اختيار", chooseWorkout: "🏋️ اختر نظام التمرين",
-    writeManual: "✏️ كتابة", memberSince: "عضو منذ", yourTrainer: "مدربك",
-    bmi: "مؤشر كتلة الجسم", tdee: "الطاقة والمغذيات", maintenance: "الصيانة", target: "الهدف",
-    activityLevel: "مستوى النشاط", fullName: "الاسم الكامل", phone: "واتساب",
-    passwordAuto: "كلمة المرور (فارغ = تلقائي)", addShare: "إضافة ومشاركة ←",
-    credentialsSent: "تمت إضافة العميل!", shareDetails: "شارك بيانات الدخول مع",
-    sendWhatsapp: "💬 إرسال عبر واتساب", copyCredentials: "📋 نسخ البيانات",
-    downloadPDF: "📄 تحميل PDF", close: "إغلاق",
-    registrationLink: "رابط التسجيل", copyLink: "📋 نسخ",
-    pendingRequests: "الطلبات المعلقة", noRequests: "لا توجد طلبات",
-    invalidCredentials: "بيانات غير صحيحة.", accountDisabled: "تم تعطيل حسابك.",
-    regSubmitted: "تم إرسال الطلب!", regApproval: "ستتلقى بيانات الدخول عبر واتساب.",
-    joinUs: "انضم إلينا", submitRequest: "إرسال الطلب ←",
-    alreadyAccount: "لديك حساب؟", loginHere: "تسجيل الدخول",
-    goalsDistribution: "توزيع الأهداف", total: "المجموع", pending: "معلق",
-    selectClient: "اختر عميلاً", pdfTitle: "خطة التدريب",
-    workoutSystem: "نظام التمرين", selectSystem: "اختر نظام التدريب",
-    exercises: "التمارين", sets: "المجموعات", reps: "التكرارات", rest: "الراحة",
-    addExercise: "+ إضافة تمرين", removeExercise: "حذف",
-    day: "اليوم", week: "الأسبوع", intensity: "الشدة",
-    shareRegLink: "مشاركة رابط التسجيل",
-  }
-};
-
-// ── WORKOUT SYSTEMS ────────────────────────────────────────
-const WORKOUT_SYSTEMS = [
-  {
-    id: "ppl", level: "intermediate", name: "Push / Pull / Legs", nameAr: "دفع / سحب / أرجل",
-    color: "#A63A3A", emoji: "💪",
-    desc: "Push / Pull / Legs run TWICE a week (6 days) \u2014 at 3 days each muscle is trained only once, which is too little",
-    descAr: "دفع/سحب/أرجل مرتين أسبوعياً (6 أيام) — 3 أيام تعني تدريب كل عضلة مرة واحدة فقط وهو غير كافٍ",
-    days: [
-      {
-        name: "Day 1 — Push (Chest, Shoulders, Triceps)",
-        exercises: [
-          { name: "Bench Press", sets: "4", reps: "8-12", rest: "90s", notes: "Compound — chest focus" },
-          { name: "Overhead Press", sets: "4", reps: "8-10", rest: "90s", notes: "Shoulder strength" },
-          { name: "Incline Dumbbell Press", sets: "3", reps: "10-12", rest: "60s", notes: "Upper chest" },
-          { name: "Lateral Raises", sets: "3", reps: "12-15", rest: "60s", notes: "Side delts" },
-          { name: "Tricep Pushdown", sets: "3", reps: "12-15", rest: "60s", notes: "Cable/rope" },
-          { name: "Overhead Tricep Extension", sets: "3", reps: "12", rest: "60s", notes: "Long head" },
-        ]
-      },
-      {
-        name: "Day 2 — Pull (Back, Biceps)",
-        exercises: [
-          { name: "Deadlift", sets: "4", reps: "5-8", rest: "2min", notes: "Compound — full back" },
-          { name: "Pull-ups / Lat Pulldown", sets: "4", reps: "8-12", rest: "90s", notes: "Lat width" },
-          { name: "Barbell Row", sets: "4", reps: "8-10", rest: "90s", notes: "Mid back thickness" },
-          { name: "Face Pulls", sets: "3", reps: "15-20", rest: "60s", notes: "Rear delts + rotator cuff" },
-          { name: "Barbell Curl", sets: "3", reps: "10-12", rest: "60s", notes: "Bicep peak" },
-          { name: "Hammer Curl", sets: "3", reps: "12", rest: "60s", notes: "Brachialis" },
-        ]
-      },
-      {
-        name: "Day 3 — Legs (Quads, Hamstrings, Glutes, Calves)",
-        exercises: [
-          { name: "Barbell Squat", sets: "4", reps: "8-12", rest: "2min", notes: "King of leg exercises" },
-          { name: "Romanian Deadlift", sets: "4", reps: "10-12", rest: "90s", notes: "Hamstring focus" },
-          { name: "Leg Press", sets: "3", reps: "12-15", rest: "90s", notes: "Quad dominant" },
-          { name: "Leg Curl", sets: "3", reps: "12-15", rest: "60s", notes: "Hamstring isolation" },
-          { name: "Leg Extension", sets: "3", reps: "15", rest: "60s", notes: "Quad isolation" },
-          { name: "Standing Calf Raise", sets: "4", reps: "15-20", rest: "45s", notes: "Calf size" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "upperlower", level: "beginner", name: "Upper / Lower Split", nameAr: "تقسيم علوي / سفلي",
-    color: "#9A6212", emoji: "⚡",
-    desc: "4-day split alternating upper and lower body training",
-    descAr: "تقسيم 4 أيام بين الجزء العلوي والسفلي",
-    days: [
-      {
-        name: "Day 1 — Upper A (Strength)",
-        exercises: [
-          { name: "Bench Press", sets: "4", reps: "5-6", rest: "2min", notes: "Heavy — strength focus" },
-          { name: "Barbell Row", sets: "4", reps: "5-6", rest: "2min", notes: "Heavy pulling" },
-          { name: "Overhead Press", sets: "3", reps: "6-8", rest: "90s", notes: "Shoulder strength" },
-          { name: "Pull-ups", sets: "3", reps: "6-8", rest: "90s", notes: "Bodyweight" },
-          { name: "Dumbbell Curl", sets: "3", reps: "10", rest: "60s", notes: "" },
-          { name: "Skull Crushers", sets: "3", reps: "10", rest: "60s", notes: "" },
-        ]
-      },
-      {
-        name: "Day 2 — Lower A (Strength)",
-        exercises: [
-          { name: "Barbell Squat", sets: "4", reps: "5-6", rest: "2min", notes: "Heavy — strength focus" },
-          { name: "Romanian Deadlift", sets: "3", reps: "6-8", rest: "2min", notes: "Hamstrings" },
-          { name: "Leg Press", sets: "3", reps: "10", rest: "90s", notes: "" },
-          { name: "Leg Curl", sets: "3", reps: "10-12", rest: "60s", notes: "" },
-          { name: "Calf Raise", sets: "4", reps: "15", rest: "45s", notes: "" },
-          { name: "Plank", sets: "3", reps: "45 sec", rest: "30s", notes: "Core stability" },
-        ]
-      },
-      {
-        name: "Day 3 — Upper B (Hypertrophy)",
-        exercises: [
-          { name: "Incline Dumbbell Press", sets: "4", reps: "10-12", rest: "60s", notes: "Volume focus" },
-          { name: "Cable Row", sets: "4", reps: "10-12", rest: "60s", notes: "" },
-          { name: "Lateral Raises", sets: "4", reps: "12-15", rest: "45s", notes: "" },
-          { name: "Face Pulls", sets: "3", reps: "15", rest: "45s", notes: "" },
-          { name: "Cable Fly", sets: "3", reps: "12-15", rest: "60s", notes: "Brings weekly chest volume in line with the rest" },
-          { name: "Preacher Curl", sets: "3", reps: "12", rest: "60s", notes: "" },
-          { name: "Tricep Pushdown", sets: "3", reps: "12-15", rest: "60s", notes: "" },
-        ]
-      },
-      {
-        name: "Day 4 — Lower B (Hypertrophy)",
-        exercises: [
-          { name: "Hack Squat / Leg Press", sets: "4", reps: "10-15", rest: "90s", notes: "Volume focus" },
-          { name: "Walking Lunges", sets: "3", reps: "12 each", rest: "60s", notes: "" },
-          { name: "Leg Curl", sets: "4", reps: "12-15", rest: "60s", notes: "" },
-          { name: "Leg Extension", sets: "3", reps: "15", rest: "60s", notes: "" },
-          { name: "Seated Calf Raise", sets: "4", reps: "15-20", rest: "45s", notes: "" },
-          { name: "Ab Wheel Rollout", sets: "3", reps: "10", rest: "60s", notes: "" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "fst7", level: "advanced", name: "FST-7 Training", nameAr: "تدريب FST-7",
-    color: "#6B4FA8", emoji: "🔥",
-    desc: "Fascia Stretch Training — 7 sets on last exercise to maximize pump",
-    descAr: "تمدد اللفافة — 7 مجموعات في آخر تمرين لأقصى ضخ",
-    days: [
-      {
-        name: "Day 1 — Chest (FST-7)",
-        exercises: [
-          { name: "Incline Barbell Press", sets: "4", reps: "8-10", rest: "90s", notes: "Warm up chest" },
-          { name: "Flat Dumbbell Press", sets: "4", reps: "10-12", rest: "75s", notes: "" },
-          { name: "Pec Dec / Cable Fly", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 — short rest, max pump!" },
-        ]
-      },
-      {
-        name: "Day 2 — Back (FST-7)",
-        exercises: [
-          { name: "Deadlift", sets: "4", reps: "6-8", rest: "2min", notes: "Heavy compound" },
-          { name: "T-Bar Row", sets: "4", reps: "10", rest: "90s", notes: "" },
-          { name: "Straight Arm Pulldown", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 — lat stretch + pump" },
-        ]
-      },
-      {
-        name: "Day 3 — Shoulders (FST-7)",
-        exercises: [
-          { name: "Seated DB Overhead Press", sets: "4", reps: "10-12", rest: "90s", notes: "" },
-          { name: "Lateral Raises", sets: "4", reps: "12-15", rest: "60s", notes: "" },
-          { name: "Cable Lateral Raise", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 — side delt pump" },
-        ]
-      },
-      {
-        name: "Day 4 — Arms (FST-7)",
-        exercises: [
-          { name: "Barbell Curl", sets: "4", reps: "10", rest: "75s", notes: "" },
-          { name: "Close Grip Bench Press", sets: "4", reps: "10", rest: "75s", notes: "" },
-          { name: "Cable Curl", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 bicep" },
-          { name: "Cable Pushdown", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 tricep" },
-        ]
-      },
-      {
-        name: "Day 5 — Legs (FST-7)",
-        exercises: [
-          { name: "Squat", sets: "4", reps: "10-12", rest: "2min", notes: "" },
-          { name: "Leg Press", sets: "4", reps: "12-15", rest: "90s", notes: "" },
-          { name: "Leg Extension", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 quad pump" },
-          { name: "Leg Curl", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 hamstring" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "superset", level: "intermediate", name: "Superset Training", nameAr: "تدريب السوبرسيت",
-    color: "#12795A", emoji: "⚡",
-    desc: "Pair antagonist muscles — maximum efficiency, time-saving",
-    descAr: "تدريب العضلات المتعاكسة معاً — كفاءة عالية",
-    days: [
-      {
-        name: "Day 1 — Chest + Back (Superset)",
-        exercises: [
-          { name: "SS1A: Bench Press", sets: "4", reps: "10", rest: "0s", notes: "↓ Go immediately to SS1B" },
-          { name: "SS1B: Barbell Row", sets: "4", reps: "10", rest: "90s", notes: "Rest after both" },
-          { name: "SS2A: Incline DB Press", sets: "3", reps: "12", rest: "0s", notes: "↓ Go immediately to SS2B" },
-          { name: "SS2B: Lat Pulldown", sets: "3", reps: "12", rest: "75s", notes: "Rest after both" },
-          { name: "SS3A: Cable Fly", sets: "3", reps: "15", rest: "0s", notes: "↓" },
-          { name: "SS3B: Face Pull", sets: "3", reps: "15", rest: "60s", notes: "Rest after both" },
-        ]
-      },
-      {
-        name: "Day 2 — Shoulders + Arms (Superset)",
-        exercises: [
-          { name: "SS1A: OHP", sets: "4", reps: "10", rest: "0s", notes: "↓" },
-          { name: "SS1B: Pull-ups", sets: "4", reps: "8", rest: "90s", notes: "Rest after both" },
-          { name: "SS2A: Barbell Curl", sets: "3", reps: "12", rest: "0s", notes: "↓" },
-          { name: "SS2B: Skull Crusher", sets: "3", reps: "12", rest: "75s", notes: "Bicep + Tricep" },
-          { name: "SS3A: Lateral Raise", sets: "3", reps: "15", rest: "0s", notes: "↓" },
-          { name: "SS3B: Tricep Pushdown", sets: "3", reps: "15", rest: "60s", notes: "" },
-        ]
-      },
-      {
-        name: "Day 3 — Legs (Superset)",
-        exercises: [
-          { name: "SS1A: Squat", sets: "4", reps: "10", rest: "0s", notes: "↓" },
-          { name: "SS1B: Leg Curl", sets: "4", reps: "12", rest: "90s", notes: "Quad + Hamstring" },
-          { name: "SS2A: Leg Press", sets: "3", reps: "15", rest: "0s", notes: "↓" },
-          { name: "SS2B: Romanian Deadlift", sets: "3", reps: "12", rest: "75s", notes: "" },
-          { name: "SS3A: Leg Extension", sets: "3", reps: "15", rest: "0s", notes: "↓" },
-          { name: "SS3B: Calf Raise", sets: "3", reps: "20", rest: "60s", notes: "" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "circuit", level: "beginner", name: "Circuit Training", nameAr: "التدريب الدائري",
-    color: "#21509B", emoji: "🔄",
-    desc: "Every exercise back-to-back with little rest, three times through — start at three rounds and add a fourth when three stop being hard",
-    descAr: "جميع التمارين متتالية مع راحة قليلة",
-    days: [
-      {
-        name: "Circuit A — Full Body",
-        // The rounds are DATA, not a line in the title. Written as a name, the
-        // player had no way to know about them and ran the list once — a third
-        // of the session, delivered as if it were the whole thing.
-        rounds: 3,
-        exercises: [
-          { name: "Jump Squats", sets: "1", reps: "15", rest: "15s", notes: "Explosive" },
-          { name: "Push-ups", sets: "1", reps: "15", rest: "15s", notes: "" },
-          { name: "Dumbbell Row", sets: "1", reps: "12 each", rest: "15s", notes: "" },
-          { name: "Reverse Lunges", sets: "1", reps: "12 each", rest: "15s", notes: "" },
-          { name: "Dumbbell Shoulder Press", sets: "1", reps: "12", rest: "15s", notes: "" },
-          { name: "Mountain Climbers", sets: "1", reps: "30 sec", rest: "15s", notes: "Core" },
-          { name: "Burpees", sets: "1", reps: "10", rest: "60s", notes: "Rest 60s between rounds" },
-        ]
-      },
-      {
-        name: "Circuit B — Upper Body Focus",
-        // The rounds are DATA, not a line in the title. Written as a name, the
-        // player had no way to know about them and ran the list once — a third
-        // of the session, delivered as if it were the whole thing.
-        rounds: 3,
-        exercises: [
-          { name: "Pull-ups / Assisted Pull-ups", sets: "1", reps: "10", rest: "15s", notes: "" },
-          { name: "Dumbbell Press", sets: "1", reps: "12", rest: "15s", notes: "" },
-          { name: "Cable Row", sets: "1", reps: "12", rest: "15s", notes: "" },
-          { name: "Arnold Press", sets: "1", reps: "12", rest: "15s", notes: "" },
-          { name: "Dumbbell Curl", sets: "1", reps: "12", rest: "15s", notes: "" },
-          { name: "Tricep Dips", sets: "1", reps: "12", rest: "15s", notes: "" },
-          { name: "Plank", sets: "1", reps: "45 sec", rest: "60s", notes: "Rest between rounds" },
-        ]
-      },
-      {
-        name: "Circuit C — Lower Body + Core",
-        // The rounds are DATA, not a line in the title. Written as a name, the
-        // player had no way to know about them and ran the list once — a third
-        // of the session, delivered as if it were the whole thing.
-        rounds: 3,
-        exercises: [
-          { name: "Goblet Squat", sets: "1", reps: "15", rest: "15s", notes: "" },
-          { name: "Hip Thrust", sets: "1", reps: "15", rest: "15s", notes: "" },
-          { name: "Step-ups", sets: "1", reps: "12 each", rest: "15s", notes: "" },
-          { name: "Sumo Deadlift", sets: "1", reps: "12", rest: "15s", notes: "" },
-          { name: "Calf Raises", sets: "1", reps: "20", rest: "15s", notes: "" },
-          { name: "Russian Twists", sets: "1", reps: "20", rest: "15s", notes: "" },
-          { name: "Leg Raises", sets: "1", reps: "15", rest: "60s", notes: "Rest between rounds" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "fullbody", level: "beginner", name: "Full Body Training", nameAr: "تدريب الجسم الكامل",
-    color: "#8b5cf6", emoji: "\ud83c\udfcb\ufe0f",
-    desc: "3 days a week, whole body each session \u2014 every muscle trained 3\u00d7 weekly, which is what makes it work for beginners",
-    descAr: "3 أيام أسبوعياً، الجسم كامل في كل جلسة — كل عضلة 3 مرات أسبوعياً",
-    days: [
-      {
-        name: "Day A \u2014 Full Body (Mon)",
-        exercises: [
-          { name: "Barbell Squat", sets: "3", reps: "6-8", rest: "2min", notes: "Main lift \u2014 add weight when all 3 sets hit 8" },
-          { name: "Bench Press", sets: "3", reps: "6-8", rest: "2min", notes: "Main upper push" },
-          { name: "Barbell Row", sets: "3", reps: "8-10", rest: "90s", notes: "Main upper pull" },
-          { name: "Overhead Press", sets: "2", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Plank", sets: "3", reps: "45 sec", rest: "30s", notes: "Core" },
-        ]
-      },
-      {
-        name: "Day B \u2014 Full Body (Wed)",
-        exercises: [
-          { name: "Romanian Deadlift", sets: "3", reps: "8-10", rest: "90s", notes: "Hinge \u2014 moderate load, not a max effort" },
-          { name: "Incline DB Press", sets: "3", reps: "10-12", rest: "75s", notes: "Upper chest" },
-          { name: "Pull-ups / Lat Pulldown", sets: "3", reps: "8-12", rest: "90s", notes: "Vertical pull" },
-          { name: "Leg Press", sets: "3", reps: "12-15", rest: "75s", notes: "Quads" },
-          { name: "Lateral Raises", sets: "2", reps: "12-15", rest: "60s", notes: "Side delts" },
-          { name: "Dead Bug", sets: "3", reps: "8 each side", rest: "45s", notes: "Core \u2014 slow and controlled" },
-        ]
-      },
-      {
-        name: "Day C \u2014 Full Body (Fri)",
-        exercises: [
-          { name: "Deadlift", sets: "3", reps: "5", rest: "2min", notes: "The one heavy pull of the week \u2014 kept on its own day" },
-          { name: "Goblet Squat", sets: "3", reps: "10-12", rest: "90s", notes: "Lighter squat pattern after the deadlift" },
-          { name: "Dumbbell Press", sets: "3", reps: "10-12", rest: "75s", notes: "" },
-          { name: "Cable Row", sets: "3", reps: "10-12", rest: "75s", notes: "" },
-          { name: "Barbell Curl", sets: "2", reps: "10-12", rest: "60s", notes: "" },
-          { name: "Tricep Pushdown", sets: "2", reps: "12-15", rest: "60s", notes: "" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "hiit", level: "intermediate", name: "HIIT Training", nameAr: "تدريب HIIT",
-    color: "#A63A3A", emoji: "🔥",
-    desc: "High Intensity Interval Training — maximum calorie burn",
-    descAr: "تدريب متقطع عالي الكثافة — حرق أقصى للسعرات",
-    days: [
-      {
-        name: "HIIT Session 1 — Cardio Intervals (20-30 min)",
-        exercises: [
-          { name: "Warm-up Jog", sets: "1", reps: "5 min", rest: "0s", notes: "Light pace" },
-          { name: "Sprint", sets: "8", reps: "30 sec", rest: "30s", notes: "All out effort" },
-          { name: "High Knees", sets: "4", reps: "40 sec", rest: "20s", notes: "" },
-          { name: "Jump Rope", sets: "4", reps: "40 sec", rest: "20s", notes: "" },
-          { name: "Burpees", sets: "4", reps: "10", rest: "30s", notes: "" },
-          { name: "Cool Down Walk", sets: "1", reps: "5 min", rest: "0s", notes: "" },
-        ]
-      },
-      {
-        name: "HIIT Session 2 — Strength Intervals",
-        exercises: [
-          { name: "Jump Squats", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "Tabata style" },
-          { name: "Push-up Burpees", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "" },
-          { name: "Kettlebell Swing", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "" },
-          { name: "Box Jumps", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "" },
-          { name: "Mountain Climbers", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "" },
-        ]
-      },
-      {
-        name: "HIIT Session 3 — Metabolic Conditioning",
-        exercises: [
-          { name: "Thrusters (DB)", sets: "4", reps: "12", rest: "30s", notes: "" },
-          { name: "Pull-ups", sets: "4", reps: "8-10", rest: "30s", notes: "" },
-          { name: "Box Step-ups", sets: "4", reps: "10 each", rest: "30s", notes: "" },
-          { name: "Battle Ropes", sets: "4", reps: "30 sec", rest: "30s", notes: "" },
-          { name: "Slam Ball", sets: "4", reps: "15", rest: "30s", notes: "" },
-          { name: "Rowing Machine", sets: "4", reps: "250m", rest: "45s", notes: "" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "crossfit", level: "advanced", name: "CrossFit Style", nameAr: "أسلوب كروسفيت",
-    color: "#0ea5e9", emoji: "🏆",
-    desc: "Functional fitness — strength, cardio and gymnastics combined. The benchmark workouts here are scaled: add rounds and load over months, and only once the movements are clean",
-    descAr: "لياقة وظيفية — قوة وكارديو وجمباز معاً",
-    days: [
-      // ── Why these two are scaled from the published versions ──
-      //
-      // "Fran" as written is 45 thrusters at 42.5 kg and 45 pull-ups for time;
-      // "Cindy" is as many rounds as possible in 20 minutes, which is commonly
-      // 15-20 rounds — 75-100 pull-ups and 150-200 push-ups. Two things in the
-      // literature say a person meeting this through an app should not be
-      // handed those numbers:
-      //
-      //   - Novices in CrossFit are injured at 9.5-10.6 per 1000 hours against
-      //     0.74-3.3 for experienced participants; 14.9% were injured inside
-      //     eight weeks, lower back and knee first. An introductory class made
-      //     no measurable difference. (Pediatr/Sports Med prospective cohort,
-      //     PMC7077206.)
-      //   - The rhabdomyolysis case reviews centre on exactly this shape of
-      //     work: high-repetition pull-ups and chin-ups, 100+ push-ups, and
-      //     "Murph". The two biggest risk factors are being unfamiliar with
-      //     the training and coming back after a break. (Apunts systematic
-      //     review, 63 cases.)
-      //
-      // So the ladder is shorter, the pull is horizontal, and the AMRAP has a
-      // round ceiling instead of an open clock. The published versions are
-      // named in the notes as what these progress towards — scaled is not the
-      // same as hidden.
-      {
-        name: "WOD 1 — \"Fran\" (scaled)",
-        rounds: 3,
-        exercises: [
-          { name: "Thrusters (Barbell 30kg)", sets: "1", reps: "15", repsByRound: [15, 12, 9], rest: "As needed", notes: "For time. Rx is 42.5kg — earn it over months, not weeks" },
-          { name: "Ring Rows", sets: "1", reps: "15", repsByRound: [15, 12, 9], rest: "As needed", notes: "Rx is strict pull-ups. High-rep pull-ups are the single most common trigger in the rhabdomyolysis case reports — this is the horizontal version of the same pull" },
-        ]
-      },
-      {
-        name: "WOD 2 — \"Cindy\" (5 rounds, 20 min cap)",
-        rounds: 5,
-        exercises: [
-          { name: "Pull-ups", sets: "1", reps: "5", rest: "0s", notes: "Band-assisted or ring rows if 5 strict is not there yet" },
-          { name: "Push-ups", sets: "1", reps: "10", rest: "0s", notes: "" },
-          { name: "Air Squats", sets: "1", reps: "15", rest: "60s", notes: "Rest here, then the next round. Stop at 20 minutes even if rounds are left" },
-        ]
-      },
-      {
-        name: "WOD 3 — Strength + Conditioning",
-        exercises: [
-          { name: "Back Squat", sets: "5", reps: "5", rest: "2min", notes: "Heavy 5×5" },
-          { name: "Power Clean", sets: "5", reps: "3", rest: "2min", notes: "Olympic lift" },
-          { name: "Box Jumps", sets: "3", reps: "10", rest: "90s", notes: "" },
-          { name: "Double Unders / Jump Rope", sets: "3", reps: "50", rest: "60s", notes: "" },
-          { name: "GHD Sit-ups", sets: "3", reps: "20", rest: "60s", notes: "" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "arnold", level: "advanced", name: "Arnold Split", nameAr: "تقسيم أرنولد",
-    color: "#21509B", emoji: "🌟",
-    desc: "6-day split by Arnold Schwarzenegger — classic bodybuilding",
-    descAr: "تقسيم 6 أيام بأسلوب أرنولد — بناء جسم كلاسيكي",
-    days: [
-      {
-        name: "Day 1 & 4 — Chest + Back",
-        exercises: [
-          { name: "Bench Press", sets: "4", reps: "6-10", rest: "90s", notes: "" },
-          { name: "Incline Dumbbell Press", sets: "4", reps: "8-12", rest: "75s", notes: "" },
-          { name: "Weighted Pull-ups", sets: "4", reps: "8-10", rest: "90s", notes: "" },
-          { name: "T-Bar Row", sets: "4", reps: "8-10", rest: "90s", notes: "" },
-          { name: "Cable Fly", sets: "3", reps: "12-15", rest: "60s", notes: "" },
-          { name: "Straight Arm Pulldown", sets: "3", reps: "12", rest: "60s", notes: "" },
-        ]
-      },
-      {
-        name: "Day 2 & 5 — Shoulders + Arms",
-        exercises: [
-          { name: "Arnold Press", sets: "4", reps: "8-12", rest: "90s", notes: "Signature exercise" },
-          { name: "Lateral Raises", sets: "4", reps: "12-15", rest: "60s", notes: "" },
-          { name: "Barbell Curl", sets: "4", reps: "8-12", rest: "75s", notes: "" },
-          { name: "Close Grip Bench", sets: "4", reps: "8-12", rest: "75s", notes: "" },
-          { name: "Concentration Curl", sets: "3", reps: "12", rest: "60s", notes: "" },
-          { name: "Overhead Tricep Ext", sets: "3", reps: "12", rest: "60s", notes: "" },
-        ]
-      },
-      {
-        name: "Day 3 & 6 — Legs + Lower Back",
-        exercises: [
-          { name: "Barbell Squat", sets: "5", reps: "8-12", rest: "2min", notes: "" },
-          { name: "Leg Press", sets: "4", reps: "12-15", rest: "90s", notes: "" },
-          { name: "Stiff Leg Deadlift", sets: "4", reps: "10-12", rest: "90s", notes: "" },
-          { name: "Leg Curl", sets: "4", reps: "12-15", rest: "60s", notes: "" },
-          { name: "Standing Calf Raise", sets: "5", reps: "15-20", rest: "45s", notes: "" },
-          { name: "Hyperextensions", sets: "3", reps: "15", rest: "60s", notes: "Lower back" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "homebw", level: "beginner", name: "Home Bodyweight", nameAr: "تمارين منزلية بوزن الجسم",
-    color: "#10b981", emoji: "🏠",
-    desc: "No equipment needed — train anywhere using only your body weight",
-    descAr: "بدون معدات — تدريب في أي مكان بوزن الجسم فقط",
-    days: [
-      {
-        name: "Day 1 — Upper Body (Bodyweight)",
-        exercises: [
-          { name: "Push-ups", sets: "4", reps: "10-15", rest: "60s", notes: "Knee \u2192 incline \u2192 full \u2192 feet raised as they get easier" },
-          { name: "Incline Push-ups (on table/wall)", sets: "3", reps: "12", rest: "45s", notes: "Easier variation" },
-          { name: "Tricep Dips (chair)", sets: "3", reps: "12", rest: "45s", notes: "Use sturdy chair" },
-          { name: "Table Inverted Row", sets: "4", reps: "8-12", rest: "60s", notes: "Under a sturdy table \u2014 the pulling this programme was missing" },
-          { name: "Superman Hold", sets: "3", reps: "20 sec", rest: "30s", notes: "Back strength" },
-          { name: "Plank Shoulder Taps", sets: "3", reps: "10 each", rest: "45s", notes: "Core + shoulder stability" },
-        ]
-      },
-      {
-        name: "Day 2 — Lower Body (Bodyweight)",
-        exercises: [
-          { name: "Bodyweight Squats", sets: "4", reps: "15-20", rest: "60s", notes: "" },
-          { name: "Reverse Lunges", sets: "3", reps: "10 each", rest: "45s", notes: "Knee friendly" },
-          { name: "Glute Bridges", sets: "3", reps: "15", rest: "45s", notes: "" },
-          { name: "Calf Raises", sets: "3", reps: "20", rest: "30s", notes: "" },
-          { name: "Wall Sit", sets: "3", reps: "30 sec", rest: "45s", notes: "Isometric quad hold" },
-        ]
-      },
-      {
-        name: "Day 3 — Full Body + Core",
-        exercises: [
-          { name: "Burpees (or step-back version)", sets: "3", reps: "10", rest: "60s", notes: "Low impact option available" },
-          { name: "Mountain Climbers", sets: "3", reps: "30 sec", rest: "45s", notes: "" },
-          { name: "Plank", sets: "3", reps: "40 sec", rest: "30s", notes: "" },
-          { name: "Bicycle Crunches", sets: "3", reps: "20", rest: "30s", notes: "" },
-          { name: "Towel Door Row", sets: "3", reps: "10-12", rest: "45s", notes: "Towel round a door handle, lean back and pull \u2014 second pull of the week" },
-          { name: "Jumping Jacks", sets: "3", reps: "30 sec", rest: "30s", notes: "Cardio finisher" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "senior75", level: "clinical", name: "Senior Fitness 75+", nameAr: "لياقة كبار السن 75+",
-    color: "#06b6d4", emoji: "🧓",
-    desc: "Gentle, safe training using resistance bands, foam roller, Pilates ring & self-massage — designed for elderly clients",
-    descAr: "تدريب لطيف وآمن باستخدام أحزمة المقاومة وأسطوانة الفوم وحلقة البيلاتس — مصمم لكبار السن",
-    warmup: [
-      { name: "Seated Marching", sets: "1", reps: "60 sec", rest: "0s", notes: "Sit tall, lift knees gently, swing arms" },
-      { name: "Ankle Pumps (seated)", sets: "1", reps: "15 each", rest: "0s", notes: "Point and flex — wakes up circulation" },
-      { name: "Seated Shoulder Rolls", sets: "1", reps: "10 each way", rest: "0s", notes: "Slow, no force" },
-      { name: "Neck Rotations (small range)", sets: "1", reps: "30 sec", rest: "0s", notes: "Never push into pain" },
-      { name: "Seated Torso Turns", sets: "1", reps: "8 each side", rest: "0s", notes: "Hands crossed on chest, gentle" },
-      { name: "Sit-to-Stand", sets: "1", reps: "5 reps", rest: "30s", notes: "Hold chair arms if needed — this is the warm-up and a test" },
-    ],
-    cooldown: [
-      { name: "Seated Deep Breathing", sets: "1", reps: "60 sec", rest: "0s", notes: "Slow in through nose, longer out" },
-      { name: "Seated Hamstring Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Leg straight, heel on floor, sit tall" },
-      { name: "Seated Calf & Ankle Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Toes pulled up toward you" },
-      { name: "Seated Chest Opener", sets: "1", reps: "20 sec", rest: "10s", notes: "Hands behind, gentle — opens posture" },
-      { name: "Neck Side Stretch", sets: "1", reps: "20 sec each", rest: "0s", notes: "Ear toward shoulder, no pulling" },
-    ],
-    // Two supervised days a week, for a client whose schedule is fixed at that
-    // — Rafi's home-PT client trains Monday and Thursday.
-    //
-    // NOT the three-day programme with a day dropped. Run that way, half of
-    // this work would reach the person once every ten days, which is under the
-    // benchmark for anyone and further under it at eighty, where muscle is
-    // lost quickly and rebuilt slowly. So each day covers the whole body, and
-    // BALANCE APPEARS ON BOTH — falls are the risk being trained against, and
-    // it is not the thing to halve.
-    //
-    // The massage and release work stays in the session. Rafi does it himself
-    // in the room; it is part of what he delivers, not homework. Only the
-    // stretching goes home, because that is safe to do alone.
-    schedules: {
-      2: [
-        {
-          name: "Day A — Power, Pull & Balance",
-          exercises: [
-            { name: "Sit-to-Stand (stand up quickly)", sets: "3", reps: "8", rest: "60s", notes: "Stand FAST, sit down slow — speed matters more than load at this age" },
-            { name: "Seated Resistance Band Row", sets: "3", reps: "10-12", rest: "60s", notes: "Light band — improves posture" },
-            { name: "Standing Wall Push-ups", sets: "2", reps: "8-10", rest: "60s", notes: "Hands on wall, gentle chest/arm work" },
-            { name: "Band Lateral Walk", sets: "2", reps: "10 steps each", rest: "60s", notes: "Loop band around ankles, hold support if needed" },
-            { name: "Single Leg Stand (hold support)", sets: "3", reps: "20 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
-            { name: "Tandem Walk (heel-to-toe)", sets: "3", reps: "10 steps", rest: "45s", notes: "Along a wall — dynamic balance, which is what actually prevents falls" },
-            { name: "Foam Roller Calf Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Slow, gentle rolling — no pain" },
-            { name: "Hand Massage / Self Massage (forearms, hands)", sets: "1", reps: "3-5 min", rest: "0s", notes: "Improves circulation, very relaxing" },
-          ]
-        },
-        {
-          name: "Day B — Squat, Press & Balance",
-          exercises: [
-            { name: "Chair-Assisted Mini Squats", sets: "3", reps: "8", rest: "60s", notes: "Hold chair back for support" },
-            { name: "Seated Band Shoulder Pull-Apart", sets: "3", reps: "10", rest: "45s", notes: "Posture + shoulder mobility" },
-            { name: "Pilates Ring Chest Press (seated)", sets: "3", reps: "10", rest: "45s", notes: "Squeeze ring between palms" },
-            { name: "Band Seated Leg Extension", sets: "2", reps: "10 each", rest: "45s", notes: "Light tension band around ankle" },
-            { name: "Single Leg Stand (hold support)", sets: "3", reps: "20 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
-            { name: "Tandem Walk (heel-to-toe)", sets: "3", reps: "10 steps", rest: "45s", notes: "Along a wall — the second dose this week, on purpose" },
-            { name: "Pilates Ring Ankle Press", sets: "2", reps: "10 each", rest: "30s", notes: "Ankle strength, seated" },
-            { name: "Foam Roller Upper Back Release", sets: "1", reps: "60 sec", rest: "0s", notes: "Gentle, supported by floor or bed" },
-            { name: "Hand-held Massager — Lower Back & Legs", sets: "1", reps: "5-8 min", rest: "0s", notes: "Use on low setting, avoid joints directly" },
-          ]
-        },
-      ],
-    },
-    days: [
-      {
-        name: "Day 1 — Seated & Standing Mobility",
-        exercises: [
-          { name: "Seated Resistance Band Row", sets: "3", reps: "10-12", rest: "60s", notes: "Light band — improves posture" },
-          { name: "Band Lateral Walk", sets: "2", reps: "10 steps each", rest: "60s", notes: "Loop band around ankles, hold support if needed" },
-          { name: "Pilates Ring Knee Squeeze (seated)", sets: "3", reps: "12", rest: "45s", notes: "Inner thigh + pelvic floor, very gentle" },
-          { name: "Standing Wall Push-ups", sets: "2", reps: "8-10", rest: "60s", notes: "Hands on wall, gentle chest/arm work" },
-          { name: "Sit-to-Stand (stand up quickly)", sets: "3", reps: "8", rest: "60s", notes: "Stand FAST, sit down slow \u2014 speed matters more than load at this age" },
-          { name: "Foam Roller Calf Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Slow, gentle rolling — no pain" },
-        ]
-      },
-      {
-        name: "Day 2 — Balance & Gentle Strength",
-        exercises: [
-          { name: "Chair-Assisted Mini Squats", sets: "3", reps: "8", rest: "60s", notes: "Hold chair back for support" },
-          { name: "Band Seated Leg Extension", sets: "2", reps: "10 each", rest: "45s", notes: "Light tension band around ankle" },
-          { name: "Pilates Ring Chest Press (seated)", sets: "3", reps: "10", rest: "45s", notes: "Squeeze ring between palms" },
-          { name: "Single Leg Stand (hold support)", sets: "3", reps: "20 sec each", rest: "30s", notes: "Balance — always near wall/chair" },
-          { name: "Tandem Walk (heel-to-toe)", sets: "3", reps: "10 steps", rest: "45s", notes: "Along a wall — dynamic balance, which is what actually prevents falls" },
-          { name: "Hand Massage / Self Massage (forearms, hands)", sets: "1", reps: "3-5 min", rest: "0s", notes: "Improves circulation, very relaxing" },
-        ]
-      },
-      {
-        name: "Day 3 — Flexibility & Recovery",
-        exercises: [
-          { name: "Foam Roller Upper Back Release", sets: "1", reps: "60 sec", rest: "0s", notes: "Gentle, supported by floor or bed" },
-          { name: "Seated Band Shoulder Pull-Apart", sets: "3", reps: "10", rest: "45s", notes: "Posture + shoulder mobility" },
-          { name: "Pilates Ring Ankle Press", sets: "2", reps: "10 each", rest: "30s", notes: "Ankle strength, seated" },
-          { name: "Hand-held Massager — Lower Back & Legs", sets: "1", reps: "5-8 min", rest: "0s", notes: "Use on low setting, avoid joints directly" },
-          { name: "Walk", sets: "1", reps: "20-30 min", rest: "0s", notes: "At least twice a week on non-training days \u2014 the part most programmes leave out" },
-          { name: "Deep Breathing + Gentle Neck Stretch", sets: "1", reps: "5 min", rest: "0s", notes: "Relaxation finish" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "lowback", level: "clinical", name: "Lower Back Pain Relief", nameAr: "تخفيف آلام أسفل الظهر",
-    color: "#f43f5e", emoji: "🩹",
-    desc: "Gentle core stabilization and mobility work to relieve and prevent lower back pain",
-    descAr: "تمارين لطيفة لتقوية الجذع وتحسين الحركة لتخفيف آلام أسفل الظهر",
-    warmup: [
-      { name: "Light Walk in Place", sets: "1", reps: "2 min", rest: "0s", notes: "Raise temperature before any spine work" },
-      { name: "Pelvic Tilts (lying)", sets: "1", reps: "10 reps", rest: "0s", notes: "Small, comfortable range" },
-      { name: "Cat-Cow (slow)", sets: "1", reps: "8 reps", rest: "0s", notes: "Move through the range you have today" },
-      { name: "Knee Rocks (lying)", sets: "1", reps: "8 each side", rest: "0s", notes: "Knees bent, rock side to side, small range" },
-      { name: "Glute Bridge (warm-up reps)", sets: "1", reps: "8 reps", rest: "30s", notes: "Light — just waking the hips up" },
-    ],
-    cooldown: [
-      { name: "Knee-to-Chest Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "One leg at a time, relaxed" },
-      { name: "Supine Figure-4 Glute Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Ankle over knee, pull gently" },
-      { name: "Child's Pose", sets: "1", reps: "45 sec", rest: "0s", notes: "Knees wide if more comfortable" },
-      { name: "Diaphragmatic Breathing (lying)", sets: "1", reps: "60 sec", rest: "0s", notes: "Hand on belly — settles the nervous system" },
-    ],
-    days: [
-      {
-        name: "Day 1 — Gentle Mobility",
-        exercises: [
-          { name: "Cat-Cow Stretch", sets: "3", reps: "10", rest: "30s", notes: "Slow controlled spinal movement" },
-          { name: "Pelvic Tilts (lying)", sets: "3", reps: "12", rest: "30s", notes: "Engage lower abs gently" },
-          { name: "Knee-to-Chest Stretch", sets: "2", reps: "20 sec each", rest: "20s", notes: "One leg at a time" },
-          { name: "Bird Dog", sets: "3", reps: "8 each side", rest: "45s", notes: "Core stability — go slow" },
-          { name: "Foam Roller Thoracic Release", sets: "1", reps: "60 sec", rest: "0s", notes: "Avoid rolling directly on lower back" },
-        ]
-      },
-      {
-        name: "Day 2 — Core Stabilization",
-        exercises: [
-          { name: "Glute Bridge", sets: "3", reps: "12", rest: "45s", notes: "Squeeze glutes, avoid arching" },
-          { name: "Dead Bug", sets: "3", reps: "8 each side", rest: "45s", notes: "Keep lower back flat on floor" },
-          { name: "Modified Side Plank (knees down)", sets: "2", reps: "20 sec each", rest: "30s", notes: "Builds side core support" },
-          { name: "Band Seated Row", sets: "3", reps: "12", rest: "45s", notes: "Strengthens upper back posture" },
-          { name: "Gentle Walking", sets: "1", reps: "10-15 min", rest: "0s", notes: "Low impact, daily recommended" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "shoulder", level: "clinical", name: "Shoulder Pain Rehab", nameAr: "علاج تأهيلي لألم الكتف",
-    color: "#8b5cf6", emoji: "💢",
-    desc: "Rotator cuff strengthening and mobility to relieve shoulder pain and improve range of motion",
-    descAr: "تقوية الكتف وتحسين المرونة لتخفيف الألم",
-    warmup: [
-      { name: "Light Walk in Place", sets: "1", reps: "2 min", rest: "0s", notes: "General warm-up, no arm swinging yet" },
-      { name: "Pendulum Swing", sets: "1", reps: "30 sec each arm", rest: "0s", notes: "Lean forward, let the arm hang and swing" },
-      { name: "Shoulder Rolls", sets: "1", reps: "10 each way", rest: "0s", notes: "Slow and controlled" },
-      { name: "Scapular Squeeze", sets: "1", reps: "10 reps", rest: "0s", notes: "Squeeze shoulder blades, hold 2 sec" },
-      { name: "Wall Slides (small range)", sets: "1", reps: "8 reps", rest: "30s", notes: "Only as high as stays pain-free" },
-      { name: "Neck Side Stretch", sets: "1", reps: "20 sec each", rest: "0s", notes: "Releases upper trap before shoulder work" },
-    ],
-    cooldown: [
-      { name: "Cross-body Shoulder Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Gentle, never forced" },
-      { name: "Doorway Chest Stretch", sets: "1", reps: "20 sec", rest: "10s", notes: "Pain-free range only" },
-      { name: "Upper Trap Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Opposite hand under the seat if sitting" },
-      { name: "Deep Breathing", sets: "1", reps: "60 sec", rest: "0s", notes: "Shoulders down and relaxed" },
-    ],
-    days: [
-      {
-        name: "Day 1 — Mobility & Activation",
-        exercises: [
-          { name: "Pendulum Swing", sets: "2", reps: "30 sec each arm", rest: "30s", notes: "Lean forward, let arm swing gently" },
-          { name: "Band External Rotation", sets: "3", reps: "12 each", rest: "45s", notes: "Elbow at side, light band" },
-          { name: "Band Internal Rotation", sets: "3", reps: "12 each", rest: "45s", notes: "" },
-          { name: "Wall Slides", sets: "3", reps: "10", rest: "45s", notes: "Back against wall, slide arms up slowly" },
-          { name: "Scapular Squeeze", sets: "3", reps: "12", rest: "30s", notes: "Squeeze shoulder blades together" },
-        ]
-      },
-      {
-        name: "Day 2 — Strength & Stability",
-        exercises: [
-          { name: "Band Front Raise (light)", sets: "3", reps: "10", rest: "45s", notes: "Keep pain-free range only" },
-          { name: "Band Lateral Raise (light)", sets: "3", reps: "10", rest: "45s", notes: "" },
-          { name: "Prone Y-T-W Raises (no weight)", sets: "2", reps: "8 each letter", rest: "45s", notes: "Lying face down, rotator cuff activation" },
-          { name: "Massager — Upper Trap & Shoulder", sets: "1", reps: "5 min", rest: "0s", notes: "Low setting, avoid bone directly" },
-          { name: "Cross-body Shoulder Stretch", sets: "2", reps: "20 sec each", rest: "20s", notes: "Gentle, never forced" },
-        ]
-      }
-    ]
-  },
-  {
-    id: "kneefriendly", level: "clinical", name: "Knee Pain Friendly", nameAr: "تمارين مناسبة لألم الركبة",
-    color: "#eab308", emoji: "🦵",
-    desc: "Low-impact strength training that protects the knees while building leg strength",
-    descAr: "تدريب منخفض التأثير يحمي الركبة مع بناء قوة الأرجل",
-    warmup: [
-      { name: "Stationary Bike or Light Walk", sets: "1", reps: "5 min", rest: "0s", notes: "Best knee warm-up there is — no impact" },
-      { name: "Ankle Pumps", sets: "1", reps: "15 each", rest: "0s", notes: "Point and flex" },
-      { name: "Seated Knee Extensions (bodyweight)", sets: "1", reps: "10 each", rest: "0s", notes: "Small range, no weight — just warming the joint" },
-      { name: "Straight Leg Raises", sets: "1", reps: "8 each", rest: "0s", notes: "Quad activation without bending the knee" },
-      { name: "Glute Bridge (warm-up reps)", sets: "1", reps: "8 reps", rest: "0s", notes: "Wakes the hips so the knee does less work" },
-      { name: "Standing Hip Circles (small)", sets: "1", reps: "8 each way", rest: "30s", notes: "Hold support, small controlled circles" },
-    ],
-    cooldown: [
-      { name: "Seated Hamstring Stretch", sets: "1", reps: "20 sec each", rest: "10s", notes: "Sit tall, heel on floor" },
-      { name: "Standing Quad Stretch (with support)", sets: "1", reps: "20 sec each", rest: "10s", notes: "Hold a wall or chair" },
-      { name: "Calf Stretch (wall)", sets: "1", reps: "20 sec each", rest: "10s", notes: "Back heel down, front knee bent" },
-      { name: "Foam Roller Quad (above knee only)", sets: "1", reps: "45 sec each", rest: "10s", notes: "Never roll over the kneecap or joint line" },
-      { name: "Deep Breathing", sets: "1", reps: "60 sec", rest: "0s", notes: "" },
-    ],
-    days: [
-      {
-        name: "Day 1 — Quad & Glute Activation (Low Impact)",
-        exercises: [
-          { name: "Straight Leg Raises (lying)", sets: "3", reps: "12 each", rest: "45s", notes: "No knee bending — quad activation" },
-          { name: "Glute Bridge", sets: "3", reps: "12", rest: "45s", notes: "Strengthens hips, supports knees" },
-          { name: "Wall Sit (shallow angle only)", sets: "2", reps: "15-20 sec", rest: "45s", notes: "Stop if any knee discomfort" },
-          { name: "Band Seated Leg Extension", sets: "3", reps: "10 each", rest: "45s", notes: "Light resistance only" },
-          { name: "Foam Roller Quad & IT Band Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Gentle rolling above knee" },
-        ]
-      },
-      {
-        name: "Day 2 — Stability & Low Impact Cardio",
-        exercises: [
-          { name: "Clamshells (band optional)", sets: "3", reps: "12 each", rest: "30s", notes: "Hip stability, protects knee tracking" },
-          { name: "Step-ups (low step, controlled)", sets: "2", reps: "8 each", rest: "45s", notes: "Use low step, avoid if painful" },
-          { name: "Stationary Bike or Pool Walking", sets: "1", reps: "15-20 min", rest: "0s", notes: "Best low-impact cardio for knees" },
-          { name: "Pilates Ring Inner Thigh Squeeze", sets: "3", reps: "12", rest: "30s", notes: "Seated or lying, gentle" },
-          { name: "Hand Massager — Around Knee (not on joint)", sets: "1", reps: "5 min", rest: "0s", notes: "Massage quad/calf, avoid joint line" },
-        ]
-      }
-    ]
-  }
-];
-
-// ── TRAINING LEVELS ────────────────────────────────────────
-// Gates what a client should be shown. "clinical" systems are conditioning
-// programmes built around a limitation — they are not medical treatment and
-// need a screening conversation before being assigned.
-const LEVEL_META = {
-  beginner:     { label: "Beginner",     labelAr: "مبتدئ",  color: "#12795A" },
-  intermediate: { label: "Intermediate", labelAr: "متوسط",  color: "#21509B" },
-  advanced:     { label: "Advanced",     labelAr: "متقدم",  color: "#A63A3A",
-    warn: "Advanced system — heavy or technical lifts and high weekly volume. Assign only to a client with a solid training base and sound technique.",
-    warnAr: "نظام متقدم — تمارين ثقيلة أو تقنية وحجم تدريبي عالٍ. لا يُسند إلا لعميل لديه أساس تدريبي جيد وتقنية سليمة." },
-  clinical:     { label: "Clinical",     labelAr: "تأهيلي", color: "#06b6d4",
-    warn: "Conditioning programme, not medical treatment. Screen the client first, and refer to a physiotherapist or doctor for undiagnosed, worsening or radiating pain.",
-    warnAr: "برنامج تأهيل بدني وليس علاجاً طبياً. افحص العميل أولاً، وحوّله إلى أخصائي علاج طبيعي أو طبيب في حال وجود ألم غير مشخّص أو متزايد أو ممتد." },
-};
-
-// ── MEAL PLANS ─────────────────────────────────────────────
-const MEALS = [
-  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#9A6212", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Kerala.jpeg", baseCal: 1800, meals: [{ mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg", time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack1.jpeg", time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack2.jpeg", time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Dinner.jpeg", time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
-  { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#A63A3A", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Protein.jpeg", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Egg whites × 6 + Oats 60g + Milk 200ml", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake 30g + Apple × 1", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice 120g + Veg 80g", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 1 + Peanut butter toast 40g", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish 180g + Sweet potato 150g + Salad 80g", cal: 420, p: 40, c: 42, f: 8 }] },
-  { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#12795A", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_FatBurn.jpeg", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt 150g + Berries 60g + Chia 10g", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber 100g + Hummus 40g", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad 200g + Olive oil 10ml", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds 20g + Black coffee 150ml", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish 150g + Vegetables 100g + Dal soup 100g", cal: 380, p: 38, c: 28, f: 8 }] },
-  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#21509B", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Vegetarian.jpeg", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
-  { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#6B4FA8", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Muscle.jpeg", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
-];
-
-const MEAL_PREP = {
-  kerala: {
-    "Breakfast": ["Soak rice flour lightly with water and salt", "Layer flour and grated coconut in puttu maker, steam 7-10 min", "Heat kadala curry (pre-soaked chickpeas pressure cooked with onion, coconut & spices)", "Serve hot with 1 banana"],
-    "Snack": ["Open one fresh coconut and pour water into glass", "Portion 20g mixed nuts (almonds, cashews) into a bowl"],
-    "Lunch": ["Cook brown rice (1:2 rice-water) for 25 min", "Simmer dal with turmeric & salt until soft", "Cook fish curry with kudampuli, chilli & coconut milk 15 min", "Stir-fry vegetables 5 min with minimal oil"],
-    "Dinner": ["Knead wheat flour with water, rest 15 min, roll & cook chapatis on hot tawa", "Cook chicken curry with onion, tomato, ginger-garlic & spices 20 min", "Chop fresh salad — cucumber, carrot, onion with lemon"],
-  },
-  protein: {
-    "Breakfast": ["Whisk 6 egg whites, cook as omelette with minimal oil", "Cook 60g oats with 200ml milk for 5 min", "Serve together while warm"],
-    "Snack": ["Blend 30g whey protein with cold water or milk", "Eat 1 apple alongside"],
-    "Lunch": ["Season chicken breast with pepper, paprika & salt", "Grill 6-7 min per side until cooked through", "Serve with cooked brown rice and steamed vegetables"],
-    "Pre-workout": ["Toast whole wheat bread, spread peanut butter 40g", "Eat with 1 banana 45-60 min before workout"],
-    "Dinner": ["Marinate fish with lemon, garlic & herbs 15 min", "Grill 5-6 min per side", "Bake or boil sweet potato until fork-tender", "Serve with fresh salad"],
-  },
-  fatburn: {
-    "Breakfast": ["Add 150g Greek yogurt to bowl", "Top with 60g fresh berries and 10g chia seeds", "Let chia soak 5 min before eating"],
-    "Snack": ["Slice cucumber into sticks", "Serve with 40g hummus for dipping"],
-    "Lunch": ["Grill seasoned chicken breast, slice thin", "Toss mixed greens, tomato, cucumber with 10ml olive oil & lemon", "Top salad with warm chicken"],
-    "Dinner": ["Steam fish 12-15 min with ginger & garlic", "Steam mixed vegetables 8 min", "Heat light dal soup — serve everything together"],
-  },
-  veg: {
-    "Breakfast": ["Steam idli batter in moulds 10-12 min", "Heat sambar with vegetables", "Serve 4 idlis with sambar and coconut chutney"],
-    "Snack": ["Chop seasonal fruits into a bowl 150g", "Serve with 200ml chilled buttermilk"],
-    "Lunch": ["Cook brown rice 25 min", "Heat rajma curry (pre-soaked, pressure cooked with spices)", "Lightly pan-fry paneer cubes 80g", "Serve with fresh salad"],
-    "Dinner": ["Cook rotis on hot tawa", "Heat dal makhani (slow-cooked black dal with butter)", "Prepare mixed vegetable curry with minimal oil"],
-  },
-  bulk: {
-    "Breakfast": ["Scramble 4 whole eggs with minimal butter", "Cook 80g oats with 250ml full-fat milk", "Serve with 1 banana"],
-    "Snack": ["Blend 60g mass gainer with milk or water", "Eat 40g dates alongside"],
-    "Lunch": ["Cook white rice 180g", "Grill or curry 250g chicken", "Heat dal, add 10g ghee on rice", "Eat together as a full meal"],
-    "Pre-workout": ["Toast 2 slices bread with 30g peanut butter", "Eat with 2 bananas 45-60 min before workout"],
-    "Dinner": ["Cook 4 chapatis fresh", "Prepare mutton curry with onion-tomato gravy 30-40 min", "Serve with 200ml warm milk before bed"],
-  },
-};
-
-const MEAL_IMAGES = {
-  kerala: {
-    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg",
-    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack1.jpeg",
-    "Snack@16:00": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack2.jpeg",
-    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg",
-    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Dinner.jpeg",
-  },
-  protein: {
-    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Breakfast.jpeg",
-    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Snack1.jpeg",
-    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Lunch.jpeg",
-    "Pre-workout": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_PreWorkout.jpeg",
-    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/HP_Dinner.jpeg",
-  },
-  fatburn: {
-    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Breakfast.jpeg",
-    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Snack1.jpeg",
-    "Snack@16:00": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Snack2.jpeg",
-    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Lunch.jpeg",
-    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/FB_Dinner.jpeg",
-  },
-  veg: {
-    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Breakfast.jpeg",
-    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Snack1.jpeg",
-    "Snack@16:00": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Snack2.jpeg",
-    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Lunch.jpeg",
-    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/VG_Dinner.jpeg",
-  },
-  bulk: {
-    "Breakfast": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Breakfast.jpeg",
-    "Snack": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Snack1.jpeg",
-    "Lunch": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Lunch.jpeg",
-    "Pre-workout": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_PreWorkout.jpeg",
-    "Dinner": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/MB_Dinner.jpeg",
-  },
-};
-
-// Scale a meal plan's quantities + macros to match a target calorie goal
-function scaleMealPlan(plan, targetCal) {
-  const factor = targetCal / plan.baseCal;
-  const clampedFactor = Math.max(0.55, Math.min(1.8, factor)); // keep portions realistic
-  const scaledMeals = plan.meals.map(m => ({
-    ...m,
-    items: scaleItemsText(m.items, clampedFactor),
-    cal: Math.round(m.cal * clampedFactor),
-    p: Math.round(m.p * clampedFactor),
-    c: Math.round(m.c * clampedFactor),
-    f: Math.round(m.f * clampedFactor),
-  }));
-  return { ...plan, meals: scaledMeals, scaleFactor: clampedFactor };
-}
-
-// Scale numeric quantities inside an item description string (e.g. "200g" -> "260g", "× 3" -> "× 4")
-function scaleItemsText(text, factor) {
-  return text.replace(/(\d+(?:\.\d+)?)(g|ml|kg|l)\b/gi, (match, num, unit) => {
-    const scaled = Math.round(parseFloat(num) * factor);
-    return `${scaled}${unit}`;
-  }).replace(/×\s*(\d+)/g, (match, num) => {
-    const scaled = Math.max(1, Math.round(parseFloat(num) * factor));
-    return `× ${scaled}`;
-  });
-}
 
 const PAL = [
   { id: "sedentary", en: "Sedentary", ar: "خامل", desc_en: "No exercise", desc_ar: "لا تمارين", factor: 1.2, icon: "🪑" },
@@ -1654,279 +774,6 @@ function getYTSearchUrl(name) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(name + " exercise proper form tutorial")}`;
 }
 
-// ── GYM-ANIMATIONS STYLE — Grey 3D Body + Red Muscle Highlight ──
-const B  = "#9aa0a6";   // body grey
-const BD = "#6b7278";   // body dark shadow
-const BL = "#c8ced2";   // body light highlight
-const BE = "#3a4248";   // body edge/outline
-const MR = "#ff2020";   // muscle red active
-const MH = "#ff7070";   // muscle highlight
-
-function lerp(a,b,t){return a+(b-a)*t;}
-
-function HumanAnim({ exerciseId, accentColor, size=120 }) {
-  const [frame, setFrame] = useState(0);
-  useEffect(()=>{
-    const id = setInterval(()=>setFrame(f=>(f+1)%240),18);
-    return ()=>clearInterval(id);
-  },[]);
-
-  const phase=(frame/240)*Math.PI*2;
-  const e=(Math.sin(phase-Math.PI/2)+1)/2;
-  const mg=0.3+e*0.7; // muscle glow intensity
-
-  const P=({pts,f,s=BE,sw=0.7,o=1})=>(
-    <polygon points={pts.map(p=>p.join(",")).join(" ")} fill={f} stroke={s} strokeWidth={sw} opacity={o}/>
-  );
-  const E=({cx,cy,rx,ry,f,s="none",sw=0.5,o=1})=>(
-    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={f} stroke={s} strokeWidth={sw} opacity={o}/>
-  );
-  const C=({cx,cy,r,f,s=BE,sw=0.6,o=1})=>(
-    <circle cx={cx} cy={cy} r={r} fill={f} stroke={s} strokeWidth={sw} opacity={o}/>
-  );
-  const Glow=({cx,cy,rx,ry,i=1})=>(
-    <g>
-      <E cx={cx} cy={cy} rx={rx*1.8} ry={ry*1.8} f={MR} o={0.08*i*mg}/>
-      <E cx={cx} cy={cy} rx={rx} ry={ry} f={MR} o={0.55*i*mg}/>
-      <E cx={cx} cy={cy} rx={rx*0.5} ry={ry*0.5} f={MH} o={0.7*i*mg}/>
-    </g>
-  );
-  const GlowPoly=({pts,i=1})=>(
-    <polygon points={pts.map(p=>p.join(",")).join(" ")}
-      fill={MR} opacity={0.5*i*mg} stroke={MH} strokeWidth="0.5" strokeOpacity={0.6*i*mg}/>
-  );
-  const Head=({cx,cy})=>(
-    <g>
-      <E cx={cx} cy={cy} rx={10} ry={11} f={B} s={BE} sw={0.7}/>
-      <E cx={cx} cy={cy-2} rx={7} ry={5} f={BL} o={0.3}/>
-      <C cx={cx-3} cy={cy-1} r={2} f={BE} s="none"/>
-      <C cx={cx+3} cy={cy-1} r={2} f={BE} s="none"/>
-      <path d={`M${cx-3} ${cy+4} Q${cx} ${cy+7} ${cx+3} ${cy+4}`} stroke={BE} strokeWidth="1.2" fill="none"/>
-      <E cx={cx} cy={cy+11} rx={5} ry={4} f={B} s="none"/>
-    </g>
-  );
-
-  const getKey=(id)=>{
-    const l=(id||"").toLowerCase();
-    if(l.includes("squat")||l.includes("goblet")||l.includes("leg press")||l.includes("wall sit")) return "squat";
-    if(l.includes("deadlift")||l.includes("rdl")||l.includes("sumo")||l.includes("hip thrust")) return "deadlift";
-    if(l.includes("bench")||l.includes("push-up")||l.includes("pushup")||l.includes("chest")||l.includes("fly")||l.includes("incline")||l.includes("dip")) return "pushup";
-    if(l.includes("pull-up")||l.includes("pullup")||l.includes("chin")||l.includes("lat pulldown")) return "pullup";
-    if(l.includes("press")&&(l.includes("over")||l.includes("shoulder")||l.includes("military")||l.includes("arnold"))) return "press";
-    if(l.includes("row")||l.includes("cable row")||l.includes("seated row")) return "row";
-    if(l.includes("lunge")||l.includes("step-up")||l.includes("step up")) return "lunge";
-    if(l.includes("plank")||l.includes("bird dog")||l.includes("dead bug")||l.includes("ab wheel")) return "plank";
-    if(l.includes("curl")||l.includes("bicep")) return "curl";
-    if(l.includes("tricep")||l.includes("pushdown")||l.includes("skull")) return "press";
-    if(l.includes("lateral raise")||l.includes("front raise")) return "press";
-    return "squat";
-  };
-
-  const key=getKey(exerciseId);
-
-  // SQUAT
-  if(key==="squat"){
-    const dip=e*32; const hY=74+dip*0.6; const kY=108+dip*0.28; const kO=e*9; const fY=144;
-    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
-      <E cx={50} cy={154} rx={22-dip*0.15} ry={3.5} f="#000" o={0.07}/>
-      <E cx={34} cy={fY} rx={10} ry={4.5} f={BD}/><E cx={66} cy={fY} rx={10} ry={4.5} f={BD}/>
-      <P pts={[[31,kY],[37,kY],[39,fY-3],[29,fY-3]]} f={B}/>
-      <P pts={[[63,kY],[69,kY],[71,fY-3],[61,fY-3]]} f={B}/>
-      <GlowPoly pts={[[38,hY+10],[32-kO,kY],[40-kO,kY],[46,hY+13]]} i={1}/>
-      <GlowPoly pts={[[62,hY+10],[68+kO,kY],[60+kO,kY],[54,hY+13]]} i={1}/>
-      <P pts={[[39,hY+10],[32-kO,kY],[40-kO,kY],[47,hY+13]]} f={B}/>
-      <P pts={[[61,hY+10],[68+kO,kY],[60+kO,kY],[53,hY+13]]} f={B}/>
-      <E cx={37-kO*0.5} cy={kY-12} rx={5} ry={10} f={BL} o={0.2}/>
-      <E cx={63+kO*0.5} cy={kY-12} rx={5} ry={10} f={BL} o={0.2}/>
-      <Glow cx={50} cy={hY+14} rx={13} ry={9} i={0.8}/>
-      <P pts={[[41,hY],[43,hY+13],[57,hY+13],[59,hY],[56,47],[44,47]]} f={B}/>
-      <E cx={50} cy={62} rx={7} ry={12} f={BL} o={0.22}/>
-      <P pts={[[43,54],[35,76],[39,77],[46,56]]} f={B}/><P pts={[[57,54],[65,76],[61,77],[54,56]]} f={B}/>
-      <P pts={[[35,76],[27,94],[31,95],[39,77]]} f={B}/><P pts={[[65,76],[73,94],[69,95],[61,77]]} f={B}/>
-      <C cx={34-kO} cy={kY} r={4.5} f={BL} s={BE} sw={0.5}/><C cx={66+kO} cy={kY} r={4.5} f={BL} s={BE} sw={0.5}/>
-      <Head cx={50} cy={35}/>
-    </svg>);
-  }
-
-  // DEADLIFT
-  if(key==="deadlift"){
-    const lift=e; const barY=lerp(124,80,lift); const hY=lerp(94,64,lift*0.72);
-    const hA=(1-lift)*36; const tx=50-hA*0.36; const ty=hY-28-hA*0.26;
-    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
-      <rect x="12" y={barY-4} width="76" height="8" rx="4" fill={BE} opacity="0.85"/>
-      <E cx={12} cy={barY} rx={6} ry={11} f={BE}/><E cx={88} cy={barY} rx={6} ry={11} f={BE}/>
-      <E cx={7} cy={barY} rx={6} ry={13} f="#222"/><E cx={93} cy={barY} rx={6} ry={13} f="#222"/>
-      <E cx={50} cy={154} rx={22} ry={3.5} f="#000" o={0.07}/>
-      <E cx={36} cy={146} rx={10} ry={4.5} f={BD}/><E cx={64} cy={146} rx={10} ry={4.5} f={BD}/>
-      <P pts={[[33,hY+5],[31,144],[41,144],[43,hY+5]]} f={B}/><P pts={[[57,hY+5],[59,144],[69,144],[67,hY+5]]} f={B}/>
-      <Glow cx={50} cy={hY+10} rx={14} ry={11} i={1}/>
-      <Glow cx={37} cy={hY+22} rx={5} ry={11} i={0.85}/><Glow cx={63} cy={hY+22} rx={5} ry={11} i={0.85}/>
-      <P pts={[[tx-11,ty],[tx+11,ty],[55,hY+5],[45,hY+5]]} f={B}/>
-      <Glow cx={tx} cy={ty+10} rx={7} ry={13} i={1}/>
-      <P pts={[[tx-7,ty+10],[24,barY-2],[28,barY+4],[tx-2,ty+14]]} f={B}/>
-      <P pts={[[tx+7,ty+10],[76,barY-2],[72,barY+4],[tx+2,ty+14]]} f={B}/>
-      <C cx={26} cy={barY+1} r={5.5} f={BD}/><C cx={74} cy={barY+1} r={5.5} f={BD}/>
-      <C cx={37} cy={hY+5} r={4.5} f={BL} s={BE} sw={0.5}/><C cx={63} cy={hY+5} r={4.5} f={BL} s={BE} sw={0.5}/>
-      <Head cx={tx-4} cy={ty-12}/>
-    </svg>);
-  }
-
-  // PUSH-UP / BENCH
-  if(key==="pushup"){
-    const lift=e; const bY=72-lift*20; const eF=lift*28;
-    return(<svg viewBox="0 0 148 105" width={size*1.22} height={size*0.75}>
-      <E cx={74} cy={100} rx={50+lift*8} ry={3.5} f="#000" o={0.06}/>
-      <E cx={122} cy={86} rx={10} ry={4.5} f={BD}/>
-      <P pts={[[72,bY+16],[118,88],[126,86],[78,bY+14]]} f={B}/>
-      <Glow cx={46} cy={bY+8} rx={12} ry={5} i={1}/>
-      <P pts={[[30,bY+4],[72,bY+16],[78,bY+14],[34,bY+2]]} f={B}/>
-      <P pts={[[34,bY+3],[22-eF*0.24,bY+17+eF*0.28],[26-eF*0.24,bY+19+eF*0.28],[38,bY+5]]} f={B}/>
-      <P pts={[[34,bY+3],[46+eF*0.24,bY+17+eF*0.28],[42+eF*0.24,bY+19+eF*0.28],[38,bY+5]]} f={B}/>
-      <Glow cx={22-eF*0.14} cy={bY+14+eF*0.18} rx={4.5} ry={7} i={0.9}/>
-      <Glow cx={46+eF*0.14} cy={bY+14+eF*0.18} rx={4.5} ry={7} i={0.9}/>
-      <P pts={[[22-eF*0.24,bY+17+eF*0.28],[14,84],[18,86],[26-eF*0.24,bY+19+eF*0.28]]} f={B}/>
-      <P pts={[[46+eF*0.24,bY+17+eF*0.28],[52,84],[56,86],[42+eF*0.24,bY+19+eF*0.28]]} f={B}/>
-      <C cx={16} cy={85} r={5} f={BD}/><C cx={54} cy={85} r={5} f={BD}/>
-      <C cx={22-eF*0.24} cy={bY+18+eF*0.28} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <C cx={46+eF*0.24} cy={bY+18+eF*0.28} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <Head cx={18} cy={bY-6}/>
-    </svg>);
-  }
-
-  // PULL-UP
-  if(key==="pullup"){
-    const pull=e; const bY=lerp(60,36,pull); const eF=pull*22;
-    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
-      <rect x="6" y="10" width="88" height="10" rx="5" fill={BE} opacity="0.88"/>
-      <rect x="12" y="10" width="8" height="22" rx="4" fill={BE} opacity="0.6"/>
-      <rect x="80" y="10" width="8" height="22" rx="4" fill={BE} opacity="0.6"/>
-      <E cx={50} cy={157} rx={18} ry={3} f="#000" o={0.05}/>
-      <C cx={26} cy={22} r={5.5} f={BD}/><C cx={74} cy={22} r={5.5} f={BD}/>
-      <P pts={[[26,22],[31-eF*0.28,bY-24],[35-eF*0.28,bY-21],[30,25]]} f={B}/>
-      <P pts={[[74,22],[69+eF*0.28,bY-24],[65+eF*0.28,bY-21],[70,25]]} f={B}/>
-      <Glow cx={32-eF*0.18} cy={bY-12} rx={5} ry={9} i={1}/>
-      <Glow cx={68+eF*0.18} cy={bY-12} rx={5} ry={9} i={1}/>
-      <P pts={[[31-eF*0.28,bY-24],[38,bY-10],[42,bY-7],[35-eF*0.28,bY-22]]} f={B}/>
-      <P pts={[[69+eF*0.28,bY-24],[62,bY-10],[58,bY-7],[65+eF*0.28,bY-22]]} f={B}/>
-      <GlowPoly pts={[[39,bY-7],[37,bY+22],[63,bY+22],[61,bY-7]]} i={1}/>
-      <P pts={[[39,bY-7],[37,bY+22],[63,bY+22],[61,bY-7]]} f={B}/>
-      <E cx={50} cy={bY+6} rx={9} ry={14} f={BL} o={0.2}/>
-      <P pts={[[43,bY+22],[41,bY+56],[47,bY+56],[47,bY+24]]} f={B}/>
-      <P pts={[[57,bY+22],[53,bY+56],[59,bY+56],[59,bY+24]]} f={B}/>
-      <P pts={[[41,bY+56],[39,bY+82],[45,bY+82],[47,bY+56]]} f={B}/>
-      <P pts={[[53,bY+56],[51,bY+82],[57,bY+82],[59,bY+56]]} f={B}/>
-      <C cx={31-eF*0.28} cy={bY-24} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <C cx={69+eF*0.28} cy={bY-24} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <Head cx={50} cy={bY-22}/>
-    </svg>);
-  }
-
-  // OVERHEAD PRESS
-  if(key==="press"){
-    const up=e; const aY=lerp(72,28,up);
-    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
-      <rect x="14" y={aY-4} width="72" height="8" rx="4" fill={BE} opacity="0.85"/>
-      <E cx={14} cy={aY} rx={6.5} ry={11} f={BE}/><E cx={86} cy={aY} rx={6.5} ry={11} f={BE}/>
-      <E cx={8} cy={aY} rx={6.5} ry={13} f="#222"/><E cx={92} cy={aY} rx={6.5} ry={13} f="#222"/>
-      <E cx={50} cy={154} rx={18} ry={3} f="#000" o={0.07}/>
-      <E cx={38} cy={148} rx={9} ry={4} f={BD}/><E cx={62} cy={148} rx={9} ry={4} f={BD}/>
-      <P pts={[[39,102],[36,146],[44,146],[45,102]]} f={B}/><P pts={[[61,102],[56,146],[64,146],[63,102]]} f={B}/>
-      <P pts={[[40,57],[38,102],[62,102],[60,57]]} f={B}/>
-      <Glow cx={36} cy={64} rx={9} ry={8} i={1}/><Glow cx={64} cy={64} rx={9} ry={8} i={1}/>
-      <Glow cx={30} cy={lerp(72,48,up)} rx={4.5} ry={9} i={0.9}/>
-      <Glow cx={70} cy={lerp(72,48,up)} rx={4.5} ry={9} i={0.9}/>
-      <P pts={[[39,63],[27,lerp(78,46,up)],[31,lerp(80,48,up)],[43,65]]} f={B}/>
-      <P pts={[[61,63],[73,lerp(78,46,up)],[69,lerp(80,48,up)],[57,65]]} f={B}/>
-      <P pts={[[27,lerp(78,46,up)],[18,aY+3],[22,aY+6],[31,lerp(80,48,up)]]} f={B}/>
-      <P pts={[[73,lerp(78,46,up)],[82,aY+3],[78,aY+6],[69,lerp(80,48,up)]]} f={B}/>
-      <C cx={27} cy={lerp(78,46,up)} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <C cx={73} cy={lerp(78,46,up)} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <Head cx={50} cy={44}/>
-    </svg>);
-  }
-
-  // ROW
-  if(key==="row"){
-    const pull=e; const eB=pull*20;
-    return(<svg viewBox="0 0 148 112" width={size*1.22} height={size*0.8}>
-      <rect x="62" y="84" width="76" height="10" rx="5" fill={BE} opacity="0.7"/>
-      <rect x="64" y="94" width="8" height="16" rx="4" fill="#333" opacity="0.7"/>
-      <rect x="122" y="94" width="8" height="16" rx="4" fill="#333" opacity="0.7"/>
-      <E cx={74} cy={108} rx={52} ry={3} f="#000" o={0.06}/>
-      <E cx={14} cy={102} rx={9} ry={4} f={BD}/><E cx={34} cy={102} rx={9} ry={4} f={BD}/>
-      <P pts={[[12,74],[10,100],[18,100],[18,74]]} f={B}/><P pts={[[30,74],[28,100],[36,100],[36,74]]} f={B}/>
-      <E cx={98} cy={84} rx={10} ry={7} f={B} s={BE} sw={0.7}/>
-      <Glow cx={58} cy={58} rx={22} ry={5} i={1}/>
-      <P pts={[[28,54],[96,74],[96,82],[28,64]]} f={B}/>
-      <P pts={[[28,57],[24,78],[32,79],[32,59]]} f={B}/>
-      <C cx={28} cy={80} r={5} f={BD}/>
-      <P pts={[[50,60],[20+eB,70],[24+eB,74],[54,64]]} f={B}/>
-      <P pts={[[20+eB,70],[26+eB,50],[30+eB,52],[24+eB,74]]} f={B}/>
-      <Glow cx={22+eB} cy={62} rx={4} ry={8} i={1}/>
-      <C cx={28+eB} cy={48} r={5.5} f={BE}/>
-      <rect x={24+eB} y={44} width={10} height={7} rx={3} fill="#555"/>
-      <C cx={20+eB} cy={70} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <Head cx={26} cy={42}/>
-    </svg>);
-  }
-
-  // LUNGE
-  if(key==="lunge"){
-    const step=e; const fkY=lerp(98,122,step);
-    return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
-      <E cx={50} cy={154} rx={22} ry={3.5} f="#000" o={0.07}/>
-      <E cx={72} cy={146} rx={8} ry={4} f={BD}/><E cx={30} cy={150} rx={9} ry={4} f={BD}/>
-      <P pts={[[67,112],[63,144],[71,144],[75,112]]} f={B}/>
-      <P pts={[[51,74],[63,112],[71,112],[59,74]]} f={B}/>
-      <C cx={67} cy={112} r={4.5} f={BL} s={BE} sw={0.5}/>
-      <P pts={[[26,fkY],[24,148],[32,148],[34,fkY]]} f={B}/>
-      <GlowPoly pts={[[43,76],[26,fkY],[34,fkY],[51,78]]} i={1}/>
-      <P pts={[[43,76],[26,fkY],[34,fkY],[51,78]]} f={B}/>
-      <Glow cx={54} cy={78} rx={10} ry={7} i={0.9}/>
-      <C cx={30} cy={fkY} r={4.5} f={BL} s={BE} sw={0.5}/>
-      <P pts={[[42,44],[40,76],[58,76],[58,44]]} f={B}/>
-      <P pts={[[42,52],[35,72],[39,73],[45,54]]} f={B}/><P pts={[[58,52],[65,72],[61,73],[55,54]]} f={B}/>
-      <Head cx={50} cy={32}/>
-    </svg>);
-  }
-
-  // PLANK
-  if(key==="plank"){
-    const br=Math.sin((frame/240)*Math.PI*4)*1.4;
-    return(<svg viewBox="0 0 168 84" width={size*1.38} height={size*0.6}>
-      <E cx={86} cy={80} rx={66} ry={3} f="#000" o={0.07}/>
-      <E cx={140} cy={70} rx={10} ry={4.5} f={BD}/>
-      <P pts={[[82,52+br],[134,70],[140,68],[86,50+br]]} f={B}/>
-      <Glow cx={58} cy={46+br*0.8} rx={16} ry={4} i={1}/>
-      <P pts={[[36,45+br*0.6],[82,52+br],[86,50+br],[40,43+br*0.6]]} f={B}/>
-      <P pts={[[38,44+br*0.6],[24,57],[28,59],[42,46+br*0.6]]} f={B}/>
-      <P pts={[[44,43+br*0.6],[56,56],[52,58],[40,45+br*0.6]]} f={B}/>
-      <P pts={[[24,57],[16,68],[20,70],[28,59]]} f={B}/><P pts={[[56,56],[62,68],[58,70],[52,58]]} f={B}/>
-      <C cx={18} cy={69} r={5.5} f={BD}/><C cx={60} cy={69} r={5.5} f={BD}/>
-      <C cx={24} cy={57} r={3.5} f={BL} s={BE} sw={0.5}/><C cx={56} cy={56} r={3.5} f={BL} s={BE} sw={0.5}/>
-      <Head cx={16} cy={34+br*0.4}/>
-    </svg>);
-  }
-
-  // CURL (default fallback)
-  const up=e; const aY=lerp(72,28,up);
-  return(<svg viewBox="0 0 100 160" width={size} height={size*1.14}>
-    <E cx={50} cy={154} rx={18} ry={3} f="#000" o={0.07}/>
-    <E cx={38} cy={148} rx={9} ry={4} f={BD}/><E cx={62} cy={148} rx={9} ry={4} f={BD}/>
-    <P pts={[[39,102],[36,146],[44,146],[45,102]]} f={B}/><P pts={[[61,102],[56,146],[64,146],[63,102]]} f={B}/>
-    <P pts={[[40,57],[38,102],[62,102],[60,57]]} f={B}/>
-    <Glow cx={36} cy={64} rx={9} ry={8} i={1}/><Glow cx={64} cy={64} rx={9} ry={8} i={1}/>
-    <P pts={[[39,63],[27,lerp(78,46,up)],[31,lerp(80,48,up)],[43,65]]} f={B}/>
-    <P pts={[[61,63],[73,lerp(78,46,up)],[69,lerp(80,48,up)],[57,65]]} f={B}/>
-    <Glow cx={27} cy={lerp(72,56,up)} rx={4.5} ry={8} i={1}/>
-    <P pts={[[27,lerp(78,46,up)],[22,aY+10],[26,aY+14],[31,lerp(80,48,up)]]} f={B}/>
-    <C cx={24} cy={aY+12} r={5} f={BD}/>
-    <rect x={16} y={aY+8} width={18} height={7} rx={3} fill="#555"/>
-    <C cx={27} cy={lerp(78,46,up)} r={3.5} f={BL} s={BE} sw={0.5}/>
-    <Head cx={50} cy={44}/>
-  </svg>);
-}
-
 // ── EXERCISE METADATA ──────────────────────────────────────
 // Explicit muscle + equipment tags, keyed by exercise name.
 //
@@ -2199,6 +1046,14 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
   const [showMeal, setShowMeal] = useState(false);
   const [showWO, setShowWO] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  // Which day the player was asked for. This was missing: the day picker in
+  // this tab called setActiveDay and the player read activeDay, and neither
+  // existed here — they belong to the top-level App component, several
+  // hundred lines away. Opening the picker and choosing a day threw a
+  // ReferenceError and the error boundary ate the admin screen. Found by
+  // running tsc with --checkJs and grepping for TS2304, which is the only
+  // thing in this toolchain that catches an undefined name.
+  const [activeDay, setActiveDay] = useState(null);
   const [showDayPicker, setShowDayPicker] = useState(false);
   const t = T[lang]; const isAr = lang === "ar";
   const sc = clients.find(c => c.id === selC?.id);
@@ -3099,6 +1954,12 @@ export default function App() {
   const [lBusy, setLBusy] = useState(false);
   const [aTab, setATab] = useState("dashboard");
   const [cTab, setCTab] = useState("profile");
+  // The client's finished sessions, used to say where they are in the block.
+  // Fetched once here rather than inside the Train tab so switching tabs does
+  // not re-hit the endpoint, and so the number is already there when the tab
+  // opens instead of appearing a moment later.
+  const [clientLogs, setClientLogs] = useState([]);
+  const [lastAssessedAt, setLastAssessedAt] = useState(null);
   const [showClientPlayer, setShowClientPlayer] = useState(false);
   const [showClientDayPicker, setShowClientDayPicker] = useState(false);
   const [activeDay, setActiveDay] = useState(null);
@@ -3175,6 +2036,27 @@ export default function App() {
       if (latest) setCurUser(latest);
     }
   }, [clients]);
+
+  // The signed-in client's finished sessions. Only fetched for a client — the
+  // admin screens have their own history view and this endpoint scopes to
+  // whoever the token says is signed in, so it would return Rafi's own.
+  useEffect(() => {
+    let cancelled = false;
+    if (screen !== "client" || !curUser?.id) { setClientLogs([]); return; }
+    Promise.all([
+      clientPost({ action: "logs.list" }),
+      clientPost({ action: "assessment.last" }),
+    ])
+      .then(([l, a]) => {
+        if (cancelled) return;
+        setClientLogs(Array.isArray(l.logs) ? l.logs : []);
+        setLastAssessedAt(a?.assessed_at || null);
+      })
+      // A missing session count is not worth interrupting anybody for: the
+      // card simply does not appear.
+      .catch(e => console.error("programme position:", e.message || e));
+    return () => { cancelled = true; };
+  }, [screen, curUser?.id]);
 
   if (window.location.pathname === "/register") {
     return <RegPage lang={lang} setLang={setLang} />;
@@ -3508,6 +2390,54 @@ export default function App() {
                     return (
                       <div>
                         {gate}
+                        {(() => {
+                          // Where they are in the block, and — the point of the
+                          // whole thing — when it is time to measure again.
+                          const pr = programmeState(ws, clientLogs, lastAssessedAt);
+                          if (!pr.weeks) return null;
+                          if (pr.dueRetest) return (
+                            <div className="card" style={{ padding: 18, marginBottom: 16, borderColor: G.accentLine, background: G.accentSoft }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8 }}>
+                                <Icon n="ruler" s={16} c={G.accent} />
+                                <div style={{ fontSize: 12.5, fontWeight: 700, color: G.accent }}>
+                                  {isAr ? "حان وقت القياس" : "Time to measure again"}
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 13, color: G.text, lineHeight: 1.6 }}>
+                                {isAr
+                                  ? `أكملت ${pr.done} جلسة في هذا البرنامج. هذه هي النقطة التي يُعاد فيها القياس — والبرنامج يتبع النتيجة.`
+                                  : `${pr.done} sessions done on this programme. This is the point where it is worth measuring again — and the programme follows the result.`}
+                              </div>
+                              <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi Rafi, I have finished ${pr.done} sessions on ${ws.name}. Ready to be reassessed.`)}`}
+                                target="_blank" rel="noreferrer"
+                                style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 44, padding: "0 18px", marginTop: 13, background: G.greenSoft, border: `1px solid ${G.greenLine}`, borderRadius: 22, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                                <Icon n="whatsapp" s={15} /> {isAr ? "راسل رافي" : "Message Rafi"}
+                              </a>
+                            </div>
+                          );
+                          return (
+                            <div className="card" style={{ padding: "16px 18px", marginBottom: 16 }}>
+                              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+                                <div style={{ fontSize: 10, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600 }}>
+                                  {isAr ? `الأسبوع ${pr.week} من ${pr.weeks}` : `Week ${pr.week} of ${pr.weeks}`}
+                                </div>
+                                <div style={{ fontSize: 12, color: G.muted }}>
+                                  {isAr ? `${pr.done} من ${pr.target} جلسة` : `${pr.done} of ${pr.target} sessions`}
+                                </div>
+                              </div>
+                              <div style={{ height: 5, borderRadius: 3, background: G.soft, marginTop: 10, overflow: "hidden" }}>
+                                <div style={{ height: 5, width: `${Math.round(pr.fraction * 100)}%`, background: G.accent, borderRadius: 3, transition: "width .3s" }} />
+                              </div>
+                              {pr.isDeloadWeek && (
+                                <div style={{ fontSize: 12.5, color: G.text, marginTop: 12, lineHeight: 1.6 }}>
+                                  {isAr
+                                    ? "هذا أسبوع أخف — نفس التمارين، حوالي 60٪ من وزنك المعتاد. الأسبوع الأسهل جزء من البرنامج وليس انقطاعاً عنه."
+                                    : "This is a lighter week — same movements, about 60% of your usual weight. The easier week is part of the programme, not a break from it."}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                         {/* System header */}
                         {/* A programme's colour used to tint this card, the day
                             bar and both buttons, so Push/Pull/Legs arrived in

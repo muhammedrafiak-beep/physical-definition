@@ -212,6 +212,26 @@ export default async function handler(req, res) {
         return res.status(200).json({ logs: data || [] });
       }
 
+      // When the client was last measured. The programme block runs FROM the
+      // last assessment, so this is what decides when the app says it is time
+      // to be measured again — and reassessing is what resets it. Without it
+      // the prompt would appear once and never go away, including to somebody
+      // who had just been assessed that morning.
+      //
+      // Only the date leaves the server. The levels and test results are the
+      // trainer's working notes and the client sees them on the Progress
+      // screen, which has its own path.
+      case "assessment.last": {
+        const { data, error } = await db
+          .from("assessments")
+          .select("assessed_at")
+          .eq("client_id", me.id)
+          .order("assessed_at", { ascending: false })
+          .limit(1);
+        if (error) throw error;
+        return res.status(200).json({ assessed_at: data && data[0] ? data[0].assessed_at : null });
+      }
+
       // ── Per-set logging ───────────────────────────────────
       //
       // This is the part of the app that gives someone a reason to open it a
