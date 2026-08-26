@@ -80,7 +80,7 @@ export const EXERCISE_META = {
   "Face Pulls":                                  { p: ["Rear Delts"], s: ["Rotator Cuff","Traps"], eq: ["cable"] },
   "Flat Dumbbell Press":                         { p: ["Chest"], s: ["Triceps","Front Delts"], eq: ["dumbbell","bench"] },
   "Foam Roller Calf Release":                    { p: ["Recovery"], s: ["Calves"], eq: ["foam roller"] },
-  "Foam Roller Quad & IT Band Release":          { p: ["Recovery"], s: ["Quads"], eq: ["foam roller"] },
+  "Foam Roller Quads & Outer Thigh":             { p: ["Recovery"], s: ["Quads"], eq: ["foam roller"] },
   "Foam Roller Quad (above knee only)":          { p: ["Recovery"], s: ["Quads"], eq: ["foam roller"] },
   "Foam Roller Thoracic Release":                { p: ["Recovery"], s: ["Mobility","Mid Back"], eq: ["foam roller"] },
   "Foam Roller Upper Back Release":              { p: ["Recovery"], s: ["Mobility","Mid Back"], eq: ["foam roller"] },
@@ -289,4 +289,76 @@ function guessLoadFromName(name) {
   if (/(barbell|dumbbell|db |cable|machine|smith|kettlebell|plate|weighted|ez[- ]bar|landmine)/.test(l)) return true;
   if (/(stretch|plank|hold|walk|jog|breathing|rotation|circle|swing|pose|mobility|march|balance|bird dog|dead bug|superman|clamshell|wall sit|crunch|sit-up|situp|push-up|pushup|pull-up|pullup|dip|burpee|jumping jack|mountain climber|bridge|leg raise|air squat|bodyweight)/.test(l)) return false;
   return true;
+}
+
+// ── WARM-UP RAMPS ──────────────────────────────────────────────────
+//
+// How many build-up sets to run before the first working set of a lift.
+//
+// The library used to send somebody from a general warm-up — a jog and some
+// arm swings — straight into their working weight on the bench. The ACSM
+// position stand (April 2026) puts strength work at ≥80% 1RM and first in the
+// session, which is exactly the case where a ramp matters most: the first
+// heavy set is the one nobody is ready for, and it is the one people get hurt
+// on. Every serious programme ramps; this library was the exception.
+//
+// Only loaded movements get one — `usesExternalLoad` is the gate, so air
+// squats, ring rows and bodyweight pull-ups get nothing, and neither do the
+// clinical and senior programmes, which are unloaded throughout.
+//
+// The count is per movement pattern rather than per exact name, because the
+// same lift appears as "Bench Press", "SS1A: Bench Press" and "Close Grip
+// Bench Press", and a lookup keyed on the exact string would silently miss two
+// of the three.
+const NEVER_RAMP = /rowing machine|jump|air squat|wall sit|ring row/i;
+const RAMP_PATTERNS = [
+  // Order matters — first match wins. The accessories that share a word with a
+  // main lift are listed FIRST so they take the smaller count: a Romanian
+  // deadlift is a hip-hinge accessory done after the squats, not a deadlift,
+  // and a hack squat is a machine.
+  [/romanian dead ?lift|rdl|stiff[- ]leg/i, 2],
+  [/hack squat/i, 2],
+  // Three: the lifts where the working weight is furthest from cold.
+  [/dead ?lift/i, 3],
+  [/power clean|\bclean\b/i, 3],
+  [/(back|front|barbell) squat|^squat|: squat/i, 3],
+  // Two: everything else heavy enough to be worth building up to.
+  [/bench press/i, 2],
+  [/overhead press|shoulder press|arnold press|military press/i, 2],
+  [/barbell row|t-?bar row|pendlay/i, 2],
+  [/leg press/i, 2],
+  [/hip thrust/i, 2],
+  [/goblet squat|split squat|bulgarian/i, 2],
+  [/thruster/i, 2],
+  [/incline (barbell|db|dumbbell) press|flat (db|dumbbell) press|dumbbell press/i, 2],
+];
+
+export function getWarmupSets(name) {
+  const n = String(name || "");
+  if (!n || NEVER_RAMP.test(n)) return 0;
+  if (!usesExternalLoad(n)) return 0;
+  for (const [re, count] of RAMP_PATTERNS) if (re.test(n)) return count;
+  return 0;
+}
+
+// What each build-up set should be, as a fraction of the working weight and a
+// rep count. Light and short: the point is to rehearse the movement and wake
+// the tissue up, not to arrive at the working set already tired.
+const RAMP_STEPS = {
+  1: [[0.55, 8]],
+  2: [[0.5, 8], [0.75, 5]],
+  3: [[0.4, 8], [0.6, 5], [0.8, 3]],
+};
+
+export function rampStep(count, index) {
+  const steps = RAMP_STEPS[count] || RAMP_STEPS[2];
+  const [pct, reps] = steps[Math.min(index, steps.length - 1)] || steps[steps.length - 1];
+  return { pct, reps };
+}
+
+// Barbells load in 2.5 kg jumps in most gyms, and a warm-up weight nobody can
+// actually build is worse than no number at all.
+export function roundToPlate(kg) {
+  if (!Number.isFinite(kg) || kg <= 0) return null;
+  return Math.max(2.5, Math.round(kg / 2.5) * 2.5);
 }

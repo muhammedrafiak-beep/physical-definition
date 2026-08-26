@@ -187,15 +187,15 @@ const WORKOUT_SYSTEMS = [
   {
     id: "fst7", level: "advanced", name: "FST-7 Training", nameAr: "تدريب FST-7",
     color: "#6B4FA8", emoji: "🔥",
-    desc: "Fascia Stretch Training — 7 sets on last exercise to maximize pump",
-    descAr: "تمدد اللفافة — 7 مجموعات في آخر تمرين لأقصى ضخ",
+    desc: "Seven sets of twelve on the last exercise, thirty seconds' rest — high volume on an isolation movement to finish",
+    descAr: "سبع مجموعات من 12 تكراراً في التمرين الأخير، راحة 30 ثانية — حجم عالٍ في تمرين عزل كخاتمة",
     days: [
       {
         name: "Day 1 — Chest (FST-7)",
         exercises: [
           { name: "Incline Barbell Press", sets: "4", reps: "8-10", rest: "90s", notes: "Warm up chest" },
           { name: "Flat Dumbbell Press", sets: "4", reps: "10-12", rest: "75s", notes: "" },
-          { name: "Pec Dec / Cable Fly", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 — short rest, max pump!" },
+          { name: "Pec Dec / Cable Fly", sets: "7", reps: "12", rest: "30s", notes: "The 7: short rest, high volume to finish" },
         ]
       },
       {
@@ -203,7 +203,7 @@ const WORKOUT_SYSTEMS = [
         exercises: [
           { name: "Deadlift", sets: "4", reps: "6-8", rest: "2min", notes: "Heavy compound" },
           { name: "T-Bar Row", sets: "4", reps: "10", rest: "90s", notes: "" },
-          { name: "Straight Arm Pulldown", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 — lat stretch + pump" },
+          { name: "Straight Arm Pulldown", sets: "7", reps: "12", rest: "30s", notes: "The 7: short rest, full range on the lats" },
         ]
       },
       {
@@ -211,7 +211,7 @@ const WORKOUT_SYSTEMS = [
         exercises: [
           { name: "Seated DB Overhead Press", sets: "4", reps: "10-12", rest: "90s", notes: "" },
           { name: "Lateral Raises", sets: "4", reps: "12-15", rest: "60s", notes: "" },
-          { name: "Cable Lateral Raise", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 — side delt pump" },
+          { name: "Cable Lateral Raise", sets: "7", reps: "12", rest: "30s", notes: "The 7: short rest, side delts" },
         ]
       },
       {
@@ -219,8 +219,8 @@ const WORKOUT_SYSTEMS = [
         exercises: [
           { name: "Barbell Curl", sets: "4", reps: "10", rest: "75s", notes: "" },
           { name: "Close Grip Bench Press", sets: "4", reps: "10", rest: "75s", notes: "" },
-          { name: "Cable Curl", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 bicep" },
-          { name: "Cable Pushdown", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 tricep" },
+          { name: "Cable Curl", sets: "7", reps: "12", rest: "30s", notes: "The 7: short rest, biceps" },
+          { name: "Cable Pushdown", sets: "7", reps: "12", rest: "30s", notes: "The 7: short rest, triceps" },
         ]
       },
       {
@@ -228,8 +228,8 @@ const WORKOUT_SYSTEMS = [
         exercises: [
           { name: "Squat", sets: "4", reps: "10-12", rest: "2min", notes: "" },
           { name: "Leg Press", sets: "4", reps: "12-15", rest: "90s", notes: "" },
-          { name: "Leg Extension", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 quad pump" },
-          { name: "Leg Curl", sets: "7", reps: "12", rest: "30s", notes: "⭐ FST-7 hamstring" },
+          { name: "Leg Extension", sets: "7", reps: "12", rest: "30s", notes: "The 7: short rest, quads" },
+          { name: "Leg Curl", sets: "7", reps: "12", rest: "30s", notes: "The 7: short rest, hamstrings" },
         ]
       }
     ]
@@ -391,7 +391,7 @@ const WORKOUT_SYSTEMS = [
       {
         name: "HIIT Session 2 — Strength Intervals",
         exercises: [
-          { name: "Jump Squats", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "Tabata style" },
+          { name: "Jump Squats", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "20 on, 10 off — hard on the 20" },
           { name: "Push-up Burpees", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "" },
           { name: "Kettlebell Swing", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "" },
           { name: "Box Jumps", sets: "5", reps: "20 sec on / 10 sec off", rest: "60s", notes: "" },
@@ -761,7 +761,7 @@ const WORKOUT_SYSTEMS = [
           { name: "Glute Bridge", sets: "3", reps: "12", rest: "45s", notes: "Strengthens hips, supports knees" },
           { name: "Wall Sit (shallow angle only)", sets: "2", reps: "15-20 sec", rest: "45s", notes: "Stop if any knee discomfort" },
           { name: "Band Seated Leg Extension", sets: "3", reps: "10 each", rest: "45s", notes: "Light resistance only" },
-          { name: "Foam Roller Quad & IT Band Release", sets: "1", reps: "60 sec each", rest: "0s", notes: "Gentle rolling above knee" },
+          { name: "Foam Roller Quads & Outer Thigh", sets: "1", reps: "60 sec each", rest: "0s", notes: "Gentle rolling above the knee — never on the kneecap" },
         ]
       },
       {
