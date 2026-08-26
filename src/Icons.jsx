@@ -11,7 +11,7 @@
 // Its own module because both the app shell and the player need it, and
 // importing one from the other would close the loop App -> Player -> App.
 
-export const SOLID = new Set(["play", "check", "dot"]);
+const SOLID = new Set(["play", "check", "dot"]);
 const ICONS = {
   train: <path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" />,
   food: <path d="M6 3v8a3 3 0 0 0 6 0V3M9 11v10M18 3c-1.6 1.4-2.5 3.4-2.5 5.5 0 1.7 1 2.9 2.5 2.9V21" />,
