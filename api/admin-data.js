@@ -29,7 +29,8 @@ const CLIENT_COLUMNS =
   // programme they got — and, for an approved registration, they are the only
   // surviving record that PAR-Q screening happened at all.
   "experience, days_per_week, equipment, limitation, parq_answers, " +
-  "assigned_reason, needs_review, signup_source, capability_levels";
+  "assigned_reason, needs_review, signup_source, capability_levels, " +
+  "parq_cleared_at, parq_cleared_by, parq_clear_note";
 
 function toClient(r) {
   return {
@@ -51,6 +52,9 @@ function toClient(r) {
     needs_review: !!r.needs_review,
     signup_source: r.signup_source || null,
     capability_levels: r.capability_levels || null,
+    parq_cleared_at: r.parq_cleared_at || null,
+    parq_cleared_by: r.parq_cleared_by || null,
+    parq_clear_note: r.parq_clear_note || null,
   };
 }
 
@@ -298,6 +302,31 @@ export default async function handler(req, res) {
         }
 
         return res.status(200).json({ assessment: data, suggestion });
+      }
+
+      case "clear_parq_flag": {
+        // A client answered YES to a health question, so the app stopped them
+        // training. This is the trainer saying he has spoken to them and they
+        // are safe to train.
+        //
+        // It records WHO decided and WHAT was said, because a cleared flag
+        // with nothing behind it is just a timestamp. The answers themselves
+        // are never edited — what somebody reported stays reported.
+        const clientId = Number(body.clientId);
+        if (!Number.isFinite(clientId)) return res.status(400).json({ error: "clientId is required" });
+        const note = body.note ? String(body.note).slice(0, 500) : null;
+        if (!note) {
+          return res.status(400).json({ error: "Say what was agreed — a cleared flag needs a reason behind it." });
+        }
+
+        const { error } = await db.from("clients").update({
+          parq_cleared_at: new Date().toISOString(),
+          parq_cleared_by: "trainer",
+          parq_clear_note: note,
+          needs_review: false,
+        }).eq("id", clientId);
+        if (error) throw error;
+        return res.status(200).json({ ok: true });
       }
 
       case "set_workout_system": {
