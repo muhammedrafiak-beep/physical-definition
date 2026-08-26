@@ -25,6 +25,7 @@ import { randomBytes } from "node:crypto";
 import { requireClient } from "./_lib/client-auth.js";
 import { missingEnv } from "./_lib/admin.js";
 import { checkLimit, recordHit, bucket as rlBucket } from "./_lib/ratelimit.js";
+import { PARQ_QUESTIONS } from "./_lib/assign.js";
 
 const BUCKET = "progress-photos";
 const SIGNED_URL_TTL_SEC = 60 * 60; // an hour is plenty for one screen
@@ -347,6 +348,62 @@ export default async function handler(req, res) {
         }]);
         if (error) throw error;
         return res.status(200).json({ ok: true });
+      }
+
+      // ── Health screening, answered by the client ──────────
+      //
+      // PAR-Q+ is designed to be self-administered — that is what makes it
+      // usable at all. Seven clients predate the signup flow and were never
+      // screened; asking each of them once, at their own login, closes that
+      // without the trainer chasing anybody.
+      //
+      // The answers are written to the CALLER'S row, taken from the token.
+      // Nothing about which client is being screened comes from the browser.
+      case "parq.submit": {
+        const answers = body.answers;
+        if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
+          return res.status(400).json({ error: "Answer every question first." });
+        }
+        // Every question, or none. A half-answered screening recorded as a
+        // screening is worse than no screening, because it looks done.
+        // Named `answered` rather than `clean` on purpose: there is already a
+        // clean() helper in this file, and shadowing it here would be a trap
+        // for whoever edits this case next.
+        const answered = {};
+        for (const q of PARQ_QUESTIONS) {
+          const v = answers[q.id];
+          if (v !== true && v !== false) {
+            return res.status(400).json({ error: "Answer every question first." });
+          }
+          answered[q.id] = v;
+        }
+
+        const anyYes = Object.values(answered).some(Boolean);
+        const patch = { parq_answers: answered };
+        if (anyYes) {
+          // A clearance belongs to the answers it was given for. Somebody
+          // cleared last month who reports chest pain today is NOT cleared,
+          // and leaving the old timestamp standing let exactly that person
+          // walk straight past the gate — the app read them as safe because
+          // they had been safe once. Void it with the answers it was about.
+          patch.parq_cleared_at = null;
+          patch.parq_cleared_by = null;
+          patch.parq_clear_note = null;
+          patch.needs_review = true;
+        } else {
+          patch.parq_cleared_at = new Date().toISOString();
+          patch.parq_cleared_by = "self";
+          patch.needs_review = false;
+        }
+
+        const { error } = await db.from("clients").update(patch).eq("id", me.id);
+        if (error) throw error;
+
+        return res.status(200).json({
+          parq_answers: answered,
+          cleared: !anyYes,
+          flagged: Object.entries(answered).filter(([, v]) => v).map(([k]) => k),
+        });
       }
 
       default:

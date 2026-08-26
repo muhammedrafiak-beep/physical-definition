@@ -30,6 +30,10 @@ const CLIENT_FIELDS = [
   // How many days a week they train. A system may be authored in more than one
   // shape; without this the client would always be handed the default one.
   "days_per_week",
+  // Health screening state. The app blocks the workout until this is answered
+  // and clear, so it has to arrive with the login — otherwise the gate would
+  // have to guess, and a gate that guesses is worse than none.
+  "parq_answers", "parq_cleared_at", "needs_review",
 ];
 
 function toPublicClient(row) {
@@ -58,6 +62,9 @@ function toPublicClient(row) {
     progress: out.progress || [],
     capabilityLevels: out.capability_levels || null,
     days_per_week: out.days_per_week ?? null,
+    parq_answers: out.parq_answers || null,
+    parq_cleared_at: out.parq_cleared_at || null,
+    needs_review: !!out.needs_review,
   };
 }
 

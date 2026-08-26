@@ -2256,6 +2256,127 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
 }
 
 // ── REGISTER PAGE ──────────────────────────────────────────
+// ── HEALTH SCREENING (client answers it themselves) ────────
+//
+// PAR-Q+ was designed to be self-administered — that is what makes it usable
+// at all. Seven clients predate the signup flow and were never screened, and
+// asking each of them once, at their own login, closes that without the
+// trainer having to chase anybody.
+//
+// The workout is blocked until this is done. That is not a technicality: the
+// whole point of a pre-participation questionnaire is that it comes BEFORE
+// participation. A screening that can be skipped is decoration.
+function ScreeningCard({ client, isAr, onAnswered }) {
+  const st = screeningState(client);
+  const [answers, setAnswers] = useState({});
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [open, setOpen] = useState(false);
+
+  if (!st.blocked) return null;
+
+  // Already answered, something was flagged, nobody has cleared it yet.
+  if (!st.needed) {
+    return (
+      <div className="card" style={{ padding: "16px 16px", marginBottom: 14, border: `1px solid ${G.amber}`, background: "rgba(245,158,11,0.07)" }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: G.amber }}>
+          {isAr ? "تحدث مع مدربك أولاً" : "Speak to your trainer first"}
+        </div>
+        <div style={{ fontSize: 12.5, color: G.text, marginTop: 8, lineHeight: 1.7 }}>
+          {isAr
+            ? "بناءً على إجاباتك، من الأفضل التحدث مع رافي — ومع طبيبك إن لزم — قبل الجلسة القادمة. خطتك موجودة هنا في انتظارك."
+            : "From your answers, it is worth speaking to Rafi — and to your doctor if he suggests it — before your next session. Your plan is here waiting; nothing has been taken away."}
+        </div>
+        <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
+          style={{ display: "inline-block", marginTop: 12, padding: "11px 16px", borderRadius: 10, background: "rgba(34,197,94,0.12)", border: `1px solid ${G.green}`, color: G.green, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+          💬 {isAr ? "راسل رافي" : "Message Rafi"}
+        </a>
+      </div>
+    );
+  }
+
+  const allAnswered = PARQ.every(q => answers[q.id] === true || answers[q.id] === false);
+
+  const submit = async () => {
+    setErr(""); setBusy(true);
+    try {
+      const d = await clientPost({ action: "parq.submit", answers });
+      onAnswered?.(d);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <div className="card" style={{ padding: "16px", marginBottom: 14, border: `1px solid ${G.borderHi}` }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>
+          ⚕ {isAr ? "فحص صحي قصير" : "One health check first"}
+        </div>
+        <div style={{ fontSize: 12.5, color: G.text, marginTop: 8, lineHeight: 1.7 }}>
+          {isAr
+            ? "ثمانية أسئلة، أقل من دقيقة. هذه هي الأسئلة القياسية التي يطرحها أي مدرب قبل التدريب — ولم نسألك إياها من قبل."
+            : "Eight questions, under a minute. These are the standard questions any trainer asks before training somebody, and we never asked you them."}
+        </div>
+        <button type="button" className="btn" onClick={() => setOpen(true)}
+          style={{ width: "100%", marginTop: 14, padding: "13px", borderRadius: 10, background: G.grad, color: "#000", fontWeight: 700, fontSize: 14 }}>
+          {isAr ? "لنبدأ" : "Answer them now"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card" style={{ padding: "16px", marginBottom: 14, border: `1px solid ${G.borderHi}` }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>
+        ⚕ {isAr ? "فحص صحي" : "Health check"}
+      </div>
+      <div style={{ fontSize: 12, color: G.muted, marginTop: 6, marginBottom: 12, lineHeight: 1.6 }}>
+        {isAr
+          ? "أجب بصدق. \"نعم\" لا تعني التوقف عن التدريب — تعني أن رافي يتحدث معك أولاً."
+          : "Answer honestly. A yes does not mean you stop training — it means Rafi speaks to you first."}
+      </div>
+      {PARQ.map(q => {
+        const v = answers[q.id];
+        return (
+          <div key={q.id} className="parq-row" style={{ padding: "11px 0", borderBottom: `1px solid ${G.border}` }}>
+            <div style={{ flex: 1, fontSize: 12.5, lineHeight: 1.55, color: v === true ? G.amber : G.text }}>{isAr ? q.ar : q.en}</div>
+            <div className="parq-btns">
+              {[[isAr ? "لا" : "No", false], [isAr ? "نعم" : "Yes", true]].map(([label, val]) => (
+                <button key={String(val)} type="button" className="btn parq-btn"
+                  onClick={() => setAnswers(p => ({ ...p, [q.id]: val }))}
+                  style={{
+                    background: v === val ? (val ? G.amber : G.green) : G.surf2,
+                    color: v === val ? "#000" : G.muted,
+                    border: `1px solid ${v === val ? "transparent" : G.border}`,
+                  }}>{label}</button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      <div style={{ fontSize: 11, color: G.dim, marginTop: 12, lineHeight: 1.65 }}>
+        {isAr
+          ? "بالمتابعة تؤكد أن هذه الإجابات صحيحة، وتفهم أن هذا تدريب لياقة وليس علاجاً طبياً."
+          : "By continuing you confirm these answers are accurate, and understand this is fitness coaching, not medical treatment."}
+      </div>
+      {err && <div style={{ color: G.red, fontSize: 12.5, marginTop: 10 }}>{err}</div>}
+      <button type="button" className="btn" onClick={submit} disabled={!allAnswered || busy}
+        style={{ width: "100%", marginTop: 14, padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 14,
+                 background: allAnswered ? G.grad : G.surf2, color: allAnswered ? "#000" : G.dim }}>
+        {busy ? "…" : (isAr ? "حفظ" : "Save answers")}
+      </button>
+      {!allAnswered && (
+        <div style={{ fontSize: 11, color: G.muted, textAlign: "center", marginTop: 8 }}>
+          {isAr ? "أجب على كل الأسئلة" : "Answer every question"}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── PROGRESS TAB ───────────────────────────────────────────
 function ProgressTab({ client, setClients, lang, isAr, t }) {
   const [photos, setPhotos] = useState([]);
@@ -2461,6 +2582,27 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
       </div>
     </div>
   );
+}
+
+// Where a client stands with health screening, worked out in one place so the
+// card, the buttons and the wording can never disagree with each other.
+//
+//   needed  — never screened. Seven clients predate the signup flow.
+//   flagged — reported something. NOT the same as unscreened, and it is not a
+//             diagnosis either: it means a person should be spoken to before
+//             they train, which is the entire purpose of PAR-Q.
+//   blocked — do not start a session. Cleared by every answer being No, or by
+//             the trainer recording that he has spoken to them.
+function screeningState(c) {
+  const answers = c?.parq_answers || null;
+  const flagged = answers ? Object.entries(answers).filter(([, v]) => v === true).map(([k]) => k) : [];
+  const cleared = !!c?.parq_cleared_at;
+  return {
+    needed: !answers,
+    flagged,
+    cleared,
+    blocked: !answers || (flagged.length > 0 && !cleared),
+  };
 }
 
 // PAR-Q+ ids must match api/_lib/assign.js — the server screens on these.
@@ -2961,6 +3103,30 @@ export default function App() {
     await dbDeleteClient(id);
     setClients(p => p.filter(x => x.id !== id));
   };
+
+  // Records that the trainer has spoken to a flagged client, which is what
+  // lets them train again. The note is required: a cleared health flag with
+  // no reason behind it is just a timestamp, and this is the one record that
+  // says screening actually happened.
+  const clearFlag = async (c) => {
+    const note = window.prompt(
+      isAr
+        ? `ماذا اتفقتما عليه مع ${c.name}؟ (سيُحفظ هذا)`
+        : `What did you and ${c.name} agree? This is saved as the record.`,
+      ""
+    );
+    if (note === null) return;
+    if (!note.trim()) {
+      window.alert(isAr ? "اكتب سبباً." : "Write what was agreed — it is the record that this was handled.");
+      return;
+    }
+    try {
+      await adminPost({ action: "clear_parq_flag", clientId: c.id, note: note.trim() });
+      await reloadClients();
+    } catch (e) {
+      window.alert(e.message || "Could not save that.");
+    }
+  };
   const regLink = `${window.location.origin}/register`;
   const liveC = clients.find(c => c.id === curUser?.id) || curUser;
   const activeCount = clients.filter(c => c.status === "Active").length;
@@ -3082,21 +3248,42 @@ export default function App() {
               {cTab === "workout" ? (
                 (() => {
                   const ws = systemFor(liveC);
+                  // Screening comes before the session, not beside it. The
+                  // plan stays visible — hiding it would read as punishment
+                  // for answering honestly — but nothing starts until this is
+                  // answered and clear.
+                  const scr = screeningState(liveC);
+                  const gate = (
+                    <ScreeningCard
+                      client={liveC}
+                      isAr={isAr}
+                      onAnswered={(d) => setCurUser(u => u ? {
+                        ...u,
+                        parq_answers: d.parq_answers,
+                        parq_cleared_at: d.cleared ? new Date().toISOString() : null,
+                        needs_review: !d.cleared,
+                      } : u)}
+                    />
+                  );
                   if (ws) {
                     return (
                       <div>
+                        {gate}
                         {/* System header */}
                         <div className="card" style={{ padding: "12px 14px", marginBottom: 14, border: `1px solid ${ws.color}30`, background: `${ws.color}08` }}>
                           <div style={{ fontSize: 15, fontWeight: 700, color: ws.color }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
                           <div style={{ fontSize: 11, color: G.muted, marginTop: 3 }}>{isAr ? ws.descAr : ws.desc}</div>
-                          <button onClick={() => setShowClientDayPicker(true)} style={{ marginTop: 10, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "9px 18px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>
+                          <button onClick={() => setShowClientDayPicker(true)} disabled={scr.blocked}
+                            title={scr.blocked ? (isAr ? "أكمل الفحص الصحي أولاً" : "Finish the health check first") : undefined}
+                            style={{ marginTop: 10, background: scr.blocked ? G.surf2 : G.gold, color: scr.blocked ? G.dim : "#000", border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 8, padding: "11px 18px", fontWeight: 700, fontSize: 12, cursor: scr.blocked ? "not-allowed" : "pointer" }}>▶ Start Workout</button>
                         </div>
                         {/* Days with exercise cards */}
                         {ws.days.map((day, di) => (
                           <div key={di} style={{ marginBottom: 20 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "7px 12px", background: `${ws.color}15`, borderRadius: 8 }}>
                               <span>📅 {day.name}</span>
-                              <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} style={{ background: ws.color, color: "#000", border: "none", borderRadius: 6, padding: "5px 12px", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>▶ Start</button>
+                              <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} disabled={scr.blocked}
+                                style={{ background: scr.blocked ? G.surf2 : ws.color, color: scr.blocked ? G.dim : "#000", border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 6, padding: "8px 12px", fontWeight: 700, fontSize: 11, cursor: scr.blocked ? "not-allowed" : "pointer" }}>▶ Start</button>
                             </div>
                             {/* The list has to match the session. If the player
                                 leaves a movement out because of the assessment,
@@ -3158,22 +3345,32 @@ export default function App() {
                             </div>
                           </div>
                         )}
-                        {showClientPlayer && (
+                        {/* The buttons above are disabled while screening is
+                            outstanding. This is the second lock: a disabled
+                            button is a hint, and a health gate should not
+                            depend on one. */}
+                        {showClientPlayer && !scr.blocked && (
                           <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={liveC} onClose={() => { setShowClientPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
                         )}
                       </div>
                     );
                   } else if (liveC.workoutPlan) {
                     return (
-                      <div className="card" style={{ padding: 16 }}>
-                        <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.workoutPlan}</pre>
+                      <div>
+                        {gate}
+                        <div className="card" style={{ padding: 16 }}>
+                          <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.workoutPlan}</pre>
+                        </div>
                       </div>
                     );
                   } else {
                     return (
-                      <div className="card" style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}>
-                        <div style={{ fontSize: 28, marginBottom: 8 }}>⚡</div>
-                        <div style={{ color: G.muted }}>{t.trainerWillAdd}</div>
+                      <div>
+                        {gate}
+                        <div className="card" style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}>⚡</div>
+                          <div style={{ color: G.muted }}>{t.trainerWillAdd}</div>
+                        </div>
                       </div>
                     );
                   }
@@ -3299,6 +3496,46 @@ export default function App() {
           <div className="fd">
             <div style={{ marginBottom: 14 }}><div className="sf gd" style={{ fontSize: 22, fontWeight: 700 }}>{t.welcome}, {TRAINER.name.split(" ")[0]}! 👋</div></div>
             {regs.length > 0 && <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 11, padding: "11px 13px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}><div><div style={{ fontSize: 13, fontWeight: 700, color: G.amber }}>📋 {regs.length} {t.pendingRequests}</div></div><Btn ch={isAr ? "مراجعة" : "Review"} v="amber" onClick={() => setATab("requests")} sx={{ padding: "7px 14px", fontSize: 12 }} /></div>}
+            {/* Screening, above the numbers on purpose.
+                A flagged client is someone who reported chest pain or
+                dizziness and is now sitting locked out of their own workout
+                waiting on a conversation. That belongs at the top of the
+                first screen, not buried in a client card. */}
+            {(() => {
+              const flagged = clients.filter(c => { const st = screeningState(c); return st.flagged.length > 0 && !st.cleared; });
+              const unscreened = clients.filter(c => screeningState(c).needed && c.status === "Active");
+              if (!flagged.length && !unscreened.length) return null;
+              return (
+                <div className="card" style={{ padding: "13px 14px", marginBottom: 12, border: `1px solid ${flagged.length ? G.red : G.amber}` }}>
+                  <div style={{ fontSize: 10, color: flagged.length ? G.red : G.amber, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginBottom: 10 }}>
+                    ⚕ {isAr ? "الفحص الصحي" : "Health screening"}
+                  </div>
+                  {flagged.map(c => (
+                    <div key={c.id} style={{ padding: "9px 0", borderBottom: `1px solid ${G.border}` }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: G.text }}>{c.name}</div>
+                      {(c.parq_answers ? Object.entries(c.parq_answers).filter(([, v]) => v).map(([id]) => id) : []).map(id => (
+                        <div key={id} style={{ fontSize: 11, color: G.red, marginTop: 3, lineHeight: 1.5 }}>• {PARQ_SHORT[id] || id}</div>
+                      ))}
+                      <div style={{ fontSize: 11, color: G.muted, marginTop: 6, lineHeight: 1.55 }}>
+                        {isAr ? "تدريبه متوقف حتى تتحدث معه." : "Their workout is stopped until you have spoken to them."}
+                      </div>
+                      <div style={{ display: "flex", gap: 7, marginTop: 9, flexWrap: "wrap" }}>
+                        <a href={`https://wa.me/${String(c.phone || "").replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer"
+                          style={{ ...VV.green, padding: "9px 13px", fontSize: 12, fontWeight: 700, borderRadius: 8, textDecoration: "none" }}>💬 {isAr ? "تواصل" : "Message"}</a>
+                        <Btn ch={isAr ? "✓ تحدثت معه" : "✓ I've spoken to them"} v="ghost"
+                          onClick={() => clearFlag(c)} sx={{ padding: "9px 13px", fontSize: 12, minHeight: 40 }} />
+                      </div>
+                    </div>
+                  ))}
+                  {unscreened.length > 0 && (
+                    <div style={{ fontSize: 12, color: G.muted, marginTop: flagged.length ? 10 : 0, lineHeight: 1.6 }}>
+                      {unscreened.length} {isAr ? "لم يُفحصوا بعد" : (unscreened.length === 1 ? "client has not been screened yet" : "clients have not been screened yet")} — {isAr ? "سيُسألون عند تسجيل الدخول." : "they are asked at their next login."}
+                      <div style={{ fontSize: 11, color: G.dim, marginTop: 4 }}>{unscreened.map(c => c.name).join(" · ")}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
               {[{ l: t.total, v: clients.length, c: G.gold }, { l: t.active, v: activeCount, c: G.green }, { l: t.pending, v: regs.length, c: G.amber }, { l: isAr ? "لديهم خطط" : "With Plans", v: clients.filter(c => c.workoutPlan || c.nutritionPlan).length, c: G.blue }].map((s, i) => (
                 <div key={i} className="card" style={{ padding: 14 }}><div style={{ fontSize: 28, fontWeight: 800, color: s.c, lineHeight: 1 }}>{s.v}</div><div style={{ fontSize: 11, color: G.muted, marginTop: 5 }}>{s.l}</div></div>
