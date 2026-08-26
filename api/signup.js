@@ -13,7 +13,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { hashPassword } from "./_lib/password.js";
 import { missingEnv, generatePassword } from "./_lib/admin.js";
-import { assignSystem, PARQ_QUESTIONS } from "./_lib/assign.js";
+import { assignSystem, PARQ_QUESTIONS, EXPERIENCE, EQUIPMENT, LIMITATION } from "./_lib/assign.js";
 import { rateLimit, bucket, clientIp, tooMany } from "./_lib/ratelimit.js";
 
 // How the app refers to itself when it talks to a person signing up. One
@@ -25,10 +25,6 @@ const SUPPORT = {
   team: "The Physical Definition team",
   coach: "One of our coaches",
 };
-
-const EXPERIENCE = ["beginner", "intermediate", "advanced"];
-const EQUIPMENT = ["full_gym", "home_basic", "none"];
-const LIMITATION = ["none", "knee", "back", "shoulder"];
 
 const pick = (v, allowed, fallback) => (allowed.includes(v) ? v : fallback);
 

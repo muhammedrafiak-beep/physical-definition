@@ -33,6 +33,14 @@ export const PARQ_QUESTIONS = [
   { id: "other",     q: "Is there any other reason you should not do physical activity?" },
 ];
 
+// The values intake answers may take. They live here because this file is the
+// thing that reads them — a value not on these lists would silently fall
+// through every branch below and land somebody on the wrong programme. Both
+// /api/signup and /api/client-data validate against these.
+export const EXPERIENCE = ["beginner", "intermediate", "advanced"];
+export const EQUIPMENT = ["full_gym", "home_basic", "none"];
+export const LIMITATION = ["none", "knee", "back", "shoulder"];
+
 // ── Reading an assessment ────────────────────────────────────
 //
 // The rungs referred to here are the ladders in src/assessment.js. The labels
