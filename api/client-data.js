@@ -301,6 +301,10 @@ export default async function handler(req, res) {
           weight_kg: num(body.weight_kg, 0, 999),
           reps_done: num(body.reps_done, 0, 500),
           duration_sec: num(body.duration_sec, 0, 100000),
+          // Reps in reserve — how many more the person could have done. 0 means
+          // nothing left, which is a real answer and not a missing one, so it
+          // has to survive num()'s null guard rather than be filtered out.
+          rir: num(body.rir, 0, 10),
           is_warmup: !!body.is_warmup,
         }], { onConflict: "session_id,exercise_name,set_no" });
         if (error) throw error;

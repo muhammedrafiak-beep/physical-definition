@@ -1,8 +1,25 @@
-// Picks a training system from a client's intake answers.
+// Picks a training system from a client's intake answers — and from an
+// assessment, when there is one.
 //
 // A pure function on purpose: no database, no network, no React. It can be
 // read, argued with, and tested on its own — which matters, because these are
 // coaching decisions, not code decisions.
+//
+// THE ORDER OF AUTHORITY, HIGHEST FIRST
+//   1. PAR-Q          — a red flag is never cleared by a good measurement.
+//   2. What was measured — capability levels from an assessment.
+//   3. Age            — an estimate, used where nothing has been measured, or
+//                       where the measurement agrees with it.
+//   4. Everything else — equipment, experience, days.
+//
+// Age sits BELOW measurement on purpose. Two eighty-year-olds are not the same
+// person: one walks to the shop, the other needs both hands on a chair to
+// stand up. Where somebody has actually been watched doing the movements,
+// that is the better information and it is used instead.
+//
+// What this must never become is a promise. An assessment says what a person
+// could do on a day, on those tests. It is not a statement about a heart, and
+// nothing here should imply anything about how long anybody will live.
 
 // PAR-Q+ red flags. Any one of these means no automatic programme at all.
 export const PARQ_QUESTIONS = [
@@ -16,6 +33,52 @@ export const PARQ_QUESTIONS = [
   { id: "other",     q: "Is there any other reason you should not do physical activity?" },
 ];
 
+// ── Reading an assessment ────────────────────────────────────
+//
+// The rungs referred to here are the ladders in src/assessment.js. The labels
+// are written out rather than left as bare numbers so that a change over there
+// is visible as a contradiction here rather than as silence.
+//
+// THE TWO LISTS ARE NOT SYMMETRICAL, AND THAT IS DELIBERATE.
+// One recorded rung is enough to move somebody onto the supported programme.
+// Moving somebody OFF it needs every one of the four to have been recorded and
+// met. An incomplete assessment can therefore make the choice safer and can
+// never make it bolder.
+
+const NEEDS_SUPPORT = [
+  { id: "sit_to_stand", atOrBelow: 1, says: "cannot stand from a chair without pushing off with the hands" },
+  { id: "gait",         atOrBelow: 1, says: "cannot walk without a frame, a stick or a person" },
+  { id: "single_leg",   atOrBelow: 1, says: "cannot stand on one leg without holding on with both hands" },
+];
+
+const ROBUST = [
+  { id: "sit_to_stand",   atLeast: 3, says: "stands from a chair with arms crossed, no hands" },
+  { id: "single_leg",     atLeast: 3, says: "stands on one leg unsupported" },
+  { id: "gait",           atLeast: 3, says: "walks unsupported for six minutes or more" },
+  { id: "floor_transfer", atLeast: 2, says: "gets down to the floor and back up unaided" },
+];
+
+function readCapability(levels) {
+  const lv = (id) => {
+    const v = levels?.[id];
+    return Number.isFinite(v) ? v : null;
+  };
+  const known = !!levels && ROBUST.concat(NEEDS_SUPPORT).some((r) => lv(r.id) !== null);
+
+  const supportReasons = NEEDS_SUPPORT
+    .filter((r) => lv(r.id) !== null && lv(r.id) <= r.atOrBelow)
+    .map((r) => r.says);
+
+  // What is still missing before the robust rungs are all met. A level that
+  // falls short and a level never recorded at all are both missing, because
+  // neither is evidence that the person can do the thing.
+  const missingForRobust = ROBUST
+    .filter((r) => lv(r.id) === null || lv(r.id) < r.atLeast)
+    .map((r) => (lv(r.id) === null ? `${r.says} (not assessed)` : r.says));
+
+  return { known, supportReasons, robust: missingForRobust.length === 0, missingForRobust };
+}
+
 export function assignSystem(intake) {
   const {
     age = 30,
@@ -23,14 +86,17 @@ export function assignSystem(intake) {
     daysPerWeek = 3,             // 2 | 3 | 4 | 5
     equipment = "full_gym",      // full_gym | home_basic | none
     limitation = "none",         // none | knee | back | shoulder
-    goal = "General Fitness",
     parqFlags = [],              // ids of any PAR-Q question answered YES
+    // Capability levels from the most recent assessment, when one exists:
+    // { sit_to_stand: 3, single_leg: 2, ... }. Absent for a self-serve
+    // signup, which is why every branch below still works without it.
+    levels = null,
   } = intake || {};
 
-  const warnings = [];
-
   // 1. Any PAR-Q yes → no automatic programme. A stranger who ticks "chest
-  //    pain" must not be handed a workout by a piece of software.
+  //    pain" must not be handed a workout by a piece of software, and no
+  //    measurement changes that — a person can have an excellent chair stand
+  //    and a heart condition on the same afternoon.
   if (parqFlags.length > 0) {
     return {
       systemId: null,
@@ -40,21 +106,69 @@ export function assignSystem(intake) {
     };
   }
 
-  // 2. Age. Not a limitation, but the training looks different enough that it
-  //    gets its own programme.
-  if (age >= 65) {
+  const cap = readCapability(levels);
+
+  // 2. Measured below the line, at any age. This is the half of the principle
+  //    that is easy to forget: a fifty-five-year-old who cannot stand up
+  //    without pushing off needs the supported programme just as much as an
+  //    eighty-year-old does, and his birthday will never say so.
+  if (cap.supportReasons.length > 0) {
     return {
       systemId: "senior75",
       needsTrainerContact: true,
-      reason: `Age ${age} — gentle, supported programme`,
-      warnings: ["Confirm this suits them personally before they start."],
+      reason: `Assessed: ${cap.supportReasons.join("; ")}`,
+      warnings: [
+        "Chosen from what was measured, not from age.",
+        "Re-assess and this moves with them — the programme is not a verdict.",
+      ],
     };
   }
 
-  // 3. Reported limitation → the matching conditioning programme, but always
-  //    with a human in the loop. These are named "rehab" and "pain relief";
-  //    handing one to an unassessed stranger is not something software should
-  //    do on its own.
+  // 3. Age, now that measurement has had its say. Someone 65 or over goes to
+  //    the supported programme UNLESS an assessment has shown all four
+  //    capabilities at or above the robust rungs.
+  if (age >= 65 && !cap.robust) {
+    return {
+      systemId: "senior75",
+      needsTrainerContact: true,
+      reason: cap.known
+        ? `Age ${age}, and not yet assessed as able to: ${cap.missingForRobust.join("; ")}`
+        : `Age ${age} — gentle, supported programme (no assessment on file)`,
+      warnings: [
+        cap.known
+          ? "Assess the missing capabilities and this can change."
+          : "Age is an estimate of a body, not a measurement of one. Assess them and this choice can be made properly.",
+      ],
+    };
+  }
+
+  const base = byIntake({ experience, daysPerWeek, equipment, limitation });
+
+  // 4. Measured above the line at 65 or over. The programme follows the
+  //    measurement — but a person confirms it, because moving an older client
+  //    off the supported programme is not a decision software should take on
+  //    its own, however good the numbers were on the day.
+  if (age >= 65 && cap.robust && base.systemId) {
+    return {
+      ...base,
+      needsTrainerContact: true,
+      reason: `${base.reason} — assessed capability rather than age ${age}`,
+      warnings: [
+        ...base.warnings,
+        `Assessed: ${ROBUST.map((r) => r.says).join("; ")}.`,
+        "Confirm this yourself before they start, and keep the balance work in whatever they train.",
+      ],
+    };
+  }
+
+  return base;
+}
+
+// Everything that does not depend on age or on an assessment.
+function byIntake({ experience, daysPerWeek, equipment, limitation }) {
+  // Reported limitation → the matching conditioning programme, but always with
+  // a human in the loop. These are named "rehab" and "pain relief"; handing one
+  // to an unassessed stranger is not something software should do on its own.
   if (limitation && limitation !== "none") {
     return {
       systemId: null,
@@ -67,13 +181,13 @@ export function assignSystem(intake) {
     };
   }
 
-  // 4. No equipment → bodyweight, whatever else they said.
+  // No equipment → bodyweight, whatever else they said.
   if (equipment === "none") {
     return { systemId: "homebw", needsTrainerContact: false, reason: "No equipment available", warnings: [] };
   }
 
-  // 5. Dumbbells and bands at home: a beginner is well served by the bodyweight
-  //    programme; anyone further along can run full body with what they have.
+  // Dumbbells and bands at home: a beginner is well served by the bodyweight
+  // programme; anyone further along can run full body with what they have.
   if (equipment === "home_basic") {
     return experience === "beginner"
       ? { systemId: "homebw", needsTrainerContact: false, reason: "Training at home, starting out", warnings: [] }

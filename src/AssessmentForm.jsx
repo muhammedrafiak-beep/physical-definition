@@ -25,24 +25,32 @@ const adminToken = () => {
   try { return sessionStorage.getItem("pd_admin_token") || ""; } catch { return ""; }
 };
 
-async function saveAssessment(payload) {
+async function post(action, payload) {
   const r = await fetch("/api/admin-data", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken()}` },
-    body: JSON.stringify({ action: "save_assessment", ...payload }),
+    body: JSON.stringify({ action, ...payload }),
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.error || "Could not save the assessment");
+  if (!r.ok) throw new Error(d.error || "That didn't work. Try again.");
   return d;
 }
 
-export function AssessmentForm({ client, G, parq: PARQ = [], exercises = [], onClose, onSaved }) {
+export function AssessmentForm({
+  client, G, parq: PARQ = [], exercises = [], onClose, onSaved,
+  // How to spell a programme id for a human. App.jsx knows the list; this
+  // screen only needs the name.
+  systemName = (id) => id,
+}) {
   const [levels, setLevels] = useState({});
   const [tests, setTests] = useState({});
   const [parqAns, setParqAns] = useState({});
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  // Set when the saved measurement disagrees with the programme the client is
+  // on. The server never acts on this — it is put in front of the trainer.
+  const [suggestion, setSuggestion] = useState(null);
 
   const setLevel = (id, v) => setLevels(p => ({ ...p, [id]: v }));
   const setTest = (id, v) => setTests(p => ({ ...p, [id]: v }));
@@ -74,7 +82,7 @@ export function AssessmentForm({ client, G, parq: PARQ = [], exercises = [], onC
         const n = Number(v);
         if (v !== "" && v !== null && v !== undefined && Number.isFinite(n)) cleanTests[k] = n;
       }
-      await saveAssessment({
+      const out = await post("save_assessment", {
         clientId: client.id,
         levels,
         tests: cleanTests,
@@ -83,8 +91,10 @@ export function AssessmentForm({ client, G, parq: PARQ = [], exercises = [], onC
         parqAnswers: parqAnswered ? Object.fromEntries(PARQ.map(q => [q.id, !!parqAns[q.id]])) : null,
         notes,
       });
+      // Refresh the list either way — the assessment is saved by this point.
       onSaved?.();
-      onClose?.();
+      if (out.suggestion) setSuggestion(out.suggestion);
+      else onClose?.();
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -98,6 +108,67 @@ export function AssessmentForm({ client, G, parq: PARQ = [], exercises = [], onC
       {sub && <div style={{ fontSize: 11, color: G.muted, marginTop: 4, lineHeight: 1.5 }}>{sub}</div>}
     </div>
   );
+
+  if (suggestion) {
+    return (
+      <div>
+        <div className="sf gd" style={{ fontSize: 19, fontWeight: 700 }}>Saved</div>
+        <div style={{ fontSize: 12, color: G.muted, marginTop: 3 }}>{client?.name}</div>
+
+        <div style={{ marginTop: 18, padding: "14px 15px", background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 10 }}>
+          <div style={{ fontSize: 11, color: G.gold, letterSpacing: 1.4, textTransform: "uppercase", fontWeight: 700 }}>
+            What you measured does not match the programme
+          </div>
+          <div style={{ fontSize: 13, color: G.text, marginTop: 10, lineHeight: 1.7 }}>
+            On: <b>{systemName(suggestion.current) || "no programme"}</b>
+            <br />
+            Suggested: <b style={{ color: G.gold }}>{systemName(suggestion.systemId)}</b>
+          </div>
+          <div style={{ fontSize: 12, color: G.muted, marginTop: 10, lineHeight: 1.6 }}>{suggestion.reason}</div>
+          {(suggestion.warnings || []).map((w, i) => (
+            <div key={i} style={{ fontSize: 11, color: G.amber, marginTop: 6, lineHeight: 1.55 }}>• {w}</div>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 11, color: G.dim, marginTop: 12, lineHeight: 1.6 }}>
+          Nothing has been changed. You saw them do it; the app only did the
+          arithmetic. If the measurement was taken on a bad day, or you know
+          something the six ladders do not, keep them where they are.
+        </div>
+
+        {err && (
+          <div style={{ marginTop: 12, padding: "9px 11px", border: `1px solid ${G.red}`, borderRadius: 8, color: G.red, fontSize: 12 }}>{err}</div>
+        )}
+
+        <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
+          <button type="button" className="btn" disabled={saving}
+            onClick={async () => {
+              setErr(""); setSaving(true);
+              try {
+                await post("set_workout_system", {
+                  clientId: client.id,
+                  systemId: suggestion.systemId,
+                  reason: suggestion.reason,
+                });
+                onSaved?.();
+                onClose?.();
+              } catch (e) {
+                setErr(e.message);
+              } finally {
+                setSaving(false);
+              }
+            }}
+            style={{ flex: 1, padding: "12px", borderRadius: 10, background: G.grad, color: "#000", fontWeight: 700, fontSize: 13 }}>
+            {saving ? "Changing…" : `Move to ${systemName(suggestion.systemId)}`}
+          </button>
+          <button type="button" className="btn" onClick={onClose} disabled={saving}
+            style={{ padding: "12px 16px", borderRadius: 10, background: G.surf2, color: G.muted, border: `1px solid ${G.border}`, fontSize: 13 }}>
+            Keep as is
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -2254,6 +2254,9 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
   // session, a photo that will not decode, the daily cap. Swallowing those
   // into console.error left the screen looking like nothing had happened.
   const [photoErr, setPhotoErr] = useState("");
+  // Which photo is mid-delete, so its own button can say so rather than the
+  // whole grid going quiet.
+  const [deletingId, setDeletingId] = useState(null);
   const fileRef = useCallback(node => {}, []);
 
   useEffect(() => {
@@ -2396,8 +2399,40 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             {photos.map(ph => (
-              <div key={ph.id} className="card" style={{ overflow: "hidden" }}>
+              <div key={ph.id} className="card" style={{ overflow: "hidden", position: "relative" }}>
                 <img src={ph.photo_url} alt="progress" style={{ width: "100%", height: 160, objectFit: "cover" }} />
+                {/* A progress photo is the most personal thing in this app.
+                    Deleting one has worked on the server since the lockdown,
+                    but there was no way to ask for it — so a person could put a
+                    photo of their own body in and never take it out again. */}
+                <button
+                  type="button"
+                  aria-label={isAr ? "حذف الصورة" : "Delete photo"}
+                  disabled={deletingId === ph.id}
+                  onClick={async () => {
+                    const ask = isAr
+                      ? "حذف هذه الصورة نهائياً؟ لا يمكن التراجع."
+                      : "Delete this photo? This cannot be undone.";
+                    if (!window.confirm(ask)) return;
+                    setPhotoErr("");
+                    setDeletingId(ph.id);
+                    try {
+                      await dbDeletePhoto(ph.id);
+                      setPhotos(p => p.filter(x => x.id !== ph.id));
+                    } catch (e) {
+                      setPhotoErr(e.message);
+                    } finally {
+                      setDeletingId(null);
+                    }
+                  }}
+                  style={{
+                    position: "absolute", top: 6, right: 6, width: 28, height: 28,
+                    borderRadius: 8, cursor: "pointer", fontSize: 12, lineHeight: 1,
+                    background: "rgba(0,0,0,0.55)", color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                  }}>
+                  {deletingId === ph.id ? "…" : "🗑"}
+                </button>
                 <div style={{ padding: "8px 10px" }}>
                   <div style={{ fontSize: 10, color: G.muted }}>{ph.taken_at}</div>
                   {ph.weight && <div style={{ fontSize: 13, fontWeight: 700, color: G.gold }}>{ph.weight} kg</div>}
@@ -3479,6 +3514,10 @@ export default function App() {
                 G={G}
                 parq={PARQ}
                 exercises={systemExerciseNames(assessC)}
+                systemName={(id) => {
+                  const w = WORKOUT_SYSTEMS.find((x) => x.id === id);
+                  return w ? `${w.emoji} ${w.name}` : (id || "");
+                }}
                 onClose={() => setAssessC(null)}
                 onSaved={reloadClients}
               />
