@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
 import { AIFormCheck } from "./AIFormCheck";
+import { Icon } from "./Icons";
 import { usesExternalLoad, getExerciseRequirement } from "./exerciseMeta";
 import { meetsRequirement } from "./assessment";
 
@@ -140,7 +141,7 @@ function flattenWorkout(workoutSystem, dayFilter, levels) {
     : () => true;
 
   const list = [];
-  resolveWarmup(workoutSystem).forEach(ex => list.push({ dayName: "🔥 Warm-up", exercise: ex }));
+  resolveWarmup(workoutSystem).forEach(ex => list.push({ dayName: "Warm-up", exercise: ex, prep: true }));
   const days = dayFilter
     ? workoutSystem.days.filter((d) => d.name === dayFilter)
     : workoutSystem.days;
@@ -170,7 +171,7 @@ function flattenWorkout(workoutSystem, dayFilter, levels) {
       });
     }
   });
-  resolveCooldown(workoutSystem).forEach(ex => list.push({ dayName: "🧘 Cool-down", exercise: ex }));
+  resolveCooldown(workoutSystem).forEach(ex => list.push({ dayName: "Cool-down", exercise: ex, prep: true }));
   return list;
 }
 
@@ -279,7 +280,7 @@ export function WorkoutPlayer({
   dayName = null,        // if provided, only play this day's exercises
   client = null,         // client object, used for logging + calorie estimate
   onClose,
-  accentColor = "#d4af37",
+  accentColor = "#8FB4EA",
 }) {
   const levels = client?.capabilityLevels || client?.capability_levels || null;
   const queue = useRef(flattenWorkout(workoutSystem, dayName, levels)).current;
@@ -296,7 +297,15 @@ export function WorkoutPlayer({
   const [restRemaining, setRestRemaining] = useState(0);
   const [exerciseRemaining, setExerciseRemaining] = useState(null); // for duration-based exercises
   const [setStarted, setSetStarted] = useState(false);
+  // A clip whose file is missing left a black rectangle the height of the
+  // screen, indistinguishable from "still loading". If it fails to load we
+  // drop it and show the illustration instead. Declared here with the other
+  // hooks — below this component there are two early returns, and a hook
+  // after one of them is a hook React stops counting.
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [motivation, setMotivation] = useState(null);
+  useEffect(() => { setVideoFailed(false); setVideoReady(false); }, [exIdx]);
   const [elapsed, setElapsed] = useState(0); // overall stopwatch, seconds
   const [saving, setSaving] = useState(false);
   const videoRef = useRef(null);
@@ -329,8 +338,10 @@ export function WorkoutPlayer({
   // otherwise each start their own session.
   const sessionPromise = useRef(null);
 
-  const isWarmupOrCooldown = (item) =>
-    !!item && (item.dayName === "\ud83d\udd25 Warm-up" || item.dayName === "\ud83e\uddd8 Cool-down");
+  // `prep` is set where the queue is built. It used to be inferred by
+  // comparing dayName to "🔥 Warm-up" — a display string, emoji and all,
+  // load-bearing for whether a set gets written to the database.
+  const isWarmupOrCooldown = (item) => !!item && item.prep === true;
 
   useEffect(() => {
     const names = [...new Set(
@@ -561,7 +572,7 @@ export function WorkoutPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setIdx, totalSets, exIdx, queue.length, logWorkout, saveCurrentSet]);
 
-  const MOTIVATIONS = ["💪 Great Set!", "🔥 Keep Going!", "⚡ Crushing It!", "🎯 Perfect Form!", "🏆 Beast Mode!"];
+  const MOTIVATIONS = ["Good set.", "Keep going.", "That is the one.", "Strong.", "Logged."];
   const handleSetDone = () => {
     if (videoRef.current) videoRef.current.pause();
 
@@ -644,17 +655,17 @@ export function WorkoutPlayer({
     return (
       <div style={overlayStyle}>
         <div style={cardStyle}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}><div style={{ width: 60, height: 60, borderRadius: 20, background: "#1B3350", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon n="check" s={28} c="#4FBF97" /></div></div>
           <h2 style={{ color: "#fff", margin: "0 0 8px" }}>Workout Complete!</h2>
-          <p style={{ color: "#aaa", marginBottom: 4 }}>{queue.length} exercises &middot; {fmtClock(elapsed)} min</p>
+          <p style={{ color: "#A9BBD2", marginBottom: 4 }}>{queue.length} exercises &middot; {fmtClock(elapsed)} min</p>
           <p style={{ color: accentColor, fontWeight: 700, marginBottom: heldBack ? 12 : 20 }}>≈ {calories} kcal burned</p>
           {heldBack > 0 && (
-            <p style={{ color: "#888", fontSize: 12, marginBottom: 18, lineHeight: 1.6 }}>
+            <p style={{ color: "#8FA3BE", fontSize: 12, marginBottom: 18, lineHeight: 1.6 }}>
               {heldBack} {heldBack === 1 ? "movement is" : "movements are"} not in this session yet —
               they open up at the next assessment.
             </p>
           )}
-          {saving && <p style={{ color: "#666", fontSize: 12, marginBottom: 10 }}>Saving...</p>}
+          {saving && <p style={{ color: "#7E93B0", fontSize: 12, marginBottom: 10 }}>Saving...</p>}
           <button onClick={onClose} style={closeBtnStyle(accentColor)}>Finish</button>
         </div>
       </div>
@@ -670,35 +681,37 @@ export function WorkoutPlayer({
   const lastLine = isWarmupOrCooldown(current) ? null : describeLast(lastByExercise[current.exercise.name]);
 
   const videoFile = getVideoForExercise(current.exercise.name);
-  const videoSrc = videoFile ? `${VIDEO_BASE}/${videoFile}` : null;
+  const videoSrc = videoFile && !videoFailed ? `${VIDEO_BASE}/${videoFile}` : null;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
   if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} targetReps={current?.exercise?.reps} clientName={client?.name} onRepsComplete={(n) => { aiRepsRef.current += (n||0); aiSetsRef.current += 1; setShowAI(false); handleSetDone(); }} />);
 
   return (
-    <div style={overlayStyle}>
+    <div className="night" style={overlayStyle}>
       <div style={playerCardStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px" }}>
-          <span style={{ color: "#999", fontSize: 13, fontWeight: 600 }}>
+        {/* At 390px this wrapped onto two lines and shoved the clock around.
+            The label truncates; the controls never move. */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "14px 16px" }}>
+          <span style={{ color: "#8FA3BE", fontSize: 12.5, fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {current.rounds > 1 && <span style={{ color: accentColor }}>Round {current.round}/{current.rounds} &middot; </span>}
             {current.dayName} &middot; Exercise {exIdx + 1}/{queue.length}
           </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ color: accentColor, fontSize: 13, fontWeight: 700, fontFamily: "monospace" }}>
-              ⏱ {fmtClock(elapsed)}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <span style={{ color: accentColor, fontSize: 13, fontWeight: 600, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontVariantNumeric: "tabular-nums" }}>
+              {fmtClock(elapsed)}
             </span>
               {setStarted && phase === "exercise" && (
-                <button onClick={() => setIsPaused(p => !p)} style={{ background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"#fff",padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700 }}>{isPaused ? "▶" : "⏸"}</button>
+                <button onClick={() => setIsPaused(p => !p)} aria-label={isPaused ? "Resume" : "Pause"} style={{ background:"#1B3350",border:"1px solid #24405F",borderRadius:10,color:"#FCFCFD",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n={isPaused ? "play" : "pause"} s={14} c="#FCFCFD" w={2} /></button>
               )}
-            <button onClick={() => setShowAI(true)} style={{ background:"rgba(212,175,55,0.15)",border:"1px solid rgba(212,175,55,0.3)",borderRadius:8,color:"#d4af37",padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700 }}>🤖 AI</button>
-            <button onClick={handleEndEarly} style={iconBtnStyle}>✕</button>
+            <button onClick={() => setShowAI(true)} aria-label="Form check" title="Form check" style={{ background:"rgba(143,180,234,0.14)",border:"1px solid #24405F",borderRadius:10,color:"#8FB4EA",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n="ai" s={15} c="#8FB4EA" /></button>
+            <button onClick={handleEndEarly} style={{ ...iconBtnStyle, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, border: "1px solid #24405F" }} aria-label="End workout"><Icon n="close" s={15} c="#8FA3BE" w={2} /></button>
           </div>
         </div>
 
-        <div style={{ height: 4, background: "#2a2a2a", margin: "0 18px", borderRadius: 2 }}>
+        <div style={{ height: 4, background: "#24405F", margin: "0 18px", borderRadius: 2 }}>
           <div style={{ height: 4, width: `${progressPct}%`, background: accentColor, borderRadius: 2, transition: "width .3s" }} />
         </div>
 
-          <div style={{ position: "relative", width: "100%", flex: 1, background: "#000", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ position: "relative", width: "100%", flex: 1, background: "#0A1727", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {phase === "exercise" && videoSrc && (
             <>
               <video
@@ -706,9 +719,22 @@ export function WorkoutPlayer({
                 ref={videoRef}
                 src={videoSrc}
                 preload="auto"
-                style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000", pointerEvents: "none", display: "block" }}
+                style={{ width: "100%", height: "100%", objectFit: "contain", background: "#0A1727", pointerEvents: "none", display: "block" }}
                 loop muted playsInline autoPlay
+                onError={() => setVideoFailed(true)}
+                onLoadedData={() => setVideoReady(true)}
               />
+              {/* The clips are 1–3 MB and sit on object storage. Until one has
+                  a frame to show, a <video> paints nothing — which on a phone
+                  meant a black screen the height of the display, with no way
+                  to tell it from a broken app. The illustration holds the
+                  space, and the spinner says which of the two it is. */}
+              {!videoReady && (
+                <div style={{ position: "absolute", inset: 0, background: "#152B45", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, color: "#8FA3BE", padding: 16 }}>
+                  <ExerciseIllustration exerciseId={current.exercise.name} size={150} />
+                  <div className="sp" style={{ width: 22, height: 22, borderWidth: 2 }} />
+                </div>
+              )}
               {exerciseRemaining !== null && (
                 <div style={{
                   position: "absolute", top: 10, right: 10,
@@ -724,7 +750,7 @@ export function WorkoutPlayer({
             </>
           )}
           {phase === "exercise" && !videoSrc && (
-            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1a1a1a", padding: 8, position: "relative" }}>
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1B3350", padding: 8, position: "relative" }}>
               <ExerciseIllustration exerciseId={current.exercise.name} size={180} />
               {exerciseRemaining !== null && (
                 <div style={{
@@ -741,9 +767,9 @@ export function WorkoutPlayer({
             </div>
           )}
           {phase === "rest" && (
-            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#111", padding: 16 }}>
-              <div style={{ fontSize: 13, color: "#999", fontWeight: 700, letterSpacing: 2, marginBottom: 6 }}>REST</div>
-              <div style={{ fontSize: 48, color: accentColor, fontWeight: 800, marginBottom: showLogger ? 18 : 0 }}>{restRemaining}s</div>
+            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0E2035", padding: 16 }}>
+              <div style={{ fontSize: 13, color: "#8FA3BE", fontWeight: 700, letterSpacing: 2, marginBottom: 6 }}>REST</div>
+              <div className="sf" style={{ fontSize: 64, lineHeight: 1, color: accentColor, marginBottom: showLogger ? 20 : 0, letterSpacing: "-.02em" }}>{restRemaining}s</div>
 
               {/* Logging the set happens HERE, while resting — the set is
                   fresh, the hands are free, and nothing is being interrupted.
@@ -752,7 +778,7 @@ export function WorkoutPlayer({
                   screen is saved when the rest ends. */}
               {showLogger && (
                 <div style={{ width: "100%", maxWidth: 320 }}>
-                  <div style={{ fontSize: 11, color: "#777", textAlign: "center", marginBottom: 8, letterSpacing: 1 }}>
+                  <div style={{ fontSize: 11, color: "#7E93B0", textAlign: "center", marginBottom: 8, letterSpacing: 1 }}>
                     SET {setIdx} - ADJUST IF IT WAS DIFFERENT
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
@@ -771,7 +797,7 @@ export function WorkoutPlayer({
                     <button
                       type="button"
                       onClick={() => setForceWeight(true)}
-                      style={{ display: "block", margin: "10px auto 0", background: "none", border: "none", color: "#777", fontSize: 11, cursor: "pointer", textDecoration: "underline" }}
+                      style={{ display: "block", margin: "10px auto 0", background: "none", border: "none", color: "#7E93B0", fontSize: 11, cursor: "pointer", textDecoration: "underline" }}
                     >
                       + add weight
                     </button>
@@ -780,7 +806,7 @@ export function WorkoutPlayer({
                       taps, all optional — a set with no answer here is still a
                       set, and pretending otherwise would cost the logging. */}
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 10, color: "#777", textAlign: "center", marginBottom: 6, letterSpacing: 1 }}>
+                    <div style={{ fontSize: 10, color: "#7E93B0", textAlign: "center", marginBottom: 6, letterSpacing: 1 }}>
                       HOW MANY MORE COULD YOU HAVE DONE?
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
@@ -797,16 +823,16 @@ export function WorkoutPlayer({
                             style={{
                               flex: 1, padding: "8px 0", borderRadius: 8, cursor: "pointer",
                               fontSize: 12, fontWeight: 700,
-                              background: on ? accentColor : "rgba(255,255,255,0.06)",
-                              color: on ? "#000" : "#999",
-                              border: `1px solid ${on ? accentColor : "rgba(255,255,255,0.12)"}`,
+                              background: on ? accentColor : "#1B3350",
+                              color: on ? "#0E2035" : "#8FA3BE",
+                              border: `1px solid ${on ? accentColor : "#24405F"}`,
                             }}>{o.label}</button>
                         );
                       })}
                     </div>
                   </div>
                   {progressed && (
-                    <div style={{ marginTop: 10, textAlign: "center", fontSize: 11, color: "#22c55e", fontWeight: 700 }}>
+                    <div style={{ marginTop: 10, textAlign: "center", fontSize: 11, color: "#4FBF97", fontWeight: 700 }}>
                       You hit the top of the range last time - this is a step up
                     </div>
                   )}
@@ -819,33 +845,33 @@ export function WorkoutPlayer({
         <div style={{ padding: "18px 18px 0" }}>
           <h2 style={{ color: "#fff", margin: "0 0 6px", fontSize: 20 }}>{current.exercise.name}</h2>
           <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-            <Pill label={`Set ${setIdx}/${totalSets}`} color={accentColor} />
-            <Pill label={`Reps: ${current.exercise.reps}`} color="#22c55e" />
-            <Pill label={`Rest: ${current.exercise.rest}`} color="#3b82f6" />
+            <Pill label={`Set ${setIdx}/${totalSets}`} />
+            <Pill label={`Reps: ${current.exercise.reps}`} />
+            <Pill label={`Rest: ${current.exercise.rest}`} />
           </div>
           {/* The one line that turns a workout list into training: what this
               person actually did the last time they stood here. */}
           {lastLine && (
-            <div style={{ marginTop: -6, marginBottom: 14, fontSize: 12, color: "#8a8a8a" }}>
-              Last time: <span style={{ color: "#ccc", fontWeight: 700 }}>{lastLine}</span>
+            <div style={{ marginTop: -6, marginBottom: 14, fontSize: 12, color: "#8FA3BE" }}>
+              Last time: <span style={{ color: "#C8D6EA", fontWeight: 700 }}>{lastLine}</span>
             </div>
           )}
         </div>
 
         {motivation && (
-          <div style={{ margin: "0 18px 8px", background: "#22c55e", color: "#fff", borderRadius: 10, padding: "12px", textAlign: "center", fontSize: 18, fontWeight: 800 }}>
+          <div style={{ margin: "0 18px 8px", background: "#12795A", color: "#FCFCFD", borderRadius: 10, padding: "12px", textAlign: "center", fontSize: 18, fontWeight: 800 }}>
             {motivation}
           </div>
         )}
         <div style={{ padding: "0 18px 20px", display: "flex", gap: 10, flexWrap: "wrap" }}>
           {phase === "exercise" ? (
             !setStarted ? (
-              <button onClick={() => setSetStarted(true)} style={{ ...primaryBtnStyle(accentColor), fontSize: 16 }}>
-                ▶ Start Set {setIdx}
+              <button onClick={() => setSetStarted(true)} style={{ ...primaryBtnStyle(accentColor), fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
+                <Icon n="play" s={15} c="#0E2035" /> Start set {setIdx}
               </button>
             ) : (
               <button onClick={handleSetDone} style={primaryBtnStyle(accentColor)}>
-                {exerciseRemaining !== null ? "✓ Finish Early" : `✓ Set ${setIdx} Done`}
+                {exerciseRemaining !== null ? "Finish early" : `Set ${setIdx} done`}
               </button>
             )
           ) : (
@@ -869,12 +895,12 @@ function NumField({ label, value, step, accent, onChange }) {
   };
   const btn = {
     width: 40, height: 44, flexShrink: 0, borderRadius: 8, cursor: "pointer",
-    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+    background: "#1B3350", border: "1px solid #24405F",
     color: "#fff", fontSize: 20, fontWeight: 700, lineHeight: 1,
   };
   return (
     <div style={{ flex: 1 }}>
-      <div style={{ fontSize: 9, color: "#777", letterSpacing: 1.2, textAlign: "center", marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 9, color: "#7E93B0", letterSpacing: 1.2, textAlign: "center", marginBottom: 5 }}>{label}</div>
       <div style={{ display: "flex", gap: 5 }}>
         <button type="button" onClick={() => bump(-1)} style={btn}>-</button>
         <input
@@ -882,7 +908,7 @@ function NumField({ label, value, step, accent, onChange }) {
           onChange={(e) => onChange(e.target.value)}
           style={{
             flex: 1, minWidth: 0, height: 44, textAlign: "center", borderRadius: 8,
-            background: "rgba(0,0,0,0.4)", border: `1px solid ${accent}55`,
+            background: "#0E2035", border: `1px solid ${accent}55`,
             color: "#fff", fontSize: 19, fontWeight: 800,
           }}
         />
@@ -892,9 +918,12 @@ function NumField({ label, value, step, accent, onChange }) {
   );
 }
 
-function Pill({ label, color }) {
+// Three pills in three colours, one of them a saturated green, over a dark
+// field: there is nothing to rank between them, and the green read as a
+// state rather than a fact. One style, three facts.
+function Pill({ label }) {
   return (
-    <span style={{ background: `${color}22`, color, fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>
+    <span style={{ background: "#1B3350", border: "1px solid #24405F", color: "#C8D6EA", fontSize: 12, fontWeight: 500, padding: "5px 11px", borderRadius: 20, whiteSpace: "nowrap" }}>
       {label}
     </span>
   );
@@ -905,15 +934,15 @@ const overlayStyle = {
   background: "rgba(0,0,0,0.92)", zIndex: 9999,
   display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
 };
-const cardStyle = { background: "#181818", borderRadius: 16, padding: 32, textAlign: "center", maxWidth: 360 };
-const playerCardStyle = { background: "#181818", borderRadius: 0, width: "100%", maxWidth: "100%", height: "100vh", maxHeight: "100vh", overflow: "hidden", display: "flex", flexDirection: "column", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" };
-const iconBtnStyle = { background: "none", border: "none", color: "#999", fontSize: 18, cursor: "pointer", padding: 4 };
+const cardStyle = { background: "#152B45", borderRadius: 16, padding: 32, textAlign: "center", maxWidth: 360 };
+const playerCardStyle = { background: "#152B45", borderRadius: 0, width: "100%", maxWidth: "100%", height: "100vh", maxHeight: "100vh", overflow: "hidden", display: "flex", flexDirection: "column", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" };
+const iconBtnStyle = { background: "none", border: "none", color: "#8FA3BE", fontSize: 18, cursor: "pointer", padding: 4 };
 function primaryBtnStyle(accent) {
-  return { flex: 1, background: accent, color: "#000", border: "none", borderRadius: 10, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" };
+  return { flex: 1, background: accent, color: "#0E2035", border: "none", borderRadius: 10, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
-const secondaryBtnStyle = { background: "#2a2a2a", color: "#ccc", border: "none", borderRadius: 10, padding: "14px 18px", fontWeight: 600, fontSize: 14, cursor: "pointer" };
+const secondaryBtnStyle = { background: "#24405F", color: "#C8D6EA", border: "none", borderRadius: 10, padding: "14px 18px", fontWeight: 600, fontSize: 14, cursor: "pointer" };
 function closeBtnStyle(accent) {
-  return { background: accent, color: "#000", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
+  return { background: accent, color: "#0E2035", border: "none", borderRadius: 10, padding: "12px 28px", fontWeight: 700, fontSize: 15, cursor: "pointer" };
 }
 
 

@@ -3,6 +3,7 @@ import { ExerciseIllustration } from "./ExerciseIllustration";
 import { WorkoutPlayer } from "./WorkoutPlayer";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
+import { Icon } from "./Icons";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -19,8 +20,8 @@ import { PDScore } from "./PDScore";
 // ── TRANSLATIONS ──────────────────────────────────────────
 const T = {
   en: {
-    appName: "PHYSICAL DEFINITION", tagline: "Your Fitness Journey Starts Here",
-    enter: "ENTER →", email: "Email / Username", password: "Password",
+    appName: "Physical Definition", tagline: "Training that follows what you can actually do today",
+    enter: "Sign in", email: "Email / Username", password: "Password",
     newMember: "New member? Register here →", welcome: "Welcome",
     profile: "Profile", workout: "Workout", nutrition: "Nutrition", progress: "Progress",
     dashboard: "Dashboard", clients: "Clients", aiTools: "AI Tools", plans: "Plans", requests: "Requests",
@@ -91,7 +92,7 @@ const T = {
 const WORKOUT_SYSTEMS = [
   {
     id: "ppl", level: "intermediate", name: "Push / Pull / Legs", nameAr: "دفع / سحب / أرجل",
-    color: "#ef4444", emoji: "💪",
+    color: "#A63A3A", emoji: "💪",
     desc: "Push / Pull / Legs run TWICE a week (6 days) \u2014 at 3 days each muscle is trained only once, which is too little",
     descAr: "دفع/سحب/أرجل مرتين أسبوعياً (6 أيام) — 3 أيام تعني تدريب كل عضلة مرة واحدة فقط وهو غير كافٍ",
     days: [
@@ -132,7 +133,7 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "upperlower", level: "beginner", name: "Upper / Lower Split", nameAr: "تقسيم علوي / سفلي",
-    color: "#f59e0b", emoji: "⚡",
+    color: "#9A6212", emoji: "⚡",
     desc: "4-day split alternating upper and lower body training",
     descAr: "تقسيم 4 أيام بين الجزء العلوي والسفلي",
     days: [
@@ -185,7 +186,7 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "fst7", level: "advanced", name: "FST-7 Training", nameAr: "تدريب FST-7",
-    color: "#9333ea", emoji: "🔥",
+    color: "#6B4FA8", emoji: "🔥",
     desc: "Fascia Stretch Training — 7 sets on last exercise to maximize pump",
     descAr: "تمدد اللفافة — 7 مجموعات في آخر تمرين لأقصى ضخ",
     days: [
@@ -235,7 +236,7 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "superset", level: "intermediate", name: "Superset Training", nameAr: "تدريب السوبرسيت",
-    color: "#22c55e", emoji: "⚡",
+    color: "#12795A", emoji: "⚡",
     desc: "Pair antagonist muscles — maximum efficiency, time-saving",
     descAr: "تدريب العضلات المتعاكسة معاً — كفاءة عالية",
     days: [
@@ -276,7 +277,7 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "circuit", level: "beginner", name: "Circuit Training", nameAr: "التدريب الدائري",
-    color: "#60a5fa", emoji: "🔄",
+    color: "#21509B", emoji: "🔄",
     desc: "Every exercise back-to-back with little rest, three times through — start at three rounds and add a fourth when three stop being hard",
     descAr: "جميع التمارين متتالية مع راحة قليلة",
     days: [
@@ -372,7 +373,7 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "hiit", level: "intermediate", name: "HIIT Training", nameAr: "تدريب HIIT",
-    color: "#ef4444", emoji: "🔥",
+    color: "#A63A3A", emoji: "🔥",
     desc: "High Intensity Interval Training — maximum calorie burn",
     descAr: "تدريب متقطع عالي الكثافة — حرق أقصى للسعرات",
     days: [
@@ -470,7 +471,7 @@ const WORKOUT_SYSTEMS = [
   },
   {
     id: "arnold", level: "advanced", name: "Arnold Split", nameAr: "تقسيم أرنولد",
-    color: "#d4af37", emoji: "🌟",
+    color: "#21509B", emoji: "🌟",
     desc: "6-day split by Arnold Schwarzenegger — classic bodybuilding",
     descAr: "تقسيم 6 أيام بأسلوب أرنولد — بناء جسم كلاسيكي",
     days: [
@@ -782,9 +783,9 @@ const WORKOUT_SYSTEMS = [
 // programmes built around a limitation — they are not medical treatment and
 // need a screening conversation before being assigned.
 const LEVEL_META = {
-  beginner:     { label: "Beginner",     labelAr: "مبتدئ",  color: "#22c55e" },
-  intermediate: { label: "Intermediate", labelAr: "متوسط",  color: "#60a5fa" },
-  advanced:     { label: "Advanced",     labelAr: "متقدم",  color: "#ef4444",
+  beginner:     { label: "Beginner",     labelAr: "مبتدئ",  color: "#12795A" },
+  intermediate: { label: "Intermediate", labelAr: "متوسط",  color: "#21509B" },
+  advanced:     { label: "Advanced",     labelAr: "متقدم",  color: "#A63A3A",
     warn: "Advanced system — heavy or technical lifts and high weekly volume. Assign only to a client with a solid training base and sound technique.",
     warnAr: "نظام متقدم — تمارين ثقيلة أو تقنية وحجم تدريبي عالٍ. لا يُسند إلا لعميل لديه أساس تدريبي جيد وتقنية سليمة." },
   clinical:     { label: "Clinical",     labelAr: "تأهيلي", color: "#06b6d4",
@@ -794,11 +795,11 @@ const LEVEL_META = {
 
 // ── MEAL PLANS ─────────────────────────────────────────────
 const MEALS = [
-  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#f59e0b", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Kerala.jpeg", baseCal: 1800, meals: [{ mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg", time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack1.jpeg", time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack2.jpeg", time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Dinner.jpeg", time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
-  { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#ef4444", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Protein.jpeg", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Egg whites × 6 + Oats 60g + Milk 200ml", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake 30g + Apple × 1", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice 120g + Veg 80g", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 1 + Peanut butter toast 40g", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish 180g + Sweet potato 150g + Salad 80g", cal: 420, p: 40, c: 42, f: 8 }] },
-  { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#22c55e", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_FatBurn.jpeg", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt 150g + Berries 60g + Chia 10g", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber 100g + Hummus 40g", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad 200g + Olive oil 10ml", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds 20g + Black coffee 150ml", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish 150g + Vegetables 100g + Dal soup 100g", cal: 380, p: 38, c: 28, f: 8 }] },
-  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#60a5fa", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Vegetarian.jpeg", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
-  { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#9333ea", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Muscle.jpeg", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
+  { id: "kerala", name: "Kerala Balanced", nameAr: "نظام كيرالا", emoji: "🍚", color: "#9A6212", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Kerala.jpeg", baseCal: 1800, meals: [{ mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Breakfast.jpeg", time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Puttu 150g + Kadala curry 120g + Banana × 1", cal: 380, p: 14, c: 62, f: 8 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack1.jpeg", time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Coconut water 200ml + Nuts 20g", cal: 180, p: 4, c: 22, f: 9 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Dal 100g + Fish curry 120g + Veg 80g", cal: 520, p: 32, c: 68, f: 12 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Snack2.jpeg", time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Banana × 1 + Green tea 200ml", cal: 120, p: 2, c: 28, f: 0 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Dinner.jpeg", time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 3 + Chicken curry 150g + Salad 80g", cal: 480, p: 38, c: 52, f: 10 }] },
+  { id: "protein", name: "High Protein", nameAr: "بروتين عالي", emoji: "💪", color: "#A63A3A", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Protein.jpeg", baseCal: 2200, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Egg whites × 6 + Oats 60g + Milk 200ml", cal: 450, p: 42, c: 38, f: 12 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Protein shake 30g + Apple × 1", cal: 250, p: 25, c: 30, f: 4 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken 200g + Brown rice 120g + Veg 80g", cal: 550, p: 48, c: 55, f: 10 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 1 + Peanut butter toast 40g", cal: 320, p: 10, c: 48, f: 10 }, { time: "19:30", name: "Dinner", nameAr: "عشاء", items: "Grilled fish 180g + Sweet potato 150g + Salad 80g", cal: 420, p: 40, c: 42, f: 8 }] },
+  { id: "fatburn", name: "Fat Burn", nameAr: "حرق الدهون", emoji: "🔥", color: "#12795A", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_FatBurn.jpeg", baseCal: 1500, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Greek yogurt 150g + Berries 60g + Chia 10g", cal: 220, p: 18, c: 22, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Cucumber 100g + Hummus 40g", cal: 120, p: 5, c: 14, f: 5 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "Grilled chicken salad 200g + Olive oil 10ml", cal: 380, p: 35, c: 20, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Almonds 20g + Black coffee 150ml", cal: 170, p: 6, c: 6, f: 14 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Steamed fish 150g + Vegetables 100g + Dal soup 100g", cal: 380, p: 38, c: 28, f: 8 }] },
+  { id: "veg", name: "Vegetarian", nameAr: "نباتي", emoji: "🥗", color: "#21509B", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Vegetarian.jpeg", baseCal: 1900, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Idli × 4 + Sambar 100g + Chutney 30g", cal: 360, p: 12, c: 68, f: 6 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Fruit bowl 150g + Buttermilk 200ml", cal: 200, p: 6, c: 38, f: 2 }, { mealImg: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Meals/KB_Lunch.jpeg", time: "13:00", name: "Lunch", nameAr: "غداء", items: "Brown rice 150g + Rajma 100g + Paneer 80g + Salad 60g", cal: 560, p: 28, c: 72, f: 14 }, { time: "16:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Roasted chana 40g + Green tea 200ml", cal: 180, p: 10, c: 28, f: 4 }, { time: "19:00", name: "Dinner", nameAr: "عشاء", items: "Roti × 3 + Dal makhani 120g + Veg curry 100g", cal: 480, p: 22, c: 72, f: 10 }] },
+  { id: "bulk", name: "Muscle Builder", nameAr: "بناء العضلات", emoji: "🏋️", color: "#6B4FA8", image: "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/Nutrition/Meal_Muscle.jpeg", baseCal: 2800, meals: [{ time: "7:00", name: "Breakfast", nameAr: "إفطار", items: "Eggs × 4 + Oats 80g + Banana × 1 + Full fat milk 250ml", cal: 620, p: 38, c: 78, f: 16 }, { time: "10:00", name: "Snack", nameAr: "وجبة خفيفة", items: "Mass gainer 60g + Dates 40g", cal: 480, p: 32, c: 72, f: 8 }, { time: "13:00", name: "Lunch", nameAr: "غداء", items: "White rice 180g + Chicken 250g + Dal 100g + Ghee 10g", cal: 680, p: 52, c: 80, f: 18 }, { time: "16:30", name: "Pre-workout", nameAr: "قبل التمرين", items: "Banana × 2 + Peanut butter 30g + Toast × 2", cal: 420, p: 14, c: 68, f: 12 }, { time: "20:00", name: "Dinner", nameAr: "عشاء", items: "Chapati × 4 + Mutton curry 200g + Milk 200ml", cal: 680, p: 48, c: 78, f: 20 }] },
 ];
 
 const MEAL_PREP = {
@@ -921,7 +922,7 @@ const COUNTRIES = [
   { code: "+63", flag: "🇵🇭", name: "Philippines" }, { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
 ];
 
-const TRAINER = { name: "MUHAMMED RAFI", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://www.physicaldefinition.com" };
+const TRAINER = { name: "Muhammed Rafi", designation: "Certified Personal Trainer", designationAr: "مدرب شخصي معتمد", whatsapp: "97471000786", appUrl: "https://www.physicaldefinition.com" };
 // The admin username and password used to live here, which meant they shipped
 // inside the browser bundle — anyone who opened devtools could read them.
 // They are now environment variables checked by /api/admin-login.
@@ -1336,26 +1337,91 @@ function generatePDF(client, lang) {
 }
 
 // ── THEME ──────────────────────────────────────────────────
-const G = { bg: "#080600", surf: "#110e00", surf2: "#1c1500", border: "rgba(212,175,55,0.14)", borderHi: "rgba(212,175,55,0.4)", gold: "#d4af37", grad: "linear-gradient(135deg,#d4af37,#f5d76e,#b8860b)", text: "#f0e8cc", muted: "#7a6a30", dim: "#3a2d10", green: "#22c55e", red: "#ef4444", amber: "#f59e0b", blue: "#60a5fa" };
+//
+// Direction A, "clinical premium": ink on paper, one navy accent, a serif for
+// titles and numbers. Chosen over the black-and-gold alternative because PD's
+// whole argument is that the programme follows a measurement — a document a
+// clinician would hand you reads that way — and because #0E2035 on #FCFCFD is
+// 14.9:1, which an eighty-year-old can read on a phone in a lit room. The old
+// #21509B on #FCFCFD was 7.4:1 and every label sat below 4.5:1.
+//
+// TWO palettes, deliberately:
+//   DAY   — everything the client reads, decides and signs in with.
+//   NIGHT — the workout player, and only the player. It is held at arm's
+//           length mid-set, often one-handed; a dark field stops a phone at
+//           full brightness from being the loudest object in the room.
+//
+// `G` keeps every key name it had — gold, green, amber, blue — so moving the
+// whole app across took no edit at any of the 440-odd call sites. What those
+// names RESOLVE to is the only thing that changed. `gold` means "the accent",
+// whatever colour the accent happens to be; renaming it would have been a
+// day of churn for a word.
+const G = {
+  bg: "#F3F6FA", surf: "#FFFFFF", surf2: "#F3F6FA",
+  border: "#E4E9F0", borderHi: "#CBD6E6",
+  gold: "#21509B",
+  grad: "linear-gradient(180deg,#16304F,#0E2035)",
+  text: "#0E2035", muted: "#5C6D84", dim: "#93A2B7",
+  green: "#12795A", red: "#A63A3A", amber: "#9A6212", blue: "#21509B",
+
+  // Additive. A dark theme can wash a colour over the page at 10% alpha and
+  // get a tint; over white the same wash goes grey. Light themes need the
+  // tint mixed properly, so each status colour gets a companion fill.
+  ink: "#0E2035", paper: "#FCFCFD", soft: "#F3F6FA",
+  // `dim` is decorative only — empty-state icons, hairlines, the chevron in a
+  // select. Anything a person has to READ uses `muted`, which is measured.
+  accent: "#21509B", accentSoft: "#E8EEF8", accentLine: "#D3E0F2",
+  greenSoft: "#E6F2ED", greenLine: "#C9E3D8",
+  amberSoft: "#FBF2E3", amberLine: "#EFE0C2",
+  redSoft: "#FBECEC", redLine: "#F0D6D6",
+
+  // NIGHT — the player only.
+  nBg: "#0E2035", nSurf: "#152B45", nSurf2: "#1B3350", nLine: "#24405F",
+  nText: "#FCFCFD", nMuted: "#8FA3BE", nAccent: "#8FB4EA",
+};
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
-html,body{background:#080600;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;max-width:100vw;touch-action:manipulation;}
-input,select,button,textarea{font-family:'Inter',sans-serif;font-size:16px;}
-.sf{font-family:'Cormorant Garamond',serif;}
-.gd{background:linear-gradient(90deg,#f5d76e,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.btn{cursor:pointer;border:none;transition:all .15s;outline:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
-.btn:active{opacity:.75;transform:scale(.97);}
-.inp{background:#1c1500;border:1px solid rgba(212,175,55,0.15);border-radius:10px;padding:12px 14px;color:#f0e8cc;font-size:16px;width:100%;outline:none;-webkit-appearance:none;appearance:none;}
-.inp:focus{border-color:rgba(212,175,55,0.5);}
-.inp::placeholder{color:#3a2d10;}
-select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6a30' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
-.card{background:#110e00;border:1px solid rgba(212,175,55,0.14);border-radius:14px;}
+html,body{background:${G.bg};color:${G.text};font-family:'Public Sans',ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;max-width:100vw;touch-action:manipulation;}
+input,select,button,textarea{font-family:'Public Sans',ui-sans-serif,system-ui,sans-serif;font-size:16px;color:inherit;}
+
+/* The display face. Used for titles and for numbers that are the answer to
+   something — a weight, a score, a count of sessions. Not for labels: at
+   11px a serif stops being elegant and starts being hard. */
+.sf{font-family:'Instrument Serif',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-.01em;}
+
+/* .gd used to paint gold gradient text by clipping a background. There is no
+   gradient text in this design, and there were ~40 call sites, so rather than
+   remove the class it is now a no-op that keeps whatever colour it is given.
+   -webkit-text-fill-color has to be reset explicitly or the old transparent
+   fill would survive and every title would vanish. */
+.gd{background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;}
+
+.btn{cursor:pointer;border:none;transition:background .15s,border-color .15s,opacity .15s;outline:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.btn:active{opacity:.8;transform:scale(.985);}
+.btn:focus-visible,.inp:focus-visible,a:focus-visible{outline:2px solid ${G.accent};outline-offset:2px;}
+
+.inp{background:#fff;border:1px solid ${G.border};border-radius:12px;padding:14px 15px;color:${G.text};font-size:16px;width:100%;min-height:52px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .15s,box-shadow .15s;}
+.inp:focus{border-color:${G.accent};box-shadow:0 0 0 3px ${G.accentSoft};}
+.inp::placeholder{color:#7E8FA8;}
+select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235C6D84' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+
+.card{background:#fff;border:1px solid ${G.border};border-radius:16px;box-shadow:0 1px 2px rgba(14,32,53,.04);}
+
+/* NIGHT. The player sets this on its root, and the shared primitives follow
+   it there rather than each needing a dark variant passed in. */
+.night{background:${G.nBg};color:${G.nText};}
+.night .card{background:${G.nSurf};border-color:${G.nLine};box-shadow:none;}
+.night .inp{background:${G.nBg};border-color:${G.nLine};color:${G.nText};}
+.night .inp:focus{border-color:${G.nAccent};box-shadow:0 0 0 3px rgba(143,180,234,.16);}
+.night .inp::placeholder{color:${G.nMuted};}
+
 .fd{animation:fi .25s ease;}
 @keyframes fi{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes spin{to{transform:rotate(360deg);}}
-.sp{width:34px;height:34px;border:3px solid #1c1500;border-top:3px solid #d4af37;border-radius:50%;animation:spin .7s linear infinite;}
+.sp{width:34px;height:34px;border:3px solid ${G.border};border-top:3px solid ${G.accent};border-radius:50%;animation:spin .7s linear infinite;}
+.night .sp{border-color:${G.nLine};border-top-color:${G.nAccent};}
 @keyframes squat3d{0%{transform:rotateX(0deg) translateY(0px);}50%{transform:rotateX(12deg) translateY(18px);}100%{transform:rotateX(0deg) translateY(0px);}}
 @keyframes push3d{0%{transform:rotateZ(0deg) translateY(0px);}50%{transform:rotateZ(2deg) translateY(-14px);}100%{transform:rotateZ(0deg) translateY(0px);}}
 @keyframes pull3d{0%{transform:translateY(0px);}50%{transform:translateY(-20px);}100%{transform:translateY(0px);}}
@@ -1365,7 +1431,10 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 @keyframes breathe{0%,100%{transform:scaleY(1);}50%{transform:scaleY(1.04);}}
 @media(max-width:480px){
   html{font-size:15px;}
-  .inp{padding:11px 12px;}
+  .inp{padding:13px 14px;}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
 }
 
 /* ── PAR-Q answer buttons ────────────────────────────────────
@@ -1386,9 +1455,21 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 `;
 
 
-const Logo = ({ s = 32 }) => (<svg width={s} height={s} viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="url(#lg)" /><defs><linearGradient id="lg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#d4af37" /><stop offset="50%" stopColor="#f5d76e" /><stop offset="100%" stopColor="#b8860b" /></linearGradient></defs><text x="6" y="33" fontFamily="Georgia,serif" fontSize="22" fontWeight="900" fill="#080600" letterSpacing="-1">PD</text><rect x="6" y="37" width="36" height="2.5" rx="1.25" fill="#080600" opacity="0.5" /></svg>);
-const Av = ({ name = "?", sz = 38 }) => (<div style={{ width: sz, height: sz, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontSize: sz * 0.33, fontWeight: 800, color: "#080600", flexShrink: 0 }}>{(name || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>);
-const VV = { gold: { background: G.grad, color: "#080600", fontWeight: 700, borderRadius: 10 }, ghost: { background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", color: G.gold, borderRadius: 8 }, danger: { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", borderRadius: 8 }, green: { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: G.green, borderRadius: 8 }, amber: { background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: G.amber, borderRadius: 8 }, blue: { background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: G.blue, borderRadius: 8 } };
+const Logo = ({ s = 32 }) => (
+  <svg width={s} height={s} viewBox="0 0 48 48" role="img" aria-label="Physical Definition">
+    <rect width="48" height="48" rx="13" fill="#0E2035" />
+    <text x="24" y="32" textAnchor="middle" fontFamily="'Instrument Serif',Georgia,serif" fontSize="21" fill="#FCFCFD">PD</text>
+  </svg>
+);
+const Av = ({ name = "?", sz = 38 }) => (<div style={{ width: sz, height: sz, borderRadius: Math.round(sz * 0.32), background: G.accentSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: Math.round(sz * 0.34), fontWeight: 700, color: G.accent, flexShrink: 0, letterSpacing: ".01em" }}>{(name || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>);
+const VV = {
+  gold: { background: G.grad, color: G.paper, fontWeight: 600, borderRadius: 12 },
+  ghost: { background: "#fff", border: `1px solid ${G.border}`, color: G.text, fontWeight: 600, borderRadius: 11 },
+  danger: { background: G.redSoft, border: `1px solid ${G.redLine}`, color: G.red, fontWeight: 600, borderRadius: 11 },
+  green: { background: G.greenSoft, border: `1px solid ${G.greenLine}`, color: G.green, fontWeight: 600, borderRadius: 11 },
+  amber: { background: G.amberSoft, border: `1px solid ${G.amberLine}`, color: G.amber, fontWeight: 600, borderRadius: 11 },
+  blue: { background: G.accentSoft, border: `1px solid ${G.accentLine}`, color: G.accent, fontWeight: 600, borderRadius: 11 },
+};
 const Btn = ({ ch, v = "gold", onClick, full, sx = {} }) => (<button className="btn" onClick={onClick} style={{ padding: "9px 14px", fontSize: 13, fontWeight: 600, width: full ? "100%" : undefined, ...VV[v], ...sx }}>{ch}</button>);
 // A system's days for a particular client.
 //
@@ -1438,8 +1519,16 @@ function systemExerciseNames(client) {
   return seen;
 }
 
-const Ovl = ({ show, close, ch, mw = 520 }) => { if (!show) return null; return (<div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", backdropFilter: "blur(8px)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 1000, padding: 16, overflowY: "auto" }} onClick={close}><div className="card" style={{ width: "100%", maxWidth: mw, padding: 22, border: `1px solid ${G.borderHi}`, marginTop: 20, marginBottom: 20 }} onClick={e => e.stopPropagation()}>{ch}</div></div>); };
-const LangBtn = ({ lang, setLang }) => (<button className="btn" onClick={() => setLang(lang === "en" ? "ar" : "en")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 13px", minHeight: 40, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 20, color: G.gold, fontSize: 12, fontWeight: 700 }}><span style={{ fontSize: 14 }}>{lang === "en" ? "🇸🇦" : "🇬🇧"}</span><span>{lang === "en" ? "العربية" : "English"}</span></button>);
+const Ovl = ({ show, close, ch, mw = 520 }) => { if (!show) return null; return (<div style={{ position: "fixed", inset: 0, background: "rgba(14,32,53,0.42)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 1000, padding: 16, overflowY: "auto" }} onClick={close}><div className="card" style={{ width: "100%", maxWidth: mw, padding: 22, border: `1px solid ${G.borderHi}`, marginTop: 20, marginBottom: 20 }} onClick={e => e.stopPropagation()}>{ch}</div></div>); };
+// Flags are not languages: a flag names a country, and this button also has
+// to work for an Arabic speaker sitting in Qatar. The word alone says it, in
+// the script it switches to.
+const LangBtn = ({ lang, setLang }) => (
+  <button className="btn" onClick={() => setLang(lang === "en" ? "ar" : "en")}
+    aria-label={lang === "en" ? "Switch to Arabic" : "Switch to English"}
+    style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 44, padding: "0 16px", background: "#fff", border: `1px solid ${G.border}`, borderRadius: 22, color: G.text, fontSize: 13, fontWeight: 600 }}>
+    {lang === "en" ? "العربية" : "English"}
+  </button>);
 const FF = ({ label, value, onChange, type = "text", ph, opts, dir = "ltr" }) => (<div><div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>{opts ? <select className="inp" value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }}>{opts.map(o => <option key={typeof o === "object" ? o.id : o} value={typeof o === "object" ? o.id : o} style={{ background: G.surf2 }}>{typeof o === "object" ? o.label : o}</option>)}</select> : <input className="inp" type={type} placeholder={ph} value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }} />}</div>);
 
 const PhoneField = ({ label, country, setCountry, phone, setPhone }) => (
@@ -1470,24 +1559,27 @@ function TDEECard({ client, t, lang }) {
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <div style={{ flex: 1, background: G.surf2, borderRadius: 10, padding: "10px 12px" }}>
           <div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>{t.maintenance}</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: G.gold }}>{tdee}</div>
+          <div className="sf" style={{ fontSize: 26, lineHeight: 1, color: G.text }}>{tdee}</div>
           <div style={{ fontSize: 10, color: G.muted }}>kcal</div>
         </div>
-        <div style={{ flex: 1, background: G.surf2, borderRadius: 10, padding: "10px 12px", border: `1px solid ${G.gold}40` }}>
+        <div style={{ flex: 1, background: G.surf2, borderRadius: 10, padding: "10px 12px", border: `1px solid ${G.accentLine}` }}>
           <div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>{t.target}</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: surplus > 0 ? G.green : G.red }}>{target}</div>
+          <div className="sf" style={{ fontSize: 26, lineHeight: 1, color: G.text }}>{target}</div>
           <div style={{ fontSize: 10, color: surplus > 0 ? G.green : G.red }}>{surplus > 0 ? "+" : ""}{surplus} kcal</div>
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7, marginBottom: 10 }}>
-        {[{ l: "Protein", v: `${protein}g`, c: "#ef4444" }, { l: "Carbs", v: `${carbs}g`, c: G.amber }, { l: "Fat", v: `${fat}g`, c: G.blue }].map(x => (
+        {/* Six figures in five colours is a chart, not a card: nothing can be
+            ranked, so nothing stands out. Only the surplus keeps a colour,
+            because only it carries a judgement. */}
+        {[{ l: "Protein", v: `${protein}g` }, { l: "Carbs", v: `${carbs}g` }, { l: "Fat", v: `${fat}g` }].map(x => (
           <div key={x.l} style={{ background: G.surf2, borderRadius: 7, padding: 8, textAlign: "center" }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: x.c }}>{x.v}</div>
+            <div className="sf" style={{ fontSize: 19, lineHeight: 1, color: G.text }}>{x.v}</div>
             <div style={{ fontSize: 9, color: G.muted, marginTop: 2 }}>{x.l}</div>
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 11, color: G.muted }}>{pal.icon} {isAr ? pal.ar : pal.en}</div>
+      <div style={{ fontSize: 11.5, color: G.muted }}>{isAr ? pal.ar : pal.en}</div>
     </div>
   );
 }
@@ -1853,7 +1945,6 @@ import { meetsRequirement, blockedBy } from "./assessment";
 import { AssessmentForm } from "./AssessmentForm";
 import { AssessmentProgress } from "./AssessmentProgress";
 
-
 function getMuscleTargets(name) {
   const m = EXERCISE_META[name];
   if (m) {
@@ -1900,7 +1991,7 @@ function ExerciseCard({ exercise, color, lang }) {
   return (
     <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
       {/* Uniform animation area — same dark bg, same size for all */}
-      <div style={{ background: "#111", padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
+      <div style={{ background: G.soft, padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
         {(() => { const vid = getVideoForExercise(exercise.name); return vid ? (
           <video src={vid} autoPlay loop muted playsInline style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", borderRadius: 10, maxHeight: 200 }} />
         ) : <ExerciseIllustration exerciseId={exercise.name} size={118} />; })()}
@@ -1909,10 +2000,10 @@ function ExerciseCard({ exercise, color, lang }) {
           {muscles.map(([m, type], i) => (
             <span key={i} style={{
               fontSize: 9, padding: "2px 7px", borderRadius: 20,
-              background: type === "primary" ? "#ff2d2d25" : "#1a1800",
-              color: type === "primary" ? "#ff6b6b" : G.muted,
-              fontWeight: type === "primary" ? 700 : 400,
-              border: `1px solid ${type === "primary" ? "#ff2d2d50" : "#2a2200"}`
+              background: type === "primary" ? G.accentSoft : G.soft,
+              color: type === "primary" ? G.accent : G.muted,
+              fontWeight: type === "primary" ? 700 : 500,
+              border: `1px solid ${type === "primary" ? G.accentLine : G.border}`
             }}>{m}</span>
           ))}
         </div>
@@ -1929,18 +2020,21 @@ function ExerciseCard({ exercise, color, lang }) {
         )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5, marginBottom: 8 }}>
           {[
-            { l: isAr ? "مجموعات" : "Sets", v: exercise.sets, c: color },
-            { l: isAr ? "تكرار" : "Reps", v: exercise.reps, c: G.green },
-            { l: isAr ? "راحة" : "Rest", v: exercise.rest, c: G.amber },
+            // Sets, reps and rest were three different colours, as if one of
+            // them were a warning. They are three facts of equal weight; the
+            // label under each is what tells them apart.
+            { l: isAr ? "مجموعات" : "Sets", v: exercise.sets },
+            { l: isAr ? "تكرار" : "Reps", v: exercise.reps },
+            { l: isAr ? "راحة" : "Rest", v: exercise.rest },
           ].map(x => (
-            <div key={x.l} style={{ background: G.surf, borderRadius: 6, padding: "5px 3px", textAlign: "center" }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: x.c }}>{x.v}</div>
-              <div style={{ fontSize: 8, color: G.muted, marginTop: 1 }}>{x.l}</div>
+            <div key={x.l} style={{ background: G.soft, borderRadius: 8, padding: "6px 3px", textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{x.v}</div>
+              <div style={{ fontSize: 8.5, color: G.muted, marginTop: 2 }}>{x.l}</div>
             </div>
           ))}
         </div>
         {exercise.notes && (
-          <div style={{ fontSize: 10, color: G.muted, marginBottom: 7, lineHeight: 1.5 }}>💡 {exercise.notes}</div>
+          <div style={{ fontSize: 11, color: G.muted, marginBottom: 7, lineHeight: 1.5, display: "flex", gap: 6, alignItems: "flex-start" }}><Icon n="spark" s={13} c={G.dim} sx={{ marginTop: 2 }} />{exercise.notes}</div>
         )}
         {/* YouTube link button only — no thumbnail */}
 
@@ -2032,7 +2126,7 @@ function MealSelector({ client, onSelect, onClose, lang }) {
         <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{t.chooseMeal} {isAr ? "الخطة الغذائية" : "Meal Plan"}</div>
         <button className="btn" onClick={onClose} style={{ background: "none", color: G.muted, fontSize: 20 }}>✕</button>
       </div>
-      {client && <div style={{ fontSize: 12, color: G.muted, marginBottom: 14, background: G.surf2, borderRadius: 8, padding: "7px 12px" }}>{isAr ? "الهدف لـ" : "Target for"} {client.name}: <strong style={{ color: G.gold }}>{target} kcal</strong> <span style={{ fontSize: 10, color: G.dim }}>— {isAr ? "سيتم ضبط الكميات تلقائياً" : "portions auto-adjusted to match"}</span></div>}
+      {client && <div style={{ fontSize: 12, color: G.muted, marginBottom: 14, background: G.surf2, borderRadius: 8, padding: "7px 12px" }}>{isAr ? "الهدف لـ" : "Target for"} {client.name}: <strong style={{ color: G.gold }}>{target} kcal</strong> <span style={{ fontSize: 10, color: G.muted }}>— {isAr ? "سيتم ضبط الكميات تلقائياً" : "portions auto-adjusted to match"}</span></div>}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {MEALS.map(p => {
           const scaledCal = client ? Math.round(p.baseCal * Math.max(0.55, Math.min(1.8, target / p.baseCal))) : p.baseCal;
@@ -2041,11 +2135,11 @@ function MealSelector({ client, onSelect, onClose, lang }) {
               style={{ overflow: "hidden", border: sel === p.id ? `2px solid ${p.color}` : `1px solid ${G.border}` }}>
               <div style={{ position: "relative" }}>
                 <img src={p.image} alt={p.name} style={{ width: "100%", height: 76, objectFit: "cover" }} />
-                {sel === p.id && <div style={{ position: "absolute", top: 5, right: 5, background: p.color, borderRadius: 20, padding: "2px 7px", fontSize: 10, fontWeight: 700, color: "#080600" }}>✓</div>}
+                {sel === p.id && <div style={{ position: "absolute", top: 5, right: 5, background: p.color, borderRadius: 20, padding: "2px 7px", fontSize: 10, fontWeight: 700, color: "#FCFCFD" }}>✓</div>}
               </div>
               <div style={{ padding: "9px 10px 11px" }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{p.emoji} {isAr ? p.nameAr : p.name}</div>
-                <div style={{ fontSize: 10, color: p.color, marginTop: 3, fontWeight: 700 }}>{scaledCal} kcal {client && scaledCal !== p.baseCal && <span style={{ color: G.dim, fontWeight: 400 }}>({isAr ? "مُعدّل" : "adjusted"})</span>}</div>
+                <div style={{ fontSize: 10, color: p.color, marginTop: 3, fontWeight: 700 }}>{scaledCal} kcal {client && scaledCal !== p.baseCal && <span style={{ color: G.muted, fontWeight: 400 }}>({isAr ? "مُعدّل" : "adjusted"})</span>}</div>
               </div>
             </div>
           );
@@ -2064,7 +2158,7 @@ function MealSelector({ client, onSelect, onClose, lang }) {
             )}
             <div style={{ background: `${plan.color}12`, border: `1px solid ${plan.color}30`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7, marginBottom: 10 }}>
-                {[{ l: "Cal", v: tot.cal, c: plan.color }, { l: "Pro", v: `${tot.p}g`, c: "#ef4444" }, { l: "Carb", v: `${tot.c}g`, c: G.amber }, { l: "Fat", v: `${tot.f}g`, c: G.blue }].map(x => (
+                {[{ l: "Cal", v: tot.cal, c: plan.color }, { l: "Pro", v: `${tot.p}g`, c: "#A63A3A" }, { l: "Carb", v: `${tot.c}g`, c: G.amber }, { l: "Fat", v: `${tot.f}g`, c: G.blue }].map(x => (
                   <div key={x.l} style={{ background: G.surf2, borderRadius: 7, padding: 7, textAlign: "center" }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: x.c }}>{x.v}</div>
                     <div style={{ fontSize: 9, color: G.muted, marginTop: 1 }}>{x.l}</div>
@@ -2160,7 +2254,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
       </div>
 
       {!sc ? (
-        <div className="card" style={{ padding: "36px 20px", textAlign: "center", color: G.dim }}>
+        <div className="card" style={{ padding: "36px 20px", textAlign: "center", color: G.muted }}>
           <div style={{ fontSize: 26, marginBottom: 8 }}>◈</div><div>{t.selectClient}</div>
         </div>
       ) : (
@@ -2181,7 +2275,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>⚡ {isAr ? "خطة التمرين" : "Workout Plan"}</div>
                 {ws && <div style={{ fontSize: 11, color: ws.color, marginTop: 2 }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>}
-                {ws && <button onClick={() => setShowDayPicker(true)} style={{ marginTop: 8, background: G.gold, color: "#000", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>}
+                {ws && <button onClick={() => setShowDayPicker(true)} style={{ marginTop: 8, background: G.gold, color: "#FCFCFD", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>}
               </div>
               {!editing ? (
                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
@@ -2208,7 +2302,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
             ) : sc.workoutPlan ? (
               <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{sc.workoutPlan}</pre>
             ) : (
-              <div style={{ textAlign: "center", padding: "24px 0", color: G.dim }}>
+              <div style={{ textAlign: "center", padding: "24px 0", color: G.muted }}>
                 <div style={{ fontSize: 24, marginBottom: 8 }}>⚡</div>
                 <div style={{ fontSize: 12, marginBottom: 12 }}>{t.noPlan}</div>
                 <div style={{ display: "flex", gap: 7, justifyContent: "center", flexWrap: "wrap" }}>
@@ -2220,25 +2314,25 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
           </div>
 
           {showDayPicker && ws && (
-            <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-              <div style={{ background: "#181818", borderRadius: 16, padding: 24, width: "100%", maxWidth: 360 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: G.gold, marginBottom: 16 }}>⚡ Select Day</div>
+            <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(14,32,53,0.45)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+              <div className="card" style={{ borderRadius: 18, padding: 24, width: "100%", maxWidth: 360 }}>
+                <div className="sf" style={{ fontSize: 21, marginBottom: 16 }}>Select a day</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-                  <button onClick={() => { setActiveDay(null); setShowPlayer(true); setShowDayPicker(false); }} style={{ background: "#2a2a2a", color: "#fff", border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
-                    🏋️ Full Workout (All Days)
+                  <button onClick={() => { setActiveDay(null); setShowPlayer(true); setShowDayPicker(false); }} style={{ background: G.accentSoft, color: G.accent, border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                    Full workout — every day
                   </button>
                   {ws.days.map((day, i) => (
                     <button key={i} onClick={() => { setActiveDay(day.name); setShowPlayer(true); setShowDayPicker(false); }} style={{ background: `${ws.color}15`, color: ws.color, border: `1px solid ${ws.color}30`, borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
-                      📅 {day.name}
+                      {day.name}
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setShowDayPicker(false)} style={{ width: "100%", background: "#333", color: "#ccc", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
+                <button onClick={() => setShowDayPicker(false)} style={{ width: "100%", background: "#fff", color: G.text, border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
               </div>
             </div>
           )}
           {showPlayer && ws && (
-            <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={sc} onClose={() => { setShowPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
+            <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={sc} onClose={() => { setShowPlayer(false); setActiveDay(null); }} accentColor={G.nAccent} />
           )}
 
           {/* NUTRITION */}
@@ -2270,7 +2364,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
             ) : sc.nutritionPlan ? (
               <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{sc.nutritionPlan}</pre>
             ) : (
-              <div style={{ textAlign: "center", padding: "24px 0", color: G.dim }}>
+              <div style={{ textAlign: "center", padding: "24px 0", color: G.muted }}>
                 <div style={{ fontSize: 24, marginBottom: 8 }}>🥗</div>
                 <div style={{ fontSize: 12, marginBottom: 12 }}>{t.noPlan}</div>
                 <div style={{ display: "flex", gap: 7, justifyContent: "center", flexWrap: "wrap" }}>
@@ -2317,7 +2411,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
   // Already answered, something was flagged, nobody has cleared it yet.
   if (!st.needed) {
     return (
-      <div className="card" style={{ padding: "16px 16px", marginBottom: 14, border: `1px solid ${G.amber}`, background: "rgba(245,158,11,0.07)" }}>
+      <div className="card" style={{ padding: "16px 16px", marginBottom: 14, border: `1px solid ${G.amber}`, background: "#FBF2E3" }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: G.amber }}>
           {isAr ? "تحدث مع مدربك أولاً" : "Speak to your trainer first"}
         </div>
@@ -2327,8 +2421,8 @@ function ScreeningCard({ client, isAr, onAnswered }) {
             : "From your answers, it is worth speaking to Rafi — and to your doctor if he suggests it — before your next session. Your plan is here waiting; nothing has been taken away."}
         </div>
         <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
-          style={{ display: "inline-block", marginTop: 12, padding: "11px 16px", borderRadius: 10, background: "rgba(34,197,94,0.12)", border: `1px solid ${G.green}`, color: G.green, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-          💬 {isAr ? "راسل رافي" : "Message Rafi"}
+          style={{ display: "inline-block", marginTop: 12, padding: "11px 16px", borderRadius: 10, background: "#E6F2ED", border: `1px solid ${G.green}`, color: G.green, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+          <Icon n="whatsapp" s={15} /> {isAr ? "راسل رافي" : "Message Rafi"}
         </a>
       </div>
     );
@@ -2358,7 +2452,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
     return (
       <div className="card" style={{ padding: "16px", marginBottom: 14, border: `1px solid ${G.borderHi}` }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>
-          ⚕ {isAr ? "فحص صحي قصير" : "One health check first"}
+          <Icon n="heart" s={15} /> {isAr ? "فحص صحي قصير" : "One health check first"}
         </div>
         <div style={{ fontSize: 12.5, color: G.text, marginTop: 8, lineHeight: 1.7 }}>
           {isAr
@@ -2370,7 +2464,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
                 : "Eight questions, under a minute. These are the standard questions any trainer asks before training somebody, and we never asked you them.")}
         </div>
         <button type="button" className="btn" onClick={() => setOpen(true)}
-          style={{ width: "100%", marginTop: 14, padding: "13px", borderRadius: 10, background: G.grad, color: "#000", fontWeight: 700, fontSize: 14 }}>
+          style={{ width: "100%", marginTop: 14, padding: "13px", borderRadius: 10, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 14 }}>
           {isAr ? "لنبدأ" : "Answer them now"}
         </button>
       </div>
@@ -2380,7 +2474,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
   return (
     <div className="card" style={{ padding: "16px", marginBottom: 14, border: `1px solid ${G.borderHi}` }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>
-        ⚕ {isAr ? "فحص صحي" : "Health check"}
+        <Icon n="heart" s={14} /> {isAr ? "فحص صحي" : "Health check"}
       </div>
       <div style={{ fontSize: 12, color: G.muted, marginTop: 6, marginBottom: 12, lineHeight: 1.6 }}>
         {isAr
@@ -2401,7 +2495,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
                   onClick={() => setIntake(p => ({ ...p, [q.id]: o.id }))}
                   style={{
                     padding: "10px 13px", borderRadius: 9, fontSize: 12, fontWeight: 700, minHeight: 42,
-                    background: on ? "rgba(212,175,55,0.16)" : G.surf2,
+                    background: on ? "#E8EEF8" : G.surf2,
                     color: on ? G.gold : G.muted,
                     border: `1px solid ${on ? G.borderHi : G.border}`,
                   }}>{isAr ? o.ar : o.en}</button>
@@ -2411,7 +2505,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
         </div>
       ))}
       {wantIntake && intake.limitation && intake.limitation !== "none" && (
-        <div style={{ fontSize: 11.5, color: G.blue, background: "rgba(96,165,250,0.09)", border: `1px solid rgba(96,165,250,0.28)`, borderRadius: 9, padding: "10px 12px", marginBottom: 14, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11.5, color: G.blue, background: "#E8EEF8", border: `1px solid #D3E0F2`, borderRadius: 9, padding: "10px 12px", marginBottom: 14, lineHeight: 1.6 }}>
           {isAr
             ? "سيراجع رافي هذا معك. لن يتوقف تدريبك."
             : "Rafi will look at this with you. It does not stop your training."}
@@ -2434,7 +2528,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
                   onClick={() => setAnswers(p => ({ ...p, [q.id]: val }))}
                   style={{
                     background: v === val ? (val ? G.amber : G.green) : G.surf2,
-                    color: v === val ? "#000" : G.muted,
+                    color: v === val ? G.paper : G.muted,
                     border: `1px solid ${v === val ? "transparent" : G.border}`,
                   }}>{label}</button>
               ))}
@@ -2442,7 +2536,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
           </div>
         );
       })}
-      <div style={{ fontSize: 11, color: G.dim, marginTop: 12, lineHeight: 1.65 }}>
+      <div style={{ fontSize: 11, color: G.muted, marginTop: 12, lineHeight: 1.65 }}>
         {isAr
           ? "بالمتابعة تؤكد أن هذه الإجابات صحيحة، وتفهم أن هذا تدريب لياقة وليس علاجاً طبياً."
           : "By continuing you confirm these answers are accurate, and understand this is fitness coaching, not medical treatment."}
@@ -2450,7 +2544,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
       {err && <div style={{ color: G.red, fontSize: 12.5, marginTop: 10 }}>{err}</div>}
       <button type="button" className="btn" onClick={submit} disabled={!allAnswered || busy}
         style={{ width: "100%", marginTop: 14, padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 14,
-                 background: allAnswered ? G.grad : G.surf2, color: allAnswered ? "#000" : G.dim }}>
+                 background: allAnswered ? G.grad : G.surf2, color: allAnswered ? "#FCFCFD" : G.dim }}>
         {busy ? "…" : (isAr ? "حفظ" : "Save answers")}
       </button>
       {!allAnswered && (
@@ -2539,7 +2633,7 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
       {/* Add Entry Form */}
       {showAdd && (
         <div className="card" style={{ padding: 16, marginBottom: 14, border: `1px solid ${G.borderHi}` }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: G.gold, marginBottom: 12 }}>📊 {isAr ? "تحديث التقدم" : "Log Progress"}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: G.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 7 }}><Icon n="bars" s={15} c={G.accent} />{isAr ? "تحديث التقدم" : "Log Progress"}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
             <div>
               <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{isAr ? "الوزن (كج)" : "Weight (kg)"}</div>
@@ -2551,17 +2645,17 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
             </div>
           </div>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>📸 {isAr ? "صورة التقدم" : "Progress Photo"}</div>
+            <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{isAr ? "صورة التقدم" : "Progress Photo"}</div>
             <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: G.surf2, border: `1px dashed ${G.border}`, borderRadius: 10, cursor: "pointer" }}>
-              <span style={{ fontSize: 20 }}>📷</span>
+              <Icon n="camera" s={22} c={G.dim} />
               <span style={{ fontSize: 13, color: G.muted }}>{newFile ? newFile.name : (isAr ? "اضغط لاختيار صورة" : "Tap to choose photo")}</span>
               <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: "none" }} />
             </label>
             {previewUrl && <img src={previewUrl} alt="preview" style={{ width: "100%", maxHeight: 200, objectFit: "cover", borderRadius: 10, marginTop: 8 }} />}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Btn ch={uploading ? "⏳" : `✓ ${isAr ? "حفظ" : "Save"}`} v="gold" onClick={addEntry} sx={{ flex: 1, padding: "11px", fontSize: 13 }} />
-            <Btn ch="✕" v="danger" onClick={() => { setShowAdd(false); setNewFile(null); setPreviewUrl(null); }} sx={{ padding: "11px 16px" }} />
+            <Btn ch={uploading ? "…" : (isAr ? "حفظ" : "Save")} v="gold" onClick={addEntry} sx={{ flex: 1, padding: "11px", fontSize: 13 }} />
+            <Btn ch={isAr ? "إلغاء" : "Cancel"} v="ghost" onClick={() => { setShowAdd(false); setNewFile(null); setPreviewUrl(null); }} sx={{ padding: "11px 16px" }} />
           </div>
         </div>
       )}
@@ -2614,8 +2708,8 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
         {loadingPhotos ? (
           <div style={{ textAlign: "center", padding: 20 }}><div className="sp" style={{ margin: "0 auto" }} /></div>
         ) : photos.length === 0 ? (
-          <div className="card" style={{ padding: "24px 16px", textAlign: "center", color: G.dim }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>📸</div>
+          <div className="card" style={{ padding: "24px 16px", textAlign: "center", color: G.muted }}>
+            <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}><Icon n="camera" s={26} c={G.dim} /></div>
             <div style={{ fontSize: 12 }}>{isAr ? "لا توجد صور بعد" : "No photos yet"}</div>
           </div>
         ) : (
@@ -2653,7 +2747,7 @@ function ProgressTab({ client, setClients, lang, isAr, t }) {
                     background: "rgba(0,0,0,0.55)", color: "#fff",
                     border: "1px solid rgba(255,255,255,0.2)",
                   }}>
-                  {deletingId === ph.id ? "…" : "🗑"}
+                  {deletingId === ph.id ? "…" : <Icon n="trash" s={15} />}
                 </button>
                 <div style={{ padding: "8px 10px" }}>
                   <div style={{ fontSize: 10, color: G.muted }}>{ph.taken_at}</div>
@@ -2830,7 +2924,7 @@ function RegPage({ lang, setLang }) {
   // ── Done: account created, plan already assigned ───────────
   if (result && result.status === "ready") return shell(
     <div className="card" style={{ padding: "30px 22px", border: `1px solid ${G.borderHi}` }}>
-      <div style={{ textAlign: "center", fontSize: 44, marginBottom: 10 }}>✅</div>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><div style={{ width: 56, height: 56, borderRadius: 18, background: G.greenSoft, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon n="check" s={26} c={G.green} /></div></div>
       <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, textAlign: "center", marginBottom: 8 }}>
         {isAr ? "حسابك جاهز" : "You're in"}
       </div>
@@ -2839,20 +2933,20 @@ function RegPage({ lang, setLang }) {
               : "Your training plan is already waiting. Save this password — it will not be shown again."}
       </div>
       {[[isAr ? "البريد" : "Email", result.email], [isAr ? "كلمة المرور" : "Password", result.password]].map(([k, v]) => (
-        <div key={k} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${G.border}`, borderRadius: 10, padding: "11px 13px", marginBottom: 9 }}>
+        <div key={k} style={{ background: "#F3F6FA", border: `1px solid ${G.border}`, borderRadius: 10, padding: "11px 13px", marginBottom: 9 }}>
           <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 4 }}>{k}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: G.text, wordBreak: "break-all" }}>{v}</div>
             <button onClick={() => navigator.clipboard.writeText(v)} className="btn"
-              style={{ flexShrink: 0, background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)", borderRadius: 7, padding: "6px 12px", color: "#a5b4fc", fontSize: 12, fontWeight: 600 }}>
-              📋 {isAr ? "نسخ" : "Copy"}
+              style={{ flexShrink: 0, background: G.accentSoft, border: `1px solid ${G.accentLine}`, borderRadius: 7, padding: "6px 12px", color: G.accent, fontSize: 12, fontWeight: 600 }}>
+              <Icon n="copy" s={14} /> {isAr ? "نسخ" : "Copy"}
             </button>
           </div>
         </div>
       ))}
       {result.needsReview && (
-        <div style={{ fontSize: 12, color: G.amber, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 9, padding: "10px 12px", margin: "12px 0", lineHeight: 1.6 }}>
-          ⚠️ {isAr ? "سيتواصل معك أحد مدربينا للتأكد من أن هذه الخطة مناسبة لك." : "One of our coaches will check in to make sure this plan suits you."}
+        <div style={{ fontSize: 12, color: G.amber, background: "#FBF2E3", border: "1px solid #EFE0C2", borderRadius: 9, padding: "10px 12px", margin: "12px 0", lineHeight: 1.6 }}>
+          <Icon n="alert" s={14} sx={{ display: "inline-block", verticalAlign: "-2px", marginInlineEnd: 6 }} />{isAr ? "سيتواصل معك أحد مدربينا للتأكد من أن هذه الخطة مناسبة لك." : "One of our coaches will check in to make sure this plan suits you."}
         </div>
       )}
       <Btn ch={isAr ? "تسجيل الدخول" : "Sign in →"} v="gold" full onClick={() => { window.location.href = "/"; }} sx={{ padding: "13px", fontSize: 14, marginTop: 10 }} />
@@ -2862,14 +2956,14 @@ function RegPage({ lang, setLang }) {
   // ── Done: this one needs the trainer, not the app ──────────
   if (result) return shell(
     <div className="card" style={{ padding: "32px 22px", textAlign: "center", border: `1px solid ${G.borderHi}` }}>
-      <div style={{ fontSize: 44, marginBottom: 12 }}>👋</div>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><Logo s={52} /></div>
       <div className="sf gd" style={{ fontSize: 19, fontWeight: 700, marginBottom: 10 }}>
         {isAr ? "شكراً لك" : "Thanks — got it"}
       </div>
       <div style={{ fontSize: 14, color: G.muted, lineHeight: 1.8 }}>{result.message}</div>
       <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
-        style={{ display: "inline-block", marginTop: 18, padding: "10px 18px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 9, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
-        💬 {isAr ? "تواصل معنا" : "Message us"}
+        style={{ display: "inline-block", marginTop: 18, padding: "10px 18px", background: "#E6F2ED", border: "1px solid #C9E3D8", borderRadius: 9, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+        <Icon n="whatsapp" s={15} /> {isAr ? "تواصل معنا" : "Message us"}
       </a>
     </div>
   );
@@ -2908,7 +3002,7 @@ function RegPage({ lang, setLang }) {
       </div>
       {nav(null, () => setStep(2), isAr ? "التالي" : "Next →", !f.name || !f.email || !f.phone)}
     </div>
-    <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: G.dim }}>
+    <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: G.muted }}>
       {t.alreadyAccount} <a href="/" style={{ color: G.gold }}>{t.loginHere}</a>
     </div>
   </>);
@@ -2945,7 +3039,7 @@ function RegPage({ lang, setLang }) {
           ]} />
       </div>
       {f.limitation !== "none" && (
-        <div style={{ fontSize: 12, color: G.blue, background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.28)", borderRadius: 9, padding: "10px 12px", marginTop: 12, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: G.blue, background: "#E8EEF8", border: "1px solid #D3E0F2", borderRadius: 9, padding: "10px 12px", marginTop: 12, lineHeight: 1.6 }}>
           {isAr ? "سيبني أحد مدربينا خطتك بنفسه بدلاً من أن يخمّن التطبيق." : "One of our coaches will build your plan personally rather than have the app guess — pain is not something software should be assessing."}
         </div>
       )}
@@ -2971,7 +3065,7 @@ function RegPage({ lang, setLang }) {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 11, color: G.dim, marginTop: 14, lineHeight: 1.65 }}>
+      <div style={{ fontSize: 11, color: G.muted, marginTop: 14, lineHeight: 1.65 }}>
         {isAr ? "بالمتابعة، أنت تؤكد أن هذه الإجابات صحيحة، وتفهم أن هذا تدريب لياقة وليس علاجاً طبياً."
               : "By continuing you confirm these answers are accurate, and understand this is fitness coaching, not medical treatment."}
       </div>
@@ -3286,11 +3380,15 @@ export default function App() {
         <div className="card fd" style={{ padding: "32px 22px", border: `1px solid ${G.borderHi}` }} dir={isAr ? "rtl" : "ltr"}>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}><Logo s={56} /></div>
-            <div className="sf gd" style={{ fontSize: 24, fontWeight: 700, letterSpacing: 2 }}>{t.appName}</div>
-            <div style={{ fontSize: 11, color: G.muted, letterSpacing: 2, textTransform: "uppercase", marginTop: 5 }}>{t.tagline}</div>
-            <div style={{ width: 36, height: 2, background: G.grad, margin: "10px auto 0", borderRadius: 2 }} />
+            {/* The name is set in the display face at its natural weight. It
+                used to be 24px, bold, tracked out 2px — letterspacing is what
+                you reach for when the font is not carrying the line on its
+                own, and a serif at 700 with 2px of tracking is neither the
+                serif nor the sans. The little gold rule went with it. */}
+            <div className="sf" style={{ fontSize: 30, lineHeight: 1.1, marginTop: 14 }}>{t.appName}</div>
+            <div style={{ fontSize: 13, color: G.muted, marginTop: 8, lineHeight: 1.5 }}>{t.tagline}</div>
           </div>
-          {lErr && <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "10px 14px", color: "#f87171", fontSize: 13, marginBottom: 14, textAlign: "center" }}>{lErr}</div>}
+          {lErr && <div style={{ background: G.redSoft, border: `1px solid ${G.redLine}`, borderRadius: 10, padding: "11px 14px", color: G.red, fontSize: 13, marginBottom: 14, textAlign: "center" }}>{lErr}</div>}
           <div style={{ marginBottom: 11 }}>
             <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{t.email}</div>
             <input className="inp" placeholder={t.email} value={lf.u} onChange={e => setLf(p => ({ ...p, u: e.target.value }))} onKeyDown={e => e.key === "Enter" && login()} style={{ direction: "ltr" }} />
@@ -3299,20 +3397,20 @@ export default function App() {
             <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>{t.password}</div>
             <input className="inp" type="password" placeholder="••••••••" value={lf.p} onChange={e => setLf(p => ({ ...p, p: e.target.value }))} onKeyDown={e => e.key === "Enter" && login()} />
           </div>
-          <Btn ch={lBusy ? "…" : t.enter} v="gold" full onClick={login} sx={{ padding: "13px", fontSize: 15, letterSpacing: 1, opacity: lBusy ? 0.6 : 1, pointerEvents: lBusy ? "none" : "auto" }} />
+          <Btn ch={lBusy ? "…" : t.enter} v="gold" full onClick={login} sx={{ minHeight: 54, fontSize: 15, opacity: lBusy ? 0.6 : 1, pointerEvents: lBusy ? "none" : "auto" }} />
           <div style={{ textAlign: "center", marginTop: 12 }}><a href="/register" style={{ fontSize: 13, color: G.gold, textDecoration: "none" }}>{t.newMember}</a></div>
         </div>
         <div style={{ marginTop: 20, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 8 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 8, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#080600", fontSize: 12 }}>MR</div>
+            <Av name={TRAINER.name} sz={40} />
             <div style={{ textAlign: isAr ? "right" : "left" }}>
-              <div className="sf gd" style={{ fontSize: 13, fontWeight: 700 }}>{TRAINER.name}</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{TRAINER.name}</div>
               <div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div>
             </div>
           </div>
           <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 20, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 600 }}>
-            💬 {isAr ? "تواصل معنا" : "Contact on WhatsApp"}
+            style={{ display: "inline-flex", alignItems: "center", gap: 7, minHeight: 44, padding: "0 18px", background: G.greenSoft, border: `1px solid ${G.greenLine}`, borderRadius: 22, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+            <Icon n="whatsapp" s={15} /> {isAr ? "تواصل معنا" : "Contact on WhatsApp"}
           </a>
         </div>
       </div>
@@ -3329,25 +3427,28 @@ export default function App() {
     return (
       <div style={{ minHeight: "100vh", background: G.bg, color: G.text }} dir={isAr ? "rtl" : "ltr"}>
         <style>{CSS}</style>
-        <div style={{ background: G.surf, borderBottom: `1px solid ${G.border}`, padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 54, position: "sticky", top: 0, zIndex: 100 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}><Logo s={26} /><div className="sf gd" style={{ fontSize: 13, fontWeight: 700 }}>{t.appName}</div></div>
-          <div style={{ display: "flex", gap: 7 }}><LangBtn lang={lang} setLang={setLang} /><Btn ch={t.logout} v="danger" onClick={logout} sx={{ padding: "9px 13px", fontSize: 12, minHeight: 40 }} /></div>
+        <div style={{ background: G.surf, borderBottom: `1px solid ${G.border}`, padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, height: 62, position: "sticky", top: 0, zIndex: 100 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <Logo s={34} />
+            <div style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: ".01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.appName}</div>
+          </div>
+          <LangBtn lang={lang} setLang={setLang} />
         </div>
-        <div style={{ padding: 14, maxWidth: 600, margin: "0 auto", paddingBottom: 80 }}>
+        <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto", paddingBottom: 92 }}>
           {cTab === "profile" && (
             <div className="fd">
               <div style={{ marginBottom: 14 }}>
-                <div className="sf gd" style={{ fontSize: 22, fontWeight: 700 }}>{t.welcome}, {liveC.name.split(" ")[0]}!</div>
-                <div style={{ fontSize: 12, color: G.muted, marginTop: 3 }}>{t.memberSince} {liveC.joinDate}</div>
+                <div className="sf" style={{ fontSize: 28, lineHeight: 1.15 }}>{t.welcome}, {liveC.name.split(" ")[0]}</div>
+                <div style={{ fontSize: 13, color: G.muted, marginTop: 6 }}>{t.memberSince} {liveC.joinDate}</div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginBottom: 11 }}>
                 {[{ l: t.age, v: `${liveC.age}y` }, { l: t.weight, v: `${liveC.weight}kg` }, { l: t.height, v: `${liveC.height}cm` }, { l: t.goal, v: liveC.goal }].map((x, i) => (
-                  <div key={i} className="card" style={{ padding: 12 }}><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>{x.l}</div><div style={{ fontSize: 15, fontWeight: 700 }}>{x.v}</div></div>
+                  <div key={i} className="card" style={{ padding: "14px 16px" }}><div style={{ fontSize: 10, color: G.muted, textTransform: "uppercase", letterSpacing: ".09em", fontWeight: 600, marginBottom: 6 }}>{x.l}</div><div className="sf" style={{ fontSize: 22, lineHeight: 1.1, fontWeight: 700 }}>{x.v}</div></div>
                 ))}
               </div>
               <div className="card" style={{ padding: 14, marginBottom: 11 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>{t.bmi}</div><div style={{ fontSize: 36, fontWeight: 800, color: bmiColor }}>{bmi}</div><div style={{ fontSize: 12, fontWeight: 700, color: bmiColor }}>{bmiLabel}</div></div>
+                  <div><div style={{ fontSize: 10, color: G.muted, textTransform: "uppercase", letterSpacing: ".09em", fontWeight: 600, marginBottom: 6 }}>{t.bmi}</div><div className="sf" style={{ fontSize: 42, lineHeight: 1, color: bmiColor }}>{bmi}</div><div style={{ fontSize: 12, fontWeight: 700, color: bmiColor }}>{bmiLabel}</div></div>
                   <div style={{ fontSize: 11, color: G.muted, lineHeight: 2.1 }}>
                     {[["<18.5", isAr ? "نحيف" : "Underweight", G.amber], ["18.5–24.9", isAr ? "صحي" : "Healthy", G.green], ["25–29.9", isAr ? "زيادة وزن" : "Overweight", G.amber], ["≥30", isAr ? "بدانة" : "Obese", G.red]].map(([r, l, c]) => (
                       <div key={l} style={{ display: "flex", gap: 8 }}><span>{r}</span><span style={{ color: c, fontWeight: 700, minWidth: 70 }}>{l}</span></div>
@@ -3360,23 +3461,22 @@ export default function App() {
                 <div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 2, marginBottom: 11 }}>{t.yourTrainer}</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: G.grad, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#080600", fontSize: 14 }}>MR</div>
-                    <div><div className="sf gd" style={{ fontSize: 15, fontWeight: 700 }}>{TRAINER.name}</div><div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div></div>
+                    <Av name={TRAINER.name} sz={42} />
+                    <div><div style={{ fontSize: 14.5, fontWeight: 600 }}>{TRAINER.name}</div><div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div></div>
                   </div>
-                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
+                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "#E6F2ED", border: "1px solid #C9E3D8", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
                 </div>
               </div>
-              {(liveC.workoutPlan || liveC.nutritionPlan) && (
-                <div style={{ marginTop: 12 }}>
-                  
-                </div>
-              )}
+              <button className="btn" onClick={logout}
+                style={{ width: "100%", marginTop: 18, minHeight: 50, background: "transparent", border: `1px solid ${G.border}`, borderRadius: 12, color: G.muted, fontSize: 14, fontWeight: 600 }}>
+                {t.logout}
+              </button>
             </div>
           )}
           {(cTab === "workout" || cTab === "nutrition") && (
             <div className="fd">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{cTab === "workout" ? "⚡ " + t.workout : "🥗 " + t.nutrition}</div>
+                <div className="sf" style={{ fontSize: 26, lineHeight: 1.15 }}>{cTab === "workout" ? t.workout : t.nutrition}</div>
               </div>
               {cTab === "workout" ? (
                 (() => {
@@ -3409,20 +3509,25 @@ export default function App() {
                       <div>
                         {gate}
                         {/* System header */}
-                        <div className="card" style={{ padding: "12px 14px", marginBottom: 14, border: `1px solid ${ws.color}30`, background: `${ws.color}08` }}>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: ws.color }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>
-                          <div style={{ fontSize: 11, color: G.muted, marginTop: 3 }}>{isAr ? ws.descAr : ws.desc}</div>
+                        {/* A programme's colour used to tint this card, the day
+                            bar and both buttons, so Push/Pull/Legs arrived in
+                            red — which reads as an error, not a plan. The
+                            colour survives as a 3px rule on the day bar and
+                            nowhere else. */}
+                        <div className="card" style={{ padding: 18, marginBottom: 16 }}>
+                          <div className="sf" style={{ fontSize: 22, lineHeight: 1.2, color: G.text }}>{isAr ? ws.nameAr : ws.name}</div>
+                          <div style={{ fontSize: 12.5, color: G.muted, marginTop: 6, lineHeight: 1.55 }}>{isAr ? ws.descAr : ws.desc}</div>
                           <button onClick={() => setShowClientDayPicker(true)} disabled={scr.blocked}
                             title={scr.blocked ? (isAr ? "أكمل الفحص الصحي أولاً" : "Finish the health check first") : undefined}
-                            style={{ marginTop: 10, background: scr.blocked ? G.surf2 : G.gold, color: scr.blocked ? G.dim : "#000", border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 8, padding: "11px 18px", fontWeight: 700, fontSize: 12, cursor: scr.blocked ? "not-allowed" : "pointer" }}>▶ Start Workout</button>
+                            style={{ marginTop: 15, width: "100%", minHeight: 52, background: scr.blocked ? G.soft : G.grad, color: scr.blocked ? G.muted : G.paper, border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 12, fontWeight: 600, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, cursor: scr.blocked ? "not-allowed" : "pointer" }}><Icon n="play" s={14} c={scr.blocked ? G.muted : G.paper} /> Start session</button>
                         </div>
                         {/* Days with exercise cards */}
                         {ws.days.map((day, di) => (
                           <div key={di} style={{ marginBottom: 20 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, fontWeight: 700, color: ws.color, marginBottom: 10, padding: "7px 12px", background: `${ws.color}15`, borderRadius: 8 }}>
-                              <span>📅 {day.name}</span>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 12, padding: "10px 12px", background: G.soft, borderRadius: 10, borderInlineStart: `3px solid ${ws.color}` }}>
+                              <span>{day.name}</span>
                               <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} disabled={scr.blocked}
-                                style={{ background: scr.blocked ? G.surf2 : ws.color, color: scr.blocked ? G.dim : "#000", border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 6, padding: "8px 12px", fontWeight: 700, fontSize: 11, cursor: scr.blocked ? "not-allowed" : "pointer" }}>▶ Start</button>
+                                style={{ background: scr.blocked ? "transparent" : G.grad, color: scr.blocked ? G.muted : G.paper, border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 10, minHeight: 40, padding: "0 16px", fontWeight: 600, fontSize: 12, flexShrink: 0, cursor: scr.blocked ? "not-allowed" : "pointer" }}>Start</button>
                             </div>
                             {/* The list has to match the session. If the player
                                 leaves a movement out because of the assessment,
@@ -3467,20 +3572,20 @@ export default function App() {
                           </div>
                         ))}
                         {showClientDayPicker && ws && (
-                          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-                            <div style={{ background: "#181818", borderRadius: 16, padding: 24, width: "100%", maxWidth: 360 }}>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: G.gold, marginBottom: 16 }}>⚡ Select Day</div>
+                          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(14,32,53,0.45)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+                            <div className="card" style={{ borderRadius: 18, padding: 24, width: "100%", maxWidth: 360 }}>
+                              <div className="sf" style={{ fontSize: 21, marginBottom: 16 }}>Select a day</div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-                                <button onClick={() => { setActiveDay(null); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: "#2a2a2a", color: "#fff", border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
-                                  🏋️ Full Workout (All Days)
+                                <button onClick={() => { setActiveDay(null); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: G.accentSoft, color: G.accent, border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                                  Full workout — every day
                                 </button>
                                 {ws.days.map((day, i) => (
                                   <button key={i} onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: `${ws.color}15`, color: ws.color, border: `1px solid ${ws.color}30`, borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
-                                    📅 {day.name}
+                                    {day.name}
                                   </button>
                                 ))}
                               </div>
-                              <button onClick={() => setShowClientDayPicker(false)} style={{ width: "100%", background: "#333", color: "#ccc", border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => setShowClientDayPicker(false)} style={{ width: "100%", background: "#fff", color: G.text, border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
                             </div>
                           </div>
                         )}
@@ -3489,7 +3594,7 @@ export default function App() {
                             button is a hint, and a health gate should not
                             depend on one. */}
                         {showClientPlayer && !scr.blocked && (
-                          <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={liveC} onClose={() => { setShowClientPlayer(false); setActiveDay(null); }} accentColor={G.gold} />
+                          <WorkoutPlayer workoutSystem={ws} dayName={activeDay} client={liveC} onClose={() => { setShowClientPlayer(false); setActiveDay(null); }} accentColor={G.nAccent} />
                         )}
                       </div>
                     );
@@ -3506,8 +3611,8 @@ export default function App() {
                     return (
                       <div>
                         {gate}
-                        <div className="card" style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}>
-                          <div style={{ fontSize: 28, marginBottom: 8 }}>⚡</div>
+                        <div className="card" style={{ textAlign: "center", padding: "36px 20px", color: G.muted }}>
+                          <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}><Icon n="train" s={26} c={G.dim} /></div>
                           <div style={{ color: G.muted }}>{t.trainerWillAdd}</div>
                         </div>
                       </div>
@@ -3536,11 +3641,11 @@ export default function App() {
                               const mealImg = MEAL_IMAGES[mp.id]?.[`${m.name}@${m.time}`] || MEAL_IMAGES[mp.id]?.[m.name];
                               const prepSteps = MEAL_PREP[mp.id]?.[m.name];
                               return (
-                                <div key={i} style={{ marginBottom: 16, borderRadius: 18, overflow: "hidden", background: G.surf, boxShadow: "0 4px 16px rgba(0,0,0,0.35)" }}>
+                                <div key={i} style={{ marginBottom: 16, borderRadius: 18, overflow: "hidden", background: G.surf, boxShadow: "0 6px 20px rgba(14,32,53,0.08)" }}>
                                   {mealImg && (
                                     <div style={{ position: "relative" }}>
                                       <img src={mealImg} alt={m.name} style={{ width: "100%", height: 170, objectFit: "cover", display: "block" }} />
-                                      <div style={{ position: "absolute", top: 10, left: 10, background: mp.color, color: "#000", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20 }}>{m.time}</div>
+                                      <div style={{ position: "absolute", top: 10, left: 10, background: mp.color, color: "#FCFCFD", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20 }}>{m.time}</div>
                                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(transparent, rgba(0,0,0,0.65))" }} />
                                     </div>
                                   )}
@@ -3548,14 +3653,14 @@ export default function App() {
                                     <div style={{ fontSize: 16, fontWeight: 800, color: G.text, marginBottom: 6 }}>{isAr ? m.nameAr : m.name}</div>
                                     <div style={{ fontSize: 11.5, color: G.muted, lineHeight: 1.5, marginBottom: 8 }}>{m.items}</div>
                                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: prepSteps ? 10 : 0 }}>
-                                      <span style={{ background: "#ef444420", color: "#ef4444", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>🔥 {m.cal} kcal</span>
-                                      <span style={{ background: "#ef444415", color: "#f87171", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>P {m.p}g</span>
+                                      <span style={{ background: G.amberSoft, color: G.amber, fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>{m.cal} kcal</span>
+                                      <span style={{ background: "#ef444415", color: "#A63A3A", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>P {m.p}g</span>
                                       <span style={{ background: "#f59e0b15", color: G.amber, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>C {m.c}g</span>
                                       <span style={{ background: "#60a5fa15", color: G.blue, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>F {m.f}g</span>
                                     </div>
                                     {prepSteps && (
                                       <details style={{ background: G.surf2, borderRadius: 12, padding: "10px 12px" }}>
-                                        <summary style={{ fontSize: 12, fontWeight: 700, color: mp.color, cursor: "pointer", listStyle: "none" }}>👨‍🍳 How to Prep</summary>
+                                        <summary style={{ fontSize: 12, fontWeight: 700, color: G.accent, cursor: "pointer", listStyle: "none", minHeight: 30, display: "flex", alignItems: "center" }}>How to prep</summary>
                                         <ol style={{ margin: "8px 0 0", paddingLeft: 18 }}>
                                           {prepSteps.map((step, si) => (
                                             <li key={si} style={{ fontSize: 11.5, color: G.text, lineHeight: 1.6, marginBottom: 4 }}>{step}</li>
@@ -3574,7 +3679,7 @@ export default function App() {
                       <div className="card" style={{ padding: 16, minHeight: 150 }}>
                         {liveC.nutritionPlan
                           ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.nutritionPlan}</pre>
-                          : <div style={{ textAlign: "center", padding: "36px 20px", color: G.dim }}><div style={{ fontSize: 28, marginBottom: 8 }}>🥗</div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
+                          : <div style={{ textAlign: "center", padding: "36px 20px", color: G.muted }}><div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}><Icon n="food" s={26} c={G.dim} /></div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
                       </div>
                     );
                   })()}
@@ -3596,21 +3701,32 @@ export default function App() {
           )}
         </div>
         {/* BOTTOM NAV */}
+        {/* BOTTOM NAV
+            Six drawn icons in place of six emoji. The emoji were the loudest
+            thing in the old design and none of it was ours — 🏆 is a different
+            picture on every phone, and a screen reader read the tab as
+            "trophy". The selected tab is now stated three ways (ink icon, ink
+            label, and a rule under it) rather than by colour alone.
+            48px tall inside a 60px bar: comfortably past the 44px minimum. */}
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.surf, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)" }}>
           {[
-            { id: "workout", l: "Workouts", i: "⚡" },
-            { id: "nutrition", l: "Nutrition", i: "🥗" },
-              { id: "pdscore", l: "PD-100", i: "🏆" },
-            { id: "progress", l: "Progress", i: "📈" },
-            { id: "history", l: "History", i: "📊" },
-            { id: "profile", l: "Profile", i: "👤" },
-          ].map(tab => (
-            <button key={tab.id} onClick={() => setCTab(tab.id)} style={{ flex: 1, background: "none", border: "none", padding: "10px 4px 8px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <span style={{ fontSize: 20 }}>{tab.i}</span>
-              <span style={{ fontSize: 9, fontWeight: 600, color: cTab === tab.id ? G.gold : G.muted }}>{tab.l}</span>
-              {cTab === tab.id && <div style={{ width: 4, height: 4, borderRadius: "50%", background: G.gold }} />}
-            </button>
-          ))}
+            { id: "workout", l: "Train", i: "train" },
+            { id: "nutrition", l: "Food", i: "food" },
+            { id: "pdscore", l: "PD-100", i: "score" },
+            { id: "progress", l: "Progress", i: "progress" },
+            { id: "history", l: "History", i: "history" },
+            { id: "profile", l: "You", i: "you" },
+          ].map(tab => {
+            const on = cTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setCTab(tab.id)} aria-current={on ? "page" : undefined}
+                style={{ flex: 1, background: "none", border: "none", padding: "9px 2px 7px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, minHeight: 56, position: "relative" }}>
+                <Icon n={tab.i} s={21} c={on ? G.ink : G.dim} w={on ? 1.9 : 1.7} />
+                <span style={{ fontSize: 10, fontWeight: on ? 700 : 500, color: on ? G.ink : G.muted, letterSpacing: ".01em", whiteSpace: "nowrap" }}>{tab.l}</span>
+                {on && <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 22, height: 2, borderRadius: 2, background: G.ink }} />}
+              </button>
+            );
+          })}
         </div>
       </div>
     );
@@ -3634,7 +3750,7 @@ export default function App() {
         {aTab === "dashboard" && (
           <div className="fd">
             <div style={{ marginBottom: 14 }}><div className="sf gd" style={{ fontSize: 22, fontWeight: 700 }}>{t.welcome}, {TRAINER.name.split(" ")[0]}! 👋</div></div>
-            {regs.length > 0 && <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 11, padding: "11px 13px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}><div><div style={{ fontSize: 13, fontWeight: 700, color: G.amber }}>📋 {regs.length} {t.pendingRequests}</div></div><Btn ch={isAr ? "مراجعة" : "Review"} v="amber" onClick={() => setATab("requests")} sx={{ padding: "7px 14px", fontSize: 12 }} /></div>}
+            {regs.length > 0 && <div style={{ background: "#FBF2E3", border: "1px solid #EFE0C2", borderRadius: 11, padding: "11px 13px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}><div><div style={{ fontSize: 13, fontWeight: 700, color: G.amber }}>📋 {regs.length} {t.pendingRequests}</div></div><Btn ch={isAr ? "مراجعة" : "Review"} v="amber" onClick={() => setATab("requests")} sx={{ padding: "7px 14px", fontSize: 12 }} /></div>}
             {/* Screening, above the numbers on purpose.
                 A flagged client is someone who reported chest pain or
                 dizziness and is now sitting locked out of their own workout
@@ -3669,7 +3785,7 @@ export default function App() {
                   {unscreened.length > 0 && (
                     <div style={{ fontSize: 12, color: G.muted, marginTop: flagged.length ? 10 : 0, lineHeight: 1.6 }}>
                       {unscreened.length} {isAr ? "لم يُفحصوا بعد" : (unscreened.length === 1 ? "client has not been screened yet" : "clients have not been screened yet")} — {isAr ? "سيُسألون عند تسجيل الدخول." : "they are asked at their next login."}
-                      <div style={{ fontSize: 11, color: G.dim, marginTop: 4 }}>{unscreened.map(c => c.name).join(" · ")}</div>
+                      <div style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>{unscreened.map(c => c.name).join(" · ")}</div>
                     </div>
                   )}
                 </div>
@@ -3689,7 +3805,7 @@ export default function App() {
               </div>
             </div>
             <div className="card" style={{ padding: 16 }}>
-              {(()=>{const today=new Date();today.setHours(0,0,0,0);const up=clients.filter(cl=>cl.dob).map(cl=>{const[,m,d]=cl.dob.split("-");let b=new Date(today.getFullYear(),+m-1,+d);if(b<today)b.setFullYear(today.getFullYear()+1);return{...cl,days:Math.ceil((b-today)/864e5)};}).filter(cl=>cl.days<=30).sort((a,b)=>a.days-b.days);if(!up.length)return null;return(<><div style={{fontSize:10,color:"#f59e0b",letterSpacing:1.5,textTransform:"uppercase",marginBottom:8,fontWeight:700}}>🎂 {isAr?"مواليد قادمة":"Upcoming Birthdays"}</div>{up.map(cl=>(<div key={cl.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${G.border}`}}><span style={{fontSize:13,color:G.text,fontWeight:600}}>{cl.name}</span><span style={{fontSize:12,color:cl.days<=7?"#f59e0b":G.muted,fontWeight:700}}>{cl.days===0?"🎉 Today!":cl.days===1?"Tomorrow 🎂":cl.days+" days"}</span></div>))}<div style={{height:1,background:G.border,margin:"12px 0"}}></div></>);})()}
+              {(()=>{const today=new Date();today.setHours(0,0,0,0);const up=clients.filter(cl=>cl.dob).map(cl=>{const[,m,d]=cl.dob.split("-");let b=new Date(today.getFullYear(),+m-1,+d);if(b<today)b.setFullYear(today.getFullYear()+1);return{...cl,days:Math.ceil((b-today)/864e5)};}).filter(cl=>cl.days<=30).sort((a,b)=>a.days-b.days);if(!up.length)return null;return(<><div style={{fontSize:10,color:"#9A6212",letterSpacing:1.5,textTransform:"uppercase",marginBottom:8,fontWeight:700}}>🎂 {isAr?"مواليد قادمة":"Upcoming Birthdays"}</div>{up.map(cl=>(<div key={cl.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${G.border}`}}><span style={{fontSize:13,color:G.text,fontWeight:600}}>{cl.name}</span><span style={{fontSize:12,color:cl.days<=7?"#9A6212":G.muted,fontWeight:700}}>{cl.days===0?"🎉 Today!":cl.days===1?"Tomorrow 🎂":cl.days+" days"}</span></div>))}<div style={{height:1,background:G.border,margin:"12px 0"}}></div></>);})()}
               <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>{t.goalsDistribution}</div>
               {Object.entries(goals).map(([g, c]) => (<div key={g} style={{ marginBottom: 10 }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 12 }}><span>{g}</span><span style={{ color: G.gold, fontWeight: 700 }}>{c}</span></div><div style={{ height: 3, background: G.surf2, borderRadius: 3 }}><div style={{ height: "100%", width: `${(c / clients.length) * 100}%`, background: G.grad, borderRadius: 3 }} /></div></div>))}
             </div>
@@ -3715,14 +3831,14 @@ export default function App() {
                       <div style={{ fontSize: 11, color: G.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.email}</div>
                       {ws && <div style={{ fontSize: 10, color: ws.color, marginTop: 2 }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>}
                     </div>
-                    <span style={{ padding: "3px 9px", borderRadius: 20, fontSize: 10, fontWeight: 700, background: c.status === "Active" ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)", color: c.status === "Active" ? G.green : G.red, border: `1px solid ${c.status === "Active" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}` }}>{c.status === "Active" ? t.active : t.disabled}</span>
+                    <span style={{ padding: "3px 9px", borderRadius: 20, fontSize: 10, fontWeight: 700, background: c.status === "Active" ? "#E6F2ED" : "#FBECEC", color: c.status === "Active" ? G.green : G.red, border: `1px solid ${c.status === "Active" ? "#C9E3D8" : "#F0D6D6"}` }}>{c.status === "Active" ? t.active : t.disabled}</span>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 9 }}>
                     {[{ l: t.goal, v: c.goal }, { l: t.weight, v: `${c.weight}kg` }, { l: t.age, v: `${c.age}y` }].map(x => (<div key={x.l} style={{ background: G.surf2, borderRadius: 6, padding: "6px 8px", textAlign: "center" }}><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 11, fontWeight: 700 }}>{x.v}</div></div>))}
                   </div>
                   <div style={{ display: "flex", gap: 6, marginBottom: 9 }}>
-                    <div style={{ flex: 1, background: G.surf2, borderRadius: 7, padding: "6px", textAlign: "center", border: `1px solid ${c.workoutPlan ? "rgba(34,197,94,0.2)" : G.border}`, fontSize: 11, color: c.workoutPlan ? G.green : G.dim }}>⚡ {c.workoutPlan ? "✓" : "—"}</div>
-                    <div style={{ flex: 1, background: G.surf2, borderRadius: 7, padding: "6px", textAlign: "center", border: `1px solid ${c.nutritionPlan ? "rgba(34,197,94,0.2)" : G.border}`, fontSize: 11, color: c.nutritionPlan ? G.green : G.dim }}>🥗 {c.nutritionPlan ? "✓" : "—"}</div>
+                    <div style={{ flex: 1, background: G.surf2, borderRadius: 7, padding: "6px", textAlign: "center", border: `1px solid ${c.workoutPlan ? "#C9E3D8" : G.border}`, fontSize: 11, color: c.workoutPlan ? G.green : G.dim }}>⚡ {c.workoutPlan ? "✓" : "—"}</div>
+                    <div style={{ flex: 1, background: G.surf2, borderRadius: 7, padding: "6px", textAlign: "center", border: `1px solid ${c.nutritionPlan ? "#C9E3D8" : G.border}`, fontSize: 11, color: c.nutritionPlan ? G.green : G.dim }}>🥗 {c.nutritionPlan ? "✓" : "—"}</div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 5, marginBottom: 9 }}>
                     {/* Assessment. Sits with the other per-client actions
@@ -3736,7 +3852,7 @@ export default function App() {
                     <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
                     <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) deleteClient(c.id); }} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
                   </div>
-                    <div style={{ marginTop:10,padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,border:`1px solid ${G.border}` }}>
+                    <div style={{ marginTop:10,padding:"10px 12px",background:"#F3F6FA",borderRadius:10,border:`1px solid ${G.border}` }}>
                       <div style={{ fontSize:11,color:G.muted,marginBottom:5,fontWeight:600 }}>📝 {isAr?"ملاحظات المدرب":"Trainer Notes"}</div>
                       <textarea value={notesDraft[c.id]??(c.trainer_notes||"")} onChange={e=>setNotesDraft(p=>({...p,[c.id]:e.target.value}))} onBlur={async()=>{if(notesDraft[c.id]!==undefined){const upd={...c,trainer_notes:notesDraft[c.id]};await dbUpdateClient(upd);setClients(p=>p.map(x=>x.id===c.id?upd:x));setNotesDraft(p=>{const n={...p};delete n[c.id];return n;});}}} placeholder={isAr?"ملاحظات خاصة...":"Private notes..."} style={{width:"100%",minHeight:55,background:"transparent",border:"none",color:G.text,fontSize:12,resize:"none",outline:"none",lineHeight:1.6,fontFamily:"Inter,sans-serif",padding:0}} />
                     </div>
@@ -3761,7 +3877,7 @@ export default function App() {
                         setResettingId(null);
                       }
                     }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700, opacity: resettingId === c.id ? 0.6 : 1 }}>
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "#E8EEF8", border: "1px solid #D3E0F2", borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700, opacity: resettingId === c.id ? 0.6 : 1 }}>
                     {resettingId === c.id
                       ? (isAr ? "جارٍ..." : "Working…")
                       : `🔑 ${isAr ? "كلمة مرور جديدة ومشاركة" : "New password & share"}`}
@@ -3794,12 +3910,12 @@ export default function App() {
               </div>
             </div>
             {regs.length === 0
-              ? <div className="card" style={{ padding: "36px 20px", textAlign: "center", color: G.dim }}><div style={{ fontSize: 26, marginBottom: 8 }}>📋</div><div>{t.noRequests}</div></div>
+              ? <div className="card" style={{ padding: "36px 20px", textAlign: "center", color: G.muted }}><div style={{ fontSize: 26, marginBottom: 8 }}>📋</div><div>{t.noRequests}</div></div>
               : regs.map(reg => (
-                <div key={reg.id} className="card" style={{ padding: 14, marginBottom: 10, border: "1px solid rgba(245,158,11,0.2)" }}>
+                <div key={reg.id} className="card" style={{ padding: 14, marginBottom: 10, border: "1px solid #EFE0C2" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 11 }}>
                     <Av name={reg.name} sz={38} />
-                    <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 700 }}>{reg.name}</div><div style={{ fontSize: 11, color: G.muted }}>{reg.email} · {reg.phone}</div><div style={{ fontSize: 10, color: G.dim }}>{new Date(reg.submittedAt).toLocaleString()}</div></div>
+                    <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 700 }}>{reg.name}</div><div style={{ fontSize: 11, color: G.muted }}>{reg.email} · {reg.phone}</div><div style={{ fontSize: 10, color: G.muted }}>{new Date(reg.submittedAt).toLocaleString()}</div></div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 11 }}>
                     {[{ l: t.goal, v: reg.goal }, { l: t.weight, v: `${reg.weight || "—"}kg` }, { l: t.activityLevel, v: PAL.find(p => p.id === reg.pal)?.[isAr ? "ar" : "en"] || "—" }].map(x => (<div key={x.l} style={{ background: G.surf2, borderRadius: 6, padding: 7, textAlign: "center" }}><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>{x.l}</div><div style={{ fontSize: 11, fontWeight: 700 }}>{x.v}</div></div>))}
@@ -3811,7 +3927,7 @@ export default function App() {
                       Showing the name and goal but not the reason is how a
                       chest-pain answer gets a one-click approval. */}
                   {reg.blocked_reason && (
-                    <div style={{ background: "rgba(239,68,68,0.08)", border: `1px solid ${G.red}`, borderRadius: 8, padding: "9px 11px", marginBottom: 11 }}>
+                    <div style={{ background: "#FBECEC", border: `1px solid ${G.red}`, borderRadius: 8, padding: "9px 11px", marginBottom: 11 }}>
                       <div style={{ fontSize: 10, color: G.red, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 700, marginBottom: 5 }}>
                         ⚠ Not started automatically
                       </div>
@@ -3886,7 +4002,7 @@ export default function App() {
                   <button key={id} type="button" className="btn" onClick={() => setAssessTab(id)}
                     style={{
                       flex: 1, padding: "9px", borderRadius: 9, fontSize: 12, fontWeight: 700,
-                      background: on ? "rgba(212,175,55,0.14)" : G.surf2,
+                      background: on ? "#E8EEF8" : G.surf2,
                       color: on ? G.gold : G.muted,
                       border: `1px solid ${on ? G.borderHi : G.border}`,
                     }}>{label}</button>
@@ -3955,18 +4071,18 @@ export default function App() {
               <>
                 <div style={{ background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 11, padding: 14, marginBottom: 12, fontFamily: "monospace", direction: "ltr" }}>
                   <div style={{ display:"flex",flexDirection:"column",gap:10,marginBottom:16 }}>
-  <div style={{ background:"rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
+  <div style={{ background:"#F3F6FA",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
     <div style={{ fontSize:11,color:G.muted,marginBottom:6,fontWeight:600 }}>📧 {isAr?"البريد الإلكتروني":"Email"}</div>
     <div style={{ display:"flex",alignItems:"center",gap:8 }}>
       <div style={{ flex:1,fontSize:13,color:G.text,fontWeight:600,wordBreak:"break-all" }}>{shareD.email}</div>
-      <button onClick={()=>navigator.clipboard.writeText(shareD.email)} style={{ flexShrink:0,background:"rgba(99,102,241,0.2)",border:"1px solid rgba(99,102,241,0.4)",borderRadius:7,padding:"6px 12px",color:"#a5b4fc",fontSize:12,cursor:"pointer",fontWeight:600 }}>📋 {isAr?"نسخ":"Copy"}</button>
+      <button onClick={()=>navigator.clipboard.writeText(shareD.email)} style={{ flexShrink:0,background:G.accentSoft,border:`1px solid ${G.accentLine}`,borderRadius:7,padding:"6px 12px",color:G.accent,fontSize:12,cursor:"pointer",fontWeight:600 }}>📋 {isAr?"نسخ":"Copy"}</button>
     </div>
   </div>
-  <div style={{ background:"rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
+  <div style={{ background:"#F3F6FA",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
     <div style={{ fontSize:11,color:G.muted,marginBottom:6,fontWeight:600 }}>🔑 {isAr?"كلمة المرور":"Password"}</div>
     <div style={{ display:"flex",alignItems:"center",gap:8 }}>
       <div style={{ flex:1,fontSize:14,color:G.text,fontWeight:700,letterSpacing:2 }}>{shareD.password}</div>
-      <button onClick={()=>navigator.clipboard.writeText(shareD.password)} style={{ flexShrink:0,background:"rgba(99,102,241,0.2)",border:"1px solid rgba(99,102,241,0.4)",borderRadius:7,padding:"6px 12px",color:"#a5b4fc",fontSize:12,cursor:"pointer",fontWeight:600 }}>📋 {isAr?"نسخ":"Copy"}</button>
+      <button onClick={()=>navigator.clipboard.writeText(shareD.password)} style={{ flexShrink:0,background:G.accentSoft,border:`1px solid ${G.accentLine}`,borderRadius:7,padding:"6px 12px",color:G.accent,fontSize:12,cursor:"pointer",fontWeight:600 }}>📋 {isAr?"نسخ":"Copy"}</button>
     </div>
   </div>
 </div>
@@ -3974,7 +4090,7 @@ export default function App() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {shareD?.phone && (
                     <a href={`https://wa.me/${shareD.phone.replace(/\D/g, "")}?text=${encodeURIComponent(credText)}`} target="_blank" rel="noreferrer"
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 11, color: G.green, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", background: "#E6F2ED", border: "1px solid #C9E3D8", borderRadius: 11, color: G.green, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>
                       💬 {t.sendWhatsapp}
                     </a>
                   )}

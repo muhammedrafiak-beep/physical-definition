@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from "react";
+import { Icon } from "./Icons";
 
 // The leaderboard used to be read and written straight from here with the
 // anon key — the last place in src/ that did. Two things were wrong with it:
@@ -20,7 +21,10 @@ async function api(action, payload = {}) {
   return d;
 }
 
-const G = { gold:"#d4af37", bg:"#0d0d0d", surf:"#181818", surf2:"#1a1a1a", green:"#22c55e", red:"#ef4444", muted:"#666", text:"#fff", border:"#2a2a2a" };
+// Kept local so this screen can be read on its own. Mirrors the DAY palette
+// in App.jsx; `night` is the camera view, which is held over live video and
+// therefore stays dark whatever the rest of the app does.
+const G = { gold:"#21509B", accent:"#21509B", accentLine:"#D3E0F2", bg:"#F3F6FA", surf:"#FFFFFF", surf2:"#F3F6FA", green:"#12795A", red:"#A63A3A", muted:"#5C6D84", dim:"#93A2B7", text:"#0E2035", border:"#E4E9F0", accentSoft:"#E8EEF8", paper:"#FCFCFD" };
 
 const STATIONS = [
   { id:"jumpSquat", name:"Jump Squats", emoji:"⚡", reps:20, muscles:"Quads · Glutes · Calves", sys:"ATP-PC · explosive" },
@@ -39,7 +43,7 @@ function pt(L,i){return{x:L[i].x,y:L[i].y};}
 function fmt(s){const m=Math.floor(s/60);const x=s%60;return `${m}:${String(x).padStart(2,"0")}`;}
 function tier(sec){
   if(sec<420) return {n:"Elite", c:G.red};
-  if(sec<660) return {n:"Advanced", c:"#f59e0b"};
+  if(sec<660) return {n:"Advanced", c:"#9A6212"};
   if(sec<960) return {n:"Intermediate", c:G.gold};
   return {n:"Beginner", c:G.muted};
 }
@@ -238,8 +242,8 @@ export function PDScore({ client, onClose }) {
           ctx.save(); ctx.scale(-1,1); ctx.translate(-cv.width,0);
           ctx.drawImage(res.image,0,0,cv.width,cv.height);
           if(res.poseLandmarks){
-            if(window.drawConnectors) window.drawConnectors(ctx,res.poseLandmarks,window.POSE_CONNECTIONS,{color:"rgba(34,197,94,0.75)",lineWidth:3});
-            if(window.drawLandmarks) window.drawLandmarks(ctx,res.poseLandmarks,{color:G.gold,fillColor:"rgba(212,175,55,0.3)",lineWidth:2,radius:4});
+            if(window.drawConnectors) window.drawConnectors(ctx,res.poseLandmarks,window.POSE_CONNECTIONS,{color:"#C9E3D8",lineWidth:3});
+            if(window.drawLandmarks) window.drawLandmarks(ctx,res.poseLandmarks,{color:G.gold,fillColor:"#D3E0F2",lineWidth:2,radius:4});
             analyze(res.poseLandmarks.map(p=>({...p,x:1-p.x})));
           }
           ctx.restore();
@@ -273,20 +277,20 @@ export function PDScore({ client, onClose }) {
       {hiddenVideo}
       <div style={{ padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${G.border}`,position:"sticky",top:0,background:G.bg,zIndex:2 }}>
         <div>
-          <div style={{ fontSize:17,fontWeight:700,color:G.gold,lineHeight:1.2 }}>🏆 PD-100</div>
+          <div className="sf" style={{ fontSize:24,color:G.text,lineHeight:1.15 }}>PD-100</div>
           <div style={{ fontSize:10,color:G.muted,letterSpacing:1.5,textTransform:"uppercase",marginTop:1 }}>Physical Definition Benchmark</div>
         </div>
-        <button onClick={onClose} style={{ background:"transparent",border:`1px solid ${G.border}`,borderRadius:8,color:"#999",padding:"6px 12px",cursor:"pointer",fontSize:13 }}>✕</button>
+        <button onClick={onClose} aria-label="Close" style={{ background:"#fff",border:`1px solid ${G.border}`,borderRadius:11,color:G.muted,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n="close" s={15} c={G.muted} w={2} /></button>
       </div>
       <div style={{ padding:16 }}>
-        <div style={{ background:"rgba(212,175,55,0.07)",border:`1px solid rgba(212,175,55,0.25)`,borderRadius:14,padding:15,marginBottom:14 }}>
+        <div style={{ background:"#E8EEF8",border:`1px solid #D3E0F2`,borderRadius:14,padding:15,marginBottom:14 }}>
           <div style={{ fontSize:16,fontWeight:700,color:G.gold,marginBottom:5 }}>The Physical Definition 100</div>
-          <div style={{ fontSize:13,color:"#bbb",lineHeight:1.7 }}>
+          <div style={{ fontSize:13,color:G.muted,lineHeight:1.7 }}>
             Our own fitness benchmark — the one test every Physical Definition client is measured by. 100 reps across 5 movements, pure bodyweight, no equipment except a pull-up bar, done straight through for time.
           </div>
           <div style={{ display:"flex",gap:7,flexWrap:"wrap",marginTop:11 }}>
             {["100 reps","5 movements","Bodyweight only","AI counted","For time"].map(x => (
-              <span key={x} style={{ fontSize:11,padding:"4px 10px",borderRadius:20,background:"rgba(255,255,255,0.05)",border:`1px solid ${G.border}`,color:"#aaa" }}>{x}</span>
+              <span key={x} style={{ fontSize:11,padding:"4px 10px",borderRadius:20,background:"#F3F6FA",border:`1px solid ${G.border}`,color:G.muted }}>{x}</span>
             ))}
           </div>
         </div>
@@ -296,7 +300,7 @@ export function PDScore({ client, onClose }) {
             <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",marginBottom:6 }}>Your best</div>
             <div style={{ display:"flex",alignItems:"baseline",gap:10 }}>
               <div style={{ fontSize:34,fontWeight:800,color:G.gold }}>{best.pd_score}</div>
-              <div style={{ fontSize:14,color:"#aaa" }}>{fmt(best.total_seconds)}</div>
+              <div style={{ fontSize:14,color:G.muted }}>{fmt(best.total_seconds)}</div>
               <div style={{ marginLeft:"auto",fontSize:12,color:tier(best.total_seconds).c,fontWeight:700 }}>{tier(best.total_seconds).n}</div>
             </div>
           </div>
@@ -304,9 +308,9 @@ export function PDScore({ client, onClose }) {
 
         {STATIONS.map((s,i) => (
           <div key={s.id} style={{ ...card, display:"flex",gap:12,alignItems:"center",padding:13 }}>
-            <div style={{ width:30,height:30,borderRadius:"50%",background:"rgba(212,175,55,0.12)",border:`1px solid ${G.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:G.gold,fontWeight:700,flexShrink:0 }}>{i+1}</div>
+            <div style={{ width:30,height:30,borderRadius:"50%",background:"#E8EEF8",border:`1px solid ${G.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:G.gold,fontWeight:700,flexShrink:0 }}>{i+1}</div>
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:15,fontWeight:600,color:"#fff" }}>{s.emoji} {s.name}</div>
+              <div style={{ fontSize:15,fontWeight:600,color:G.text }}>{s.name}</div>
               <div style={{ fontSize:11,color:G.muted,marginTop:2 }}>{s.muscles} · {s.sys}</div>
             </div>
             <div style={{ fontSize:14,fontWeight:700,color:G.gold,flexShrink:0 }}>{s.isTime ? "60s" : s.reps}</div>
@@ -315,18 +319,18 @@ export function PDScore({ client, onClose }) {
 
         <div style={{ ...card, padding:0, overflow:"hidden", marginTop:14 }}>
           <div onClick={() => setShowHow(!showHow)} style={{ padding:"13px 15px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer" }}>
-            <span style={{ fontSize:14,fontWeight:600,color:G.gold }}>📖 How the PD-100 works</span>
+            <span style={{ fontSize:14,fontWeight:600,color:G.text,display:"flex",alignItems:"center",gap:8 }}><Icon n="book" s={15} c={G.accent} />How the PD-100 works</span>
             <span style={{ color:G.muted,fontSize:16 }}>{showHow ? "−" : "+"}</span>
           </div>
           {showHow && (
             <div style={{ padding:"0 15px 15px",borderTop:`1px solid ${G.border}` }}>
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"13px 0 6px" }}>What it is</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.65 }}>
                 A single continuous bodyweight benchmark. Five stations, 100 total reps, done back to back for time. It tests every major movement pattern — squat, pull, push, full body and core — and every energy system, from explosive power through to endurance. Your time becomes a PD Score that ranks you against every other client.
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Before you start</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.85 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.85 }}>
                 1. Lean your phone against something at chest height.<br/>
                 2. Stand back 2 to 3 metres so your whole body — head to feet — is in frame.<br/>
                 3. Make sure the room is well lit and there is space behind you.<br/>
@@ -335,42 +339,42 @@ export function PDScore({ client, onClose }) {
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>During the test</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.85 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.85 }}>
                 The clock starts the moment the camera opens and never stops — rest counts against you. The AI counts each rep only when you hit full range of motion, so half reps will not register. When a station hits its target it moves you on automatically. Watch the form badge: if it turns red, fix your position before continuing.
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Your score</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65,marginBottom:10 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.65,marginBottom:10 }}>
                 A 6:00 finish scores 1000. Halve your time and you double your score — 24:00 is 250, 12:00 is 500, 6:00 is 1000. There is no zero: however long it takes, finishing is a number, and the number moves every time you get faster. Retest monthly.
               </div>
               <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6 }}>
-                {[["Elite","<7m",G.red],["Advanced","7-11m","#f59e0b"],["Intermediate","11-16m",G.gold],["Beginner","16m+",G.muted]].map(x => (
-                  <div key={x[0]} style={{ background:"rgba(255,255,255,0.04)",border:`1px solid ${G.border}`,borderRadius:8,padding:"8px 5px",textAlign:"center" }}>
+                {[["Elite","<7m",G.red],["Advanced","7-11m","#9A6212"],["Intermediate","11-16m",G.gold],["Beginner","16m+",G.muted]].map(x => (
+                  <div key={x[0]} style={{ background:"#F3F6FA",border:`1px solid ${G.border}`,borderRadius:8,padding:"8px 5px",textAlign:"center" }}>
                     <div style={{ fontSize:11,fontWeight:700,color:x[2] }}>{x[0]}</div>
-                    <div style={{ fontSize:11,color:"#888",marginTop:2 }}>{x[1]}</div>
+                    <div style={{ fontSize:11,color:G.muted,marginTop:2 }}>{x[1]}</div>
                   </div>
                 ))}
               </div>
 
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",margin:"15px 0 6px" }}>Privacy</div>
-              <div style={{ fontSize:13,color:"#bbb",lineHeight:1.65 }}>
+              <div style={{ fontSize:13,color:G.muted,lineHeight:1.65 }}>
                 Nothing is recorded. The camera runs entirely on your own device and only body position points are read. No video leaves your phone.
               </div>
             </div>
           )}
         </div>
 
-        <button onClick={start} style={{ width:"100%",padding:16,background:G.gold,border:"none",borderRadius:12,fontWeight:800,fontSize:16,cursor:"pointer",marginTop:6,marginBottom:16 }}>
-          ▶ Start PD-100
+        <button onClick={start} style={{ width:"100%",minHeight:56,background:"linear-gradient(180deg,#16304F,#0E2035)",color:G.paper,border:"none",borderRadius:14,fontWeight:600,fontSize:16,cursor:"pointer",marginTop:6,marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:9 }}>
+          <Icon n="play" s={15} c={G.paper} /> Start the PD-100
         </button>
 
         <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",marginBottom:8 }}>Global leaderboard</div>
         {board.length===0 && <div style={{ fontSize:13,color:G.muted,padding:"12px 0" }}>No scores yet — be the first.</div>}
         {board.map((r,i) => (
-          <div key={r.id} style={{ display:"flex",alignItems:"center",gap:11,padding:"11px 13px",background:r.mine?"rgba(212,175,55,0.07)":G.surf,border:`1px solid ${r.mine?"rgba(212,175,55,0.3)":G.border}`,borderRadius:11,marginBottom:6 }}>
-            <div style={{ fontSize:14,fontWeight:800,color:i<3?G.gold:G.muted,width:26,flexShrink:0 }}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`}</div>
-            <div style={{ flex:1,fontSize:14,color:"#fff",fontWeight:500 }}>{r.client_name}</div>
-            <div style={{ fontSize:12,color:"#888" }}>{fmt(r.total_seconds)}</div>
+          <div key={r.id} style={{ display:"flex",alignItems:"center",gap:11,padding:"11px 13px",background:r.mine?"#E8EEF8":G.surf,border:`1px solid ${r.mine?"#D3E0F2":G.border}`,borderRadius:11,marginBottom:6 }}>
+            <div className="sf" style={{ fontSize:17,color:i<3?G.accent:G.dim,width:26,flexShrink:0,textAlign:"center" }}>{i+1}</div>
+            <div style={{ flex:1,fontSize:14,color:G.text,fontWeight:500 }}>{r.client_name}</div>
+            <div style={{ fontSize:12,color:G.muted }}>{fmt(r.total_seconds)}</div>
             <div style={{ fontSize:15,fontWeight:800,color:G.gold,minWidth:44,textAlign:"right" }}>{r.pd_score}</div>
           </div>
         ))}
@@ -391,11 +395,11 @@ export function PDScore({ client, onClose }) {
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto",padding:20 }}>
       {hiddenVideo}
       <div style={{ textAlign:"center",paddingTop:30,marginBottom:22 }}>
-        <div style={{ fontSize:48,marginBottom:10 }}>🏆</div>
-        <div style={{ fontSize:13,color:G.muted,letterSpacing:2,textTransform:"uppercase" }}>PD Score</div>
-        <div style={{ fontSize:64,fontWeight:800,color:G.gold,lineHeight:1.1 }}>{finalScore.score}</div>
-        <div style={{ fontSize:17,color:"#fff",marginTop:6 }}>{fmt(finalScore.total)}</div>
-        <div style={{ display:"inline-block",marginTop:10,padding:"5px 16px",borderRadius:20,background:"rgba(255,255,255,0.06)",color:finalScore.tier.c,fontWeight:700,fontSize:13 }}>{finalScore.tier.n}</div>
+        <div style={{ display:"flex",justifyContent:"center",marginBottom:14 }}><div style={{ width:58,height:58,borderRadius:19,background:G.accentSoft,display:"flex",alignItems:"center",justifyContent:"center" }}><Icon n="score" s={26} c={G.accent} /></div></div>
+        <div style={{ fontSize:11,color:G.muted,letterSpacing:".09em",textTransform:"uppercase",fontWeight:600 }}>PD Score</div>
+        <div className="sf" style={{ fontSize:76,color:G.text,lineHeight:1,marginTop:6,letterSpacing:"-.02em" }}>{finalScore.score}</div>
+        <div style={{ fontSize:17,color:G.text,marginTop:6 }}>{fmt(finalScore.total)}</div>
+        <div style={{ display:"inline-block",marginTop:10,padding:"5px 16px",borderRadius:20,background:"#F3F6FA",color:finalScore.tier.c,fontWeight:700,fontSize:13 }}>{finalScore.tier.n}</div>
         {saving && <div style={{ fontSize:12,color:G.muted,marginTop:10 }}>Saving...</div>}
         {saveErr && (
           <div style={{ fontSize:12,color:G.red,marginTop:10,lineHeight:1.6 }}>
@@ -405,7 +409,7 @@ export function PDScore({ client, onClose }) {
       </div>
       {times.map((t,i) => (
         <div key={i} style={{ display:"flex",justifyContent:"space-between",padding:"10px 14px",background:G.surf,border:`1px solid ${G.border}`,borderRadius:10,marginBottom:6 }}>
-          <span style={{ fontSize:14,color:"#ccc" }}>{t.name}</span>
+          <span style={{ fontSize:14,color:G.muted }}>{t.name}</span>
           <span style={{ fontSize:14,color:G.gold,fontFamily:"monospace" }}>{fmt(t.at)}</span>
         </div>
       ))}
@@ -419,10 +423,10 @@ export function PDScore({ client, onClose }) {
   return (
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,display:"flex",flexDirection:"column",userSelect:"none" }}>
       <div style={{ padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${G.border}`,flexShrink:0 }}>
-        <div style={{ fontSize:14,fontWeight:700,color:G.gold }}>🏆 Station {station+1}/5</div>
+        <div style={{ fontSize:13,fontWeight:600,color:G.muted,letterSpacing:".05em" }}>Station {station+1} of 5</div>
         <div style={{ display:"flex",alignItems:"center",gap:12 }}>
           <span style={{ color:G.gold,fontSize:15,fontWeight:800,fontFamily:"monospace" }}>{fmt(elapsed)}</span>
-          <button onClick={() => { stopCam(); setScreen("intro"); }} style={{ background:"transparent",border:`1px solid ${G.border}`,borderRadius:8,color:"#999",padding:"5px 11px",cursor:"pointer",fontSize:12 }}>Quit</button>
+          <button onClick={() => { stopCam(); setScreen("intro"); }} style={{ background:"transparent",border:`1px solid ${G.border}`,borderRadius:8,color:G.muted,padding:"5px 11px",cursor:"pointer",fontSize:12 }}>Quit</button>
         </div>
       </div>
 
@@ -430,28 +434,31 @@ export function PDScore({ client, onClose }) {
         <div style={{ height:4,width:`${(station/5)*100 + (reps/st.reps)*20}%`,background:G.gold,transition:"width .3s" }}/>
       </div>
 
-      <div style={{ position:"relative",flex:1,background:"#111",overflow:"hidden" }}>
+      <div style={{ position:"relative",flex:1,background:"#0A1727",overflow:"hidden" }}>
         {hiddenVideo}
         <canvas ref={canvasRef} style={{ width:"100%",height:"100%",objectFit:"cover" }} />
         <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:16,pointerEvents:"none" }}>
           <div style={{ background:"rgba(0,0,0,0.62)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",width:"fit-content",border:`1px solid ${G.border}` }}>
-            <div style={{ fontSize:11,color:G.muted,letterSpacing:1.5,textTransform:"uppercase" }}>{st.emoji} {st.name}</div>
-            <div style={{ fontSize:52,fontWeight:800,color:G.gold,lineHeight:1.05 }}>
-              {st.isTime ? plankSec : reps}<span style={{ fontSize:22,color:"#666" }}>/{st.reps}</span>
+            <div style={{ fontSize:11,color:"#C8D6EA",letterSpacing:1.5,textTransform:"uppercase" }}>{st.name}</div>
+            <div className="sf" style={{ fontSize:58,color:"#FCFCFD",lineHeight:1 }}>
+              {st.isTime ? plankSec : reps}<span style={{ fontSize:22,color:"#8FA3BE" }}>/{st.reps}</span>
             </div>
           </div>
           <div>
-            <div style={{ padding:"8px 16px",borderRadius:20,fontSize:13,fontWeight:700,width:"fit-content",background:good?"rgba(34,197,94,0.85)":"rgba(239,68,68,0.85)",color:good?"#000":"#fff",marginBottom:8 }}>
-              {good ? "✅ Good Form" : "⚠️ Fix Form"}
+            {/* Over live video, so this pill keeps a solid fill rather than
+                the pale tint the rest of the app uses — a 5% wash disappears
+                against whatever the camera happens to be pointing at. */}
+            <div style={{ padding:"9px 15px",borderRadius:22,fontSize:13,fontWeight:600,width:"fit-content",background:good?"#12795A":"#A63A3A",color:"#FCFCFD",marginBottom:8,display:"flex",alignItems:"center",gap:7 }}>
+              <Icon n={good ? "check" : "alert"} s={14} c="#FCFCFD" /> {good ? "Good form" : "Fix form"}
             </div>
-            <div style={{ background:"rgba(0,0,0,0.72)",padding:"10px 14px",borderRadius:12,fontSize:13,color:"#e5e5e5",border:`1px solid ${G.border}`,maxWidth:280 }}>{tip}</div>
+            <div style={{ background:"rgba(0,0,0,0.72)",padding:"10px 14px",borderRadius:12,fontSize:13,color:"#C8D6EA",border:`1px solid ${G.border}`,maxWidth:280 }}>{tip}</div>
             <div style={{ fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:6 }}>© Physical Definition · {client?.name||""}</div>
           </div>
         </div>
       </div>
 
       <div style={{ padding:"12px 16px",borderTop:`1px solid ${G.border}`,flexShrink:0 }}>
-        <button onClick={nextStation} style={{ width:"100%",padding:13,background:"transparent",border:`1px solid ${G.border}`,borderRadius:11,color:"#999",fontSize:14,cursor:"pointer" }}>
+        <button onClick={nextStation} style={{ width:"100%",padding:13,background:"transparent",border:`1px solid ${G.border}`,borderRadius:11,color:G.muted,fontSize:14,cursor:"pointer" }}>
           Skip station →
         </button>
       </div>
