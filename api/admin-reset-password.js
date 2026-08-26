@@ -64,12 +64,13 @@ export default async function handler(req, res) {
   const newPassword = generatePassword(10);
   const password_hash = await hashPassword(newPassword);
 
-  // Write the hash and clear any legacy plaintext in one go. Unlike
-  // migrate-on-login this MUST be atomic: if only half of it landed, the
-  // trainer would hand out a password that does not work.
+  // Only the hash. This used to also write `password: null` to clear the
+  // legacy plaintext column — that column has since been dropped, and writing
+  // to a column that no longer exists fails the whole update, which broke
+  // every password reset until it was caught.
   const { error: upErr } = await db
     .from("clients")
-    .update({ password_hash, password: null })
+    .update({ password_hash })
     .eq("id", row.id);
 
   if (upErr) {
