@@ -303,8 +303,9 @@ export function WorkoutPlayer({
   // hooks — below this component there are two early returns, and a hook
   // after one of them is a hook React stops counting.
   const [videoFailed, setVideoFailed] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [motivation, setMotivation] = useState(null);
-  useEffect(() => { setVideoFailed(false); }, [exIdx]);
+  useEffect(() => { setVideoFailed(false); setVideoReady(false); }, [exIdx]);
   const [elapsed, setElapsed] = useState(0); // overall stopwatch, seconds
   const [saving, setSaving] = useState(false);
   const videoRef = useRef(null);
@@ -721,7 +722,19 @@ export function WorkoutPlayer({
                 style={{ width: "100%", height: "100%", objectFit: "contain", background: "#0A1727", pointerEvents: "none", display: "block" }}
                 loop muted playsInline autoPlay
                 onError={() => setVideoFailed(true)}
+                onLoadedData={() => setVideoReady(true)}
               />
+              {/* The clips are 1–3 MB and sit on object storage. Until one has
+                  a frame to show, a <video> paints nothing — which on a phone
+                  meant a black screen the height of the display, with no way
+                  to tell it from a broken app. The illustration holds the
+                  space, and the spinner says which of the two it is. */}
+              {!videoReady && (
+                <div style={{ position: "absolute", inset: 0, background: "#152B45", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, color: "#8FA3BE", padding: 16 }}>
+                  <ExerciseIllustration exerciseId={current.exercise.name} size={150} />
+                  <div className="sp" style={{ width: 22, height: 22, borderWidth: 2 }} />
+                </div>
+              )}
               {exerciseRemaining !== null && (
                 <div style={{
                   position: "absolute", top: 10, right: 10,
