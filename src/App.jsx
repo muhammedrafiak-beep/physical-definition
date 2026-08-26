@@ -2268,7 +2268,9 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
 // participation. A screening that can be skipped is decoration.
 function ScreeningCard({ client, isAr, onAnswered }) {
   const st = screeningState(client);
+  const wantIntake = needsIntake(client);
   const [answers, setAnswers] = useState({});
+  const [intake, setIntake] = useState({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(false);
@@ -2295,12 +2297,18 @@ function ScreeningCard({ client, isAr, onAnswered }) {
     );
   }
 
-  const allAnswered = PARQ.every(q => answers[q.id] === true || answers[q.id] === false);
+  const allAnswered =
+    PARQ.every(q => answers[q.id] === true || answers[q.id] === false) &&
+    (!wantIntake || INTAKE_QUESTIONS.every(q => !!intake[q.id]));
 
   const submit = async () => {
     setErr(""); setBusy(true);
     try {
-      const d = await clientPost({ action: "parq.submit", answers });
+      const d = await clientPost({
+        action: "parq.submit",
+        answers,
+        ...(wantIntake ? { intake: { ...intake, daysPerWeek: Number(intake.daysPerWeek) } } : {}),
+      });
       onAnswered?.(d);
     } catch (e) {
       setErr(e.message);
@@ -2317,8 +2325,12 @@ function ScreeningCard({ client, isAr, onAnswered }) {
         </div>
         <div style={{ fontSize: 12.5, color: G.text, marginTop: 8, lineHeight: 1.7 }}>
           {isAr
-            ? "ثمانية أسئلة، أقل من دقيقة. هذه هي الأسئلة القياسية التي يطرحها أي مدرب قبل التدريب — ولم نسألك إياها من قبل."
-            : "Eight questions, under a minute. These are the standard questions any trainer asks before training somebody, and we never asked you them."}
+            ? (wantIntake
+                ? "اثنا عشر سؤالاً، أقل من دقيقتين. هذه هي الأسئلة القياسية التي يطرحها أي مدرب قبل التدريب — ولم نسألك إياها من قبل."
+                : "ثمانية أسئلة، أقل من دقيقة. هذه هي الأسئلة القياسية التي يطرحها أي مدرب قبل التدريب — ولم نسألك إياها من قبل.")
+            : (wantIntake
+                ? "Twelve questions, under two minutes. Four about how you train and eight about your health — the standard questions any trainer asks before training somebody, and we never asked you them."
+                : "Eight questions, under a minute. These are the standard questions any trainer asks before training somebody, and we never asked you them.")}
         </div>
         <button type="button" className="btn" onClick={() => setOpen(true)}
           style={{ width: "100%", marginTop: 14, padding: "13px", borderRadius: 10, background: G.grad, color: "#000", fontWeight: 700, fontSize: 14 }}>
@@ -2338,6 +2350,42 @@ function ScreeningCard({ client, isAr, onAnswered }) {
           ? "أجب بصدق. \"نعم\" لا تعني التوقف عن التدريب — تعني أن رافي يتحدث معك أولاً."
           : "Answer honestly. A yes does not mean you stop training — it means Rafi speaks to you first."}
       </div>
+
+      {/* How they train. Asked first because it is the easy half, and because
+          the app has been choosing programmes without these answers. */}
+      {wantIntake && INTAKE_QUESTIONS.map(q => (
+        <div key={q.id} style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12.5, color: G.text, marginBottom: 7, lineHeight: 1.5 }}>{isAr ? q.ar : q.en}</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {q.opts.map(o => {
+              const on = intake[q.id] === o.id;
+              return (
+                <button key={o.id} type="button" className="btn"
+                  onClick={() => setIntake(p => ({ ...p, [q.id]: o.id }))}
+                  style={{
+                    padding: "10px 13px", borderRadius: 9, fontSize: 12, fontWeight: 700, minHeight: 42,
+                    background: on ? "rgba(212,175,55,0.16)" : G.surf2,
+                    color: on ? G.gold : G.muted,
+                    border: `1px solid ${on ? G.borderHi : G.border}`,
+                  }}>{isAr ? o.ar : o.en}</button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {wantIntake && intake.limitation && intake.limitation !== "none" && (
+        <div style={{ fontSize: 11.5, color: G.blue, background: "rgba(96,165,250,0.09)", border: `1px solid rgba(96,165,250,0.28)`, borderRadius: 9, padding: "10px 12px", marginBottom: 14, lineHeight: 1.6 }}>
+          {isAr
+            ? "سيراجع رافي هذا معك. لن يتوقف تدريبك."
+            : "Rafi will look at this with you. It does not stop your training."}
+        </div>
+      )}
+      {wantIntake && (
+        <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.4, textTransform: "uppercase", fontWeight: 700, margin: "18px 0 4px" }}>
+          {isAr ? "الصحة" : "Health"}
+        </div>
+      )}
+
       {PARQ.map(q => {
         const v = answers[q.id];
         return (
@@ -2603,6 +2651,54 @@ function screeningState(c) {
     cleared,
     blocked: !answers || (flagged.length > 0 && !cleared),
   };
+}
+
+// The four intake answers, in one place, because two screens ask for them: the
+// register page for a new person, and the health-check card for the clients
+// who predate that page. The ids must match api/_lib/assign.js — the server
+// validates against the same lists and the assignment rules read them.
+const INTAKE_QUESTIONS = [
+  {
+    id: "experience",
+    en: "How long have you been training?", ar: "خبرتك في التدريب",
+    opts: [
+      { id: "beginner", en: "New to it (under 6 months)", ar: "مبتدئ (أقل من 6 أشهر)" },
+      { id: "intermediate", en: "6 months to 2 years", ar: "متوسط (6 أشهر - سنتان)" },
+      { id: "advanced", en: "Over 2 years, consistently", ar: "متقدم (أكثر من سنتين)" },
+    ],
+  },
+  {
+    id: "daysPerWeek",
+    en: "How many days a week can you train?", ar: "كم يوماً في الأسبوع؟",
+    opts: ["2", "3", "4", "5", "6"].map(n => ({ id: n, en: n, ar: n })),
+  },
+  {
+    id: "equipment",
+    en: "What do you have access to?", ar: "ما المتاح لديك؟",
+    opts: [
+      { id: "full_gym", en: "A full gym", ar: "صالة رياضية كاملة" },
+      { id: "home_basic", en: "Dumbbells / bands at home", ar: "دمبل وأحزمة في المنزل" },
+      { id: "none", en: "Nothing — bodyweight only", ar: "لا شيء — وزن الجسم فقط" },
+    ],
+  },
+  {
+    id: "limitation",
+    en: "Any ongoing pain anywhere?", ar: "هل لديك ألم مستمر في مكان ما؟",
+    opts: [
+      { id: "none", en: "No", ar: "لا" },
+      { id: "knee", en: "Knee", ar: "الركبة" },
+      { id: "back", en: "Lower back", ar: "أسفل الظهر" },
+      { id: "shoulder", en: "Shoulder", ar: "الكتف" },
+    ],
+  },
+];
+
+// Missing intake, for a client who predates the register page. Not blocking on
+// its own — it is asked in the same breath as the health check because the two
+// are one conversation, and because catching somebody twice is how you get
+// answered once.
+function needsIntake(c) {
+  return !c?.experience || !c?.equipment || !c?.limitation;
 }
 
 // PAR-Q+ ids must match api/_lib/assign.js — the server screens on these.
@@ -3262,6 +3358,12 @@ export default function App() {
                         parq_answers: d.parq_answers,
                         parq_cleared_at: d.cleared ? new Date().toISOString() : null,
                         needs_review: !d.cleared,
+                        ...(d.intake ? {
+                          experience: d.intake.experience,
+                          equipment: d.intake.equipment,
+                          limitation: d.intake.limitation,
+                          days_per_week: d.intake.days_per_week,
+                        } : {}),
                       } : u)}
                     />
                   );

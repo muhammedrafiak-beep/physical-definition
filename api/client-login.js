@@ -34,6 +34,9 @@ const CLIENT_FIELDS = [
   // and clear, so it has to arrive with the login — otherwise the gate would
   // have to guess, and a gate that guesses is worse than none.
   "parq_answers", "parq_cleared_at", "needs_review",
+  // Intake. Every client who predates the signup flow has these as null, and
+  // the app asks for them alongside the health check.
+  "experience", "equipment", "limitation",
 ];
 
 function toPublicClient(row) {
@@ -65,6 +68,9 @@ function toPublicClient(row) {
     parq_answers: out.parq_answers || null,
     parq_cleared_at: out.parq_cleared_at || null,
     needs_review: !!out.needs_review,
+    experience: out.experience || null,
+    equipment: out.equipment || null,
+    limitation: out.limitation || null,
   };
 }
 

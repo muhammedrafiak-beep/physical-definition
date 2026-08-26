@@ -25,7 +25,7 @@ import { randomBytes } from "node:crypto";
 import { requireClient } from "./_lib/client-auth.js";
 import { missingEnv } from "./_lib/admin.js";
 import { checkLimit, recordHit, bucket as rlBucket } from "./_lib/ratelimit.js";
-import { PARQ_QUESTIONS } from "./_lib/assign.js";
+import { PARQ_QUESTIONS, EXPERIENCE, EQUIPMENT, LIMITATION } from "./_lib/assign.js";
 
 const BUCKET = "progress-photos";
 const SIGNED_URL_TTL_SEC = 60 * 60; // an hour is plenty for one screen
@@ -378,8 +378,48 @@ export default async function handler(req, res) {
           answered[q.id] = v;
         }
 
+        // The four intake answers, when the client is being asked for them
+        // too. Every existing client predates the signup flow, so none of
+        // them has an experience level, a days-a-week, an equipment answer or
+        // a pain answer on file — and without those the app is choosing
+        // programmes from a birthday and a guess.
+        //
+        // They are collected here rather than by re-registering these people,
+        // because a new registration means a new row: their sets, sessions and
+        // photos all hang off the id they already have.
+        const intake = body.intake;
+        if (intake !== undefined) {
+          if (!intake || typeof intake !== "object" || Array.isArray(intake)) {
+            return res.status(400).json({ error: "Answer every question first." });
+          }
+          const days = num(intake.daysPerWeek, 1, 7);
+          if (!EXPERIENCE.includes(intake.experience) ||
+              !EQUIPMENT.includes(intake.equipment) ||
+              !LIMITATION.includes(intake.limitation) ||
+              days === null) {
+            return res.status(400).json({ error: "Answer every question first." });
+          }
+        }
+
         const anyYes = Object.values(answered).some(Boolean);
         const patch = { parq_answers: answered };
+
+        if (intake !== undefined) {
+          patch.experience = intake.experience;
+          patch.equipment = intake.equipment;
+          patch.limitation = intake.limitation;
+          patch.days_per_week = num(intake.daysPerWeek, 1, 7);
+        }
+
+        // Reported pain is not a PAR-Q red flag and does not stop anybody
+        // training — they are already training, with a trainer who knows them.
+        // It does need a person to look at it, which is what needs_review
+        // means. See the limitation branch in assign.js.
+        //
+        // Decided here, in one place, and never twice: an earlier draft set it
+        // in the intake block above and then had the all-clear branch below
+        // set it straight back to false, quietly losing the reported pain.
+        const painReported = intake !== undefined && intake.limitation !== "none";
         if (anyYes) {
           // A clearance belongs to the answers it was given for. Somebody
           // cleared last month who reports chest pain today is NOT cleared,
@@ -393,7 +433,7 @@ export default async function handler(req, res) {
         } else {
           patch.parq_cleared_at = new Date().toISOString();
           patch.parq_cleared_by = "self";
-          patch.needs_review = false;
+          patch.needs_review = painReported;
         }
 
         const { error } = await db.from("clients").update(patch).eq("id", me.id);
@@ -403,6 +443,12 @@ export default async function handler(req, res) {
           parq_answers: answered,
           cleared: !anyYes,
           flagged: Object.entries(answered).filter(([, v]) => v).map(([k]) => k),
+          intake: intake === undefined ? null : {
+            experience: patch.experience,
+            equipment: patch.equipment,
+            limitation: patch.limitation,
+            days_per_week: patch.days_per_week,
+          },
         });
       }
 
