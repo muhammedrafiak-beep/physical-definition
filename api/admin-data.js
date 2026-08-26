@@ -250,9 +250,19 @@ export default async function handler(req, res) {
           const anyYes = Object.values(parq).some(Boolean);
           const patch = { parq_answers: parq };
           // parq_cleared_at means "screened and clear", not "screened". A YES
-          // must not set it, or a flagged client would look cleared.
-          if (!anyYes) patch.parq_cleared_at = new Date().toISOString();
-          else patch.needs_review = true;
+          // must not set it — and must also VOID any clearance already there,
+          // which belonged to a different set of answers. Without that, a
+          // client cleared at one assessment stays cleared through the next
+          // one even after reporting chest pain in it.
+          if (!anyYes) {
+            patch.parq_cleared_at = new Date().toISOString();
+            patch.parq_cleared_by = "trainer";
+          } else {
+            patch.parq_cleared_at = null;
+            patch.parq_cleared_by = null;
+            patch.parq_clear_note = null;
+            patch.needs_review = true;
+          }
           const { error: cErr } = await db.from("clients").update(patch).eq("id", clientId);
           if (cErr) console.error("save_assessment: client patch failed -", cErr.message);
         }

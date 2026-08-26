@@ -381,8 +381,14 @@ export default async function handler(req, res) {
         const anyYes = Object.values(answered).some(Boolean);
         const patch = { parq_answers: answered };
         if (anyYes) {
-          // NOT cleared. parq_cleared_at means "screened and clear"; setting it
-          // here would make a flagged client look safe to train.
+          // A clearance belongs to the answers it was given for. Somebody
+          // cleared last month who reports chest pain today is NOT cleared,
+          // and leaving the old timestamp standing let exactly that person
+          // walk straight past the gate — the app read them as safe because
+          // they had been safe once. Void it with the answers it was about.
+          patch.parq_cleared_at = null;
+          patch.parq_cleared_by = null;
+          patch.parq_clear_note = null;
           patch.needs_review = true;
         } else {
           patch.parq_cleared_at = new Date().toISOString();
