@@ -4,6 +4,7 @@ import { WorkoutPlayer } from "./WorkoutPlayer";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
 import { Icon } from "./Icons";
+import { programmeState } from "./programme";
 
 /* ═══════════════════════════════════════════════════════════
    PHYSICAL DEFINITION v7
@@ -95,6 +96,7 @@ const WORKOUT_SYSTEMS = [
     color: "#A63A3A", emoji: "💪",
     desc: "Push / Pull / Legs run TWICE a week (6 days) \u2014 at 3 days each muscle is trained only once, which is too little",
     descAr: "دفع/سحب/أرجل مرتين أسبوعياً (6 أيام) — 3 أيام تعني تدريب كل عضلة مرة واحدة فقط وهو غير كافٍ",
+    weeks: 8, deloadEvery: 4,
     days: [
       {
         name: "Day 1 — Push (Chest, Shoulders, Triceps)",
@@ -136,6 +138,7 @@ const WORKOUT_SYSTEMS = [
     color: "#9A6212", emoji: "⚡",
     desc: "4-day split alternating upper and lower body training",
     descAr: "تقسيم 4 أيام بين الجزء العلوي والسفلي",
+    weeks: 8, deloadEvery: 4,
     days: [
       {
         name: "Day 1 — Upper A (Strength)",
@@ -189,6 +192,7 @@ const WORKOUT_SYSTEMS = [
     color: "#6B4FA8", emoji: "🔥",
     desc: "Seven sets of twelve on the last exercise, thirty seconds' rest — high volume on an isolation movement to finish",
     descAr: "سبع مجموعات من 12 تكراراً في التمرين الأخير، راحة 30 ثانية — حجم عالٍ في تمرين عزل كخاتمة",
+    weeks: 6, deloadEvery: 3,
     days: [
       {
         name: "Day 1 — Chest (FST-7)",
@@ -239,6 +243,7 @@ const WORKOUT_SYSTEMS = [
     color: "#12795A", emoji: "⚡",
     desc: "Pair antagonist muscles — maximum efficiency, time-saving",
     descAr: "تدريب العضلات المتعاكسة معاً — كفاءة عالية",
+    weeks: 8, deloadEvery: 4,
     days: [
       {
         name: "Day 1 — Chest + Back (Superset)",
@@ -280,6 +285,7 @@ const WORKOUT_SYSTEMS = [
     color: "#21509B", emoji: "🔄",
     desc: "Every exercise back-to-back with little rest, three times through — start at three rounds and add a fourth when three stop being hard",
     descAr: "جميع التمارين متتالية مع راحة قليلة",
+    weeks: 8, deloadEvery: 4,
     days: [
       {
         name: "Circuit A — Full Body",
@@ -336,6 +342,7 @@ const WORKOUT_SYSTEMS = [
     color: "#8b5cf6", emoji: "\ud83c\udfcb\ufe0f",
     desc: "3 days a week, whole body each session \u2014 every muscle trained 3\u00d7 weekly, which is what makes it work for beginners",
     descAr: "3 أيام أسبوعياً، الجسم كامل في كل جلسة — كل عضلة 3 مرات أسبوعياً",
+    weeks: 8, deloadEvery: 4,
     days: [
       {
         name: "Day A \u2014 Full Body (Mon)",
@@ -376,6 +383,7 @@ const WORKOUT_SYSTEMS = [
     color: "#A63A3A", emoji: "🔥",
     desc: "High Intensity Interval Training — maximum calorie burn",
     descAr: "تدريب متقطع عالي الكثافة — حرق أقصى للسعرات",
+    weeks: 6, deloadEvery: 3,
     days: [
       {
         name: "HIIT Session 1 — Cardio Intervals (20-30 min)",
@@ -416,6 +424,7 @@ const WORKOUT_SYSTEMS = [
     color: "#0ea5e9", emoji: "🏆",
     desc: "Functional fitness — strength, cardio and gymnastics combined. The benchmark workouts here are scaled: add rounds and load over months, and only once the movements are clean",
     descAr: "لياقة وظيفية — قوة وكارديو وجمباز معاً",
+    weeks: 8, deloadEvery: 4,
     days: [
       // ── Why these two are scaled from the published versions ──
       //
@@ -474,6 +483,7 @@ const WORKOUT_SYSTEMS = [
     color: "#21509B", emoji: "🌟",
     desc: "6-day split by Arnold Schwarzenegger — classic bodybuilding",
     descAr: "تقسيم 6 أيام بأسلوب أرنولد — بناء جسم كلاسيكي",
+    weeks: 6, deloadEvery: 3,
     days: [
       {
         name: "Day 1 & 4 — Chest + Back",
@@ -515,6 +525,7 @@ const WORKOUT_SYSTEMS = [
     color: "#10b981", emoji: "🏠",
     desc: "No equipment needed — train anywhere using only your body weight",
     descAr: "بدون معدات — تدريب في أي مكان بوزن الجسم فقط",
+    weeks: 8, deloadEvery: 4,
     days: [
       {
         name: "Day 1 — Upper Body (Bodyweight)",
@@ -555,6 +566,7 @@ const WORKOUT_SYSTEMS = [
     color: "#06b6d4", emoji: "🧓",
     desc: "Gentle, safe training using resistance bands, foam roller, Pilates ring & self-massage — designed for elderly clients",
     descAr: "تدريب لطيف وآمن باستخدام أحزمة المقاومة وأسطوانة الفوم وحلقة البيلاتس — مصمم لكبار السن",
+    weeks: 12, deloadEvery: 0,
     warmup: [
       { name: "Seated Marching", sets: "1", reps: "60 sec", rest: "0s", notes: "Sit tall, lift knees gently, swing arms" },
       { name: "Ankle Pumps (seated)", sets: "1", reps: "15 each", rest: "0s", notes: "Point and flex — wakes up circulation" },
@@ -655,6 +667,7 @@ const WORKOUT_SYSTEMS = [
     color: "#f43f5e", emoji: "🩹",
     desc: "Gentle core stabilization and mobility work to relieve and prevent lower back pain",
     descAr: "تمارين لطيفة لتقوية الجذع وتحسين الحركة لتخفيف آلام أسفل الظهر",
+    weeks: 6, deloadEvery: 0,
     warmup: [
       { name: "Light Walk in Place", sets: "1", reps: "2 min", rest: "0s", notes: "Raise temperature before any spine work" },
       { name: "Pelvic Tilts (lying)", sets: "1", reps: "10 reps", rest: "0s", notes: "Small, comfortable range" },
@@ -696,6 +709,7 @@ const WORKOUT_SYSTEMS = [
     color: "#8b5cf6", emoji: "💢",
     desc: "Rotator cuff strengthening and mobility to relieve shoulder pain and improve range of motion",
     descAr: "تقوية الكتف وتحسين المرونة لتخفيف الألم",
+    weeks: 6, deloadEvery: 0,
     warmup: [
       { name: "Light Walk in Place", sets: "1", reps: "2 min", rest: "0s", notes: "General warm-up, no arm swinging yet" },
       { name: "Pendulum Swing", sets: "1", reps: "30 sec each arm", rest: "0s", notes: "Lean forward, let the arm hang and swing" },
@@ -738,6 +752,7 @@ const WORKOUT_SYSTEMS = [
     color: "#eab308", emoji: "🦵",
     desc: "Low-impact strength training that protects the knees while building leg strength",
     descAr: "تدريب منخفض التأثير يحمي الركبة مع بناء قوة الأرجل",
+    weeks: 6, deloadEvery: 0,
     warmup: [
       { name: "Stationary Bike or Light Walk", sets: "1", reps: "5 min", rest: "0s", notes: "Best knee warm-up there is — no impact" },
       { name: "Ankle Pumps", sets: "1", reps: "15 each", rest: "0s", notes: "Point and flex" },
@@ -3099,6 +3114,12 @@ export default function App() {
   const [lBusy, setLBusy] = useState(false);
   const [aTab, setATab] = useState("dashboard");
   const [cTab, setCTab] = useState("profile");
+  // The client's finished sessions, used to say where they are in the block.
+  // Fetched once here rather than inside the Train tab so switching tabs does
+  // not re-hit the endpoint, and so the number is already there when the tab
+  // opens instead of appearing a moment later.
+  const [clientLogs, setClientLogs] = useState([]);
+  const [lastAssessedAt, setLastAssessedAt] = useState(null);
   const [showClientPlayer, setShowClientPlayer] = useState(false);
   const [showClientDayPicker, setShowClientDayPicker] = useState(false);
   const [activeDay, setActiveDay] = useState(null);
@@ -3175,6 +3196,27 @@ export default function App() {
       if (latest) setCurUser(latest);
     }
   }, [clients]);
+
+  // The signed-in client's finished sessions. Only fetched for a client — the
+  // admin screens have their own history view and this endpoint scopes to
+  // whoever the token says is signed in, so it would return Rafi's own.
+  useEffect(() => {
+    let cancelled = false;
+    if (screen !== "client" || !curUser?.id) { setClientLogs([]); return; }
+    Promise.all([
+      clientPost({ action: "logs.list" }),
+      clientPost({ action: "assessment.last" }),
+    ])
+      .then(([l, a]) => {
+        if (cancelled) return;
+        setClientLogs(Array.isArray(l.logs) ? l.logs : []);
+        setLastAssessedAt(a?.assessed_at || null);
+      })
+      // A missing session count is not worth interrupting anybody for: the
+      // card simply does not appear.
+      .catch(e => console.error("programme position:", e.message || e));
+    return () => { cancelled = true; };
+  }, [screen, curUser?.id]);
 
   if (window.location.pathname === "/register") {
     return <RegPage lang={lang} setLang={setLang} />;
@@ -3508,6 +3550,54 @@ export default function App() {
                     return (
                       <div>
                         {gate}
+                        {(() => {
+                          // Where they are in the block, and — the point of the
+                          // whole thing — when it is time to measure again.
+                          const pr = programmeState(ws, clientLogs, lastAssessedAt);
+                          if (!pr.weeks) return null;
+                          if (pr.dueRetest) return (
+                            <div className="card" style={{ padding: 18, marginBottom: 16, borderColor: G.accentLine, background: G.accentSoft }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8 }}>
+                                <Icon n="ruler" s={16} c={G.accent} />
+                                <div style={{ fontSize: 12.5, fontWeight: 700, color: G.accent }}>
+                                  {isAr ? "حان وقت القياس" : "Time to measure again"}
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 13, color: G.text, lineHeight: 1.6 }}>
+                                {isAr
+                                  ? `أكملت ${pr.done} جلسة في هذا البرنامج. هذه هي النقطة التي يُعاد فيها القياس — والبرنامج يتبع النتيجة.`
+                                  : `${pr.done} sessions done on this programme. This is the point where it is worth measuring again — and the programme follows the result.`}
+                              </div>
+                              <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi Rafi, I have finished ${pr.done} sessions on ${ws.name}. Ready to be reassessed.`)}`}
+                                target="_blank" rel="noreferrer"
+                                style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 44, padding: "0 18px", marginTop: 13, background: G.greenSoft, border: `1px solid ${G.greenLine}`, borderRadius: 22, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                                <Icon n="whatsapp" s={15} /> {isAr ? "راسل رافي" : "Message Rafi"}
+                              </a>
+                            </div>
+                          );
+                          return (
+                            <div className="card" style={{ padding: "16px 18px", marginBottom: 16 }}>
+                              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+                                <div style={{ fontSize: 10, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600 }}>
+                                  {isAr ? `الأسبوع ${pr.week} من ${pr.weeks}` : `Week ${pr.week} of ${pr.weeks}`}
+                                </div>
+                                <div style={{ fontSize: 12, color: G.muted }}>
+                                  {isAr ? `${pr.done} من ${pr.target} جلسة` : `${pr.done} of ${pr.target} sessions`}
+                                </div>
+                              </div>
+                              <div style={{ height: 5, borderRadius: 3, background: G.soft, marginTop: 10, overflow: "hidden" }}>
+                                <div style={{ height: 5, width: `${Math.round(pr.fraction * 100)}%`, background: G.accent, borderRadius: 3, transition: "width .3s" }} />
+                              </div>
+                              {pr.isDeloadWeek && (
+                                <div style={{ fontSize: 12.5, color: G.text, marginTop: 12, lineHeight: 1.6 }}>
+                                  {isAr
+                                    ? "هذا أسبوع أخف — نفس التمارين، حوالي 60٪ من وزنك المعتاد. الأسبوع الأسهل جزء من البرنامج وليس انقطاعاً عنه."
+                                    : "This is a lighter week — same movements, about 60% of your usual weight. The easier week is part of the programme, not a break from it."}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                         {/* System header */}
                         {/* A programme's colour used to tint this card, the day
                             bar and both buttons, so Push/Pull/Legs arrived in

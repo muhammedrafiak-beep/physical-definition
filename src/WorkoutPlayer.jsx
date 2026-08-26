@@ -408,14 +408,14 @@ export function WorkoutPlayer({
     }
       setSetStarted(exIdx > 0 || setIdx > 1);
       const autoStart = exIdx > 0 || setIdx > 1;
-      const d = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
+      const d = current ? parseExerciseDurationSeconds(inRamp ? `${ramp.reps} reps` : current.exercise.reps) : null;
       setExerciseRemaining(autoStart && d ? d : null);
-  }, [exIdx, setIdx, phase]);
+  }, [exIdx, setIdx, phase, rampDone]);
 
   // Start timer when user presses Start
   useEffect(() => {
     if (!setStarted || phase !== "exercise") return;
-    const dur = current ? parseExerciseDurationSeconds(current.exercise.reps) : null;
+    const dur = current ? parseExerciseDurationSeconds(inRamp ? `${ramp.reps} reps` : current.exercise.reps) : null;
     if (dur) setExerciseRemaining(dur);
     }, [setStarted, exIdx, setIdx, phase]);
 
@@ -921,7 +921,7 @@ export function WorkoutPlayer({
               </button>
             ) : (
               <button onClick={handleSetDone} style={primaryBtnStyle(accentColor)}>
-                {exerciseRemaining !== null ? "Finish early" : inRamp ? "Warm-up done" : `Set ${setIdx} done`}
+                {inRamp ? "Warm-up done" : exerciseRemaining !== null ? "Finish early" : `Set ${setIdx} done`}
               </button>
             )
           ) : (
