@@ -17,6 +17,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { hashPassword } from "./_lib/password.js";
 import { requireAdmin, missingEnv, generatePassword } from "./_lib/admin.js";
+import { assignSystem } from "./_lib/assign.js";
 
 // Columns the browser may see. `password` and `password_hash` are absent by
 // design — do not add them.
@@ -63,10 +64,15 @@ function toRow(c) {
     status: c.status,
     workout_plan: c.workoutPlan, nutrition_plan: c.nutritionPlan,
     workout_system_id: c.workoutSystemId, meal_plan_id: c.mealPlanId,
-    progress: c.progress || [],
-    dob: c.dob || "",
-    trainer_notes: c.trainer_notes || "",
   };
+
+  // These three are only written when the caller actually sent them. They were
+  // written unconditionally with `|| []` and `|| ""` defaults, which meant any
+  // caller updating two fields would silently wipe a client's whole progress
+  // history and their trainer notes along with it.
+  if (c.progress !== undefined) row.progress = c.progress || [];
+  if (c.dob !== undefined) row.dob = c.dob || "";
+  if (c.trainer_notes !== undefined) row.trainer_notes = c.trainer_notes || "";
 
   // Intake answers ride along only when the caller actually has them —
   // approving a registration does, editing a client's weight does not. Writing
@@ -247,7 +253,70 @@ export default async function handler(req, res) {
           if (cErr) console.error("save_assessment: client patch failed -", cErr.message);
         }
 
-        return res.status(200).json({ assessment: data });
+        // Does what was just measured agree with the programme they are on?
+        //
+        // This deliberately does NOT change anything. Software moving an
+        // assessed client onto a different programme on its own is exactly
+        // backwards — it reports the disagreement, and the trainer decides
+        // with the person in front of him.
+        let suggestion = null;
+        try {
+          const { data: c } = await db
+            .from("clients")
+            .select("age, experience, days_per_week, equipment, limitation, workout_system_id, parq_answers")
+            .eq("id", clientId)
+            .single();
+          if (c) {
+            // Destructuring defaults fire on undefined and not on null, and
+            // these columns are null for every client who predates intake.
+            const or = (v) => (v === null ? undefined : v);
+            const parqNow = parq || c.parq_answers || null;
+            const decision = assignSystem({
+              age: or(c.age),
+              experience: or(c.experience),
+              daysPerWeek: or(c.days_per_week),
+              equipment: or(c.equipment),
+              limitation: or(c.limitation),
+              parqFlags: parqNow
+                ? Object.entries(parqNow).filter(([, v]) => v === true).map(([k]) => k)
+                : [],
+              levels: Object.keys(levels).length ? levels : null,
+            });
+            if (decision.systemId && decision.systemId !== c.workout_system_id) {
+              suggestion = {
+                systemId: decision.systemId,
+                current: c.workout_system_id || null,
+                reason: decision.reason,
+                warnings: decision.warnings || [],
+              };
+            }
+          }
+        } catch (e) {
+          // A suggestion is a nicety; the assessment is already saved. Never
+          // fail the save because the advice could not be worked out.
+          console.error("save_assessment: suggestion failed -", e?.message || e);
+        }
+
+        return res.status(200).json({ assessment: data, suggestion });
+      }
+
+      case "set_workout_system": {
+        // Changes the programme and nothing else.
+        //
+        // update_client would also have done it, but that action rebuilds a
+        // row out of whatever the browser sent — so a caller who only knows
+        // the id and the new system would post empty values for everything
+        // else. One narrow action is safer than one careful caller.
+        const clientId = Number(body.clientId);
+        if (!Number.isFinite(clientId)) return res.status(400).json({ error: "clientId is required" });
+
+        const patch = { workout_system_id: body.systemId ? String(body.systemId).slice(0, 40) : null };
+        if (body.reason !== undefined) {
+          patch.assigned_reason = body.reason ? String(body.reason).slice(0, 500) : null;
+        }
+        const { error } = await db.from("clients").update(patch).eq("id", clientId);
+        if (error) throw error;
+        return res.status(200).json({ ok: true });
       }
 
       case "delete_registration": {

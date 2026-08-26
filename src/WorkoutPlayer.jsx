@@ -287,11 +287,19 @@ export function WorkoutPlayer({
   const [lastByExercise, setLastByExercise] = useState({});
   const [entry, setEntry] = useState({ weight: "", reps: "" });
   const [progressed, setProgressed] = useState(false);
+  // Reps in reserve for the set just finished. Optional and one tap — asking
+  // someone to type a number between sets is how a logging screen gets
+  // ignored. Unlike the weight, it is cleared for every set: effort is not
+  // carried over the way a load is.
+  const [rir, setRir] = useState(null);
   // Bodyweight movements hide the weight box, but some people do load them —
   // a dumbbell on the hips for a glute bridge, ankle weights, a vest. This
   // lets them ask for the box back, per exercise.
   const [forceWeight, setForceWeight] = useState(false);
   const savedRef = useRef(new Set());       // "exIdx:setIdx" already written
+  // "exIdx:setIdx" -> seconds actually held, filled in the moment a timed set
+  // ends. A hold is written from here and never from the prescription.
+  const heldRef = useRef(new Map());
 
   // The session row is created lazily, on the first set actually logged. Held
   // as a PROMISE, not an id: two sets saved in quick succession would
@@ -439,6 +447,9 @@ export function WorkoutPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exIdx, lastByExercise]);
 
+  // Effort is asked again for every set, so it starts blank for every set.
+  useEffect(() => { setRir(null); }, [exIdx, setIdx]);
+
   // One session row per workout, created the first time a set is actually
   // logged. Kept as a promise so simultaneous saves share it.
   const getSessionId = useCallback(() => {
@@ -469,8 +480,15 @@ export function WorkoutPlayer({
     const weight = timed ? null : parseFloat(entry.weight);
     const reps = timed ? null : parseInt(entry.reps, 10);
 
+    // How long the hold ACTUALLY lasted, put here by handleSetDone. What used
+    // to be stored was the prescribed number — so a plank was recorded as 30
+    // seconds whether it lasted 30 or 12, and a personal best could never
+    // appear. If the timer never ran there is no honest number to write.
+    const held = timed ? heldRef.current.get(key) : null;
+
     // Nothing worth recording for a weighted set with no numbers in it.
     if (!timed && !Number.isFinite(weight) && !Number.isFinite(reps)) return;
+    if (timed && !Number.isFinite(held)) return;
 
     savedRef.current.add(key);
 
@@ -482,7 +500,8 @@ export function WorkoutPlayer({
         set_no: setIdx,
         weight_kg: Number.isFinite(weight) ? weight : null,
         reps_done: Number.isFinite(reps) ? reps : null,
-        duration_sec: timed ? parseExerciseDurationSeconds(item.exercise.reps) : null,
+        duration_sec: timed ? held : null,
+        rir: Number.isFinite(rir) ? rir : null,
         is_warmup: false,
       }))
       .catch(e => {
@@ -490,7 +509,7 @@ export function WorkoutPlayer({
         console.error("save set:", e.message);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exIdx, setIdx, entry, client, getSessionId]);
+  }, [exIdx, setIdx, entry, rir, client, getSessionId]);
 
   const advanceAfterRest = useCallback(() => {
     saveCurrentSet();
@@ -513,6 +532,24 @@ export function WorkoutPlayer({
   const MOTIVATIONS = ["💪 Great Set!", "🔥 Keep Going!", "⚡ Crushing It!", "🎯 Perfect Form!", "🏆 Beast Mode!"];
   const handleSetDone = () => {
     if (videoRef.current) videoRef.current.pause();
+
+    // Read the clock BEFORE anything resets it. Moving to the rest phase
+    // re-arms the countdown for the next set, so by the time the set is
+    // written this number is gone — which is why it is kept in a ref rather
+    // than read again later.
+    {
+      const item = queue[exIdx];
+      if (item && isTimedExercise(item.exercise.reps)) {
+        const prescribed = parseExerciseDurationSeconds(item.exercise.reps);
+        const left = Number.isFinite(exerciseRemaining) ? Math.max(0, exerciseRemaining) : null;
+        // left === null means the timer never started: nobody watched this
+        // hold, so nothing is recorded for it.
+        if (Number.isFinite(prescribed) && left !== null) {
+          heldRef.current.set(`${exIdx}:${setIdx}`, Math.max(0, prescribed - left));
+        }
+      }
+    }
+
     setSetStarted(false);
     const msg = MOTIVATIONS[Math.floor(Math.random() * MOTIVATIONS.length)];
     setMotivation(msg);
@@ -706,6 +743,35 @@ export function WorkoutPlayer({
                       + add weight
                     </button>
                   )}
+                  {/* Reps in reserve, asked in words rather than jargon. Four
+                      taps, all optional — a set with no answer here is still a
+                      set, and pretending otherwise would cost the logging. */}
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 10, color: "#777", textAlign: "center", marginBottom: 6, letterSpacing: 1 }}>
+                      HOW MANY MORE COULD YOU HAVE DONE?
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {[
+                        { v: 3, label: "3+" },
+                        { v: 2, label: "2" },
+                        { v: 1, label: "1" },
+                        { v: 0, label: "None" },
+                      ].map((o) => {
+                        const on = rir === o.v;
+                        return (
+                          <button key={o.v} type="button"
+                            onClick={() => setRir(on ? null : o.v)}
+                            style={{
+                              flex: 1, padding: "8px 0", borderRadius: 8, cursor: "pointer",
+                              fontSize: 12, fontWeight: 700,
+                              background: on ? accentColor : "rgba(255,255,255,0.06)",
+                              color: on ? "#000" : "#999",
+                              border: `1px solid ${on ? accentColor : "rgba(255,255,255,0.12)"}`,
+                            }}>{o.label}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   {progressed && (
                     <div style={{ marginTop: 10, textAlign: "center", fontSize: 11, color: "#22c55e", fontWeight: 700 }}>
                       You hit the top of the range last time - this is a step up

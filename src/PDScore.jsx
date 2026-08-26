@@ -1,6 +1,24 @@
 ﻿import { useEffect, useRef, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
+
+// The leaderboard used to be read and written straight from here with the
+// anon key — the last place in src/ that did. Two things were wrong with it:
+// the key is public because it ships in this bundle, and the score arrived
+// with whatever client_id and client_name the browser felt like sending. Both
+// now come from the signed session token on the server; see api/pd-score.js.
+const clientToken = () => {
+  try { return sessionStorage.getItem("pd_token") || ""; } catch { return ""; }
+};
+
+async function api(action, payload = {}) {
+  const r = await fetch("/api/pd-score", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken()}` },
+    body: JSON.stringify({ action, ...payload }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "That didn't work. Try again.");
+  return d;
+}
 
 const G = { gold:"#d4af37", bg:"#0d0d0d", surf:"#181818", surf2:"#1a1a1a", green:"#22c55e", red:"#ef4444", muted:"#666", text:"#fff", border:"#2a2a2a" };
 
@@ -52,17 +70,24 @@ export function PDScore({ client, onClose }) {
   const [board, setBoard] = useState([]);
   const [best, setBest] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState("");
   const [finalScore, setFinalScore] = useState(null);
   const [showHow, setShowHow] = useState(false);
 
   useEffect(() => { loadBoard(); return () => stopCam(); }, []);
 
   async function loadBoard(){
-    const { data } = await supabase.from("pd_scores").select("*").order("pd_score",{ascending:false}).limit(50);
-    if (data) {
-      setBoard(data);
-      const mine = data.filter(r => String(r.client_id) === String(client?.id));
-      if (mine.length) setBest(mine[0]);
+    try {
+      // The server marks the caller's own rows; ids of other people never
+      // leave it. Rows come back best first, so the first one that is mine is
+      // my best.
+      const { board } = await api("board");
+      const rows = board || [];
+      setBoard(rows);
+      setBest(rows.find(r => r.mine) || null);
+    } catch (e) {
+      // A leaderboard that will not load must not stop somebody training.
+      console.error("pd-score board:", e.message);
     }
   }
 
@@ -175,15 +200,18 @@ export function PDScore({ client, onClose }) {
     setFinalScore({ total, score, tier: tier(total) });
     setScreen("done");
     setSaving(true);
-    await supabase.from("pd_scores").insert([{
-      client_id: String(client?.id || ""),
-      client_name: client?.name || "Unknown",
-      total_seconds: total,
-      pd_score: score,
-      scaled: false,
-      station_times: times,
-    }]);
-    setSaving(false);
+    try {
+      // Only the time and the station splits are sent. The name on the board
+      // and the score itself are worked out on the server from the session —
+      // a leaderboard anyone can type into is not a leaderboard.
+      await api("submit", { totalSeconds: total, scaled: false, stationTimes: times });
+    } catch (e) {
+      // The effort was real and the result is already on screen. Say the
+      // saving failed rather than pretending it worked.
+      setSaveErr(e.message);
+    } finally {
+      setSaving(false);
+    }
     loadBoard();
   }
 
@@ -336,7 +364,7 @@ export function PDScore({ client, onClose }) {
         <div style={{ fontSize:11,color:G.muted,letterSpacing:1,textTransform:"uppercase",marginBottom:8 }}>Global leaderboard</div>
         {board.length===0 && <div style={{ fontSize:13,color:G.muted,padding:"12px 0" }}>No scores yet — be the first.</div>}
         {board.map((r,i) => (
-          <div key={r.id} style={{ display:"flex",alignItems:"center",gap:11,padding:"11px 13px",background:String(r.client_id)===String(client?.id)?"rgba(212,175,55,0.07)":G.surf,border:`1px solid ${String(r.client_id)===String(client?.id)?"rgba(212,175,55,0.3)":G.border}`,borderRadius:11,marginBottom:6 }}>
+          <div key={r.id} style={{ display:"flex",alignItems:"center",gap:11,padding:"11px 13px",background:r.mine?"rgba(212,175,55,0.07)":G.surf,border:`1px solid ${r.mine?"rgba(212,175,55,0.3)":G.border}`,borderRadius:11,marginBottom:6 }}>
             <div style={{ fontSize:14,fontWeight:800,color:i<3?G.gold:G.muted,width:26,flexShrink:0 }}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`}</div>
             <div style={{ flex:1,fontSize:14,color:"#fff",fontWeight:500 }}>{r.client_name}</div>
             <div style={{ fontSize:12,color:"#888" }}>{fmt(r.total_seconds)}</div>
@@ -366,6 +394,11 @@ export function PDScore({ client, onClose }) {
         <div style={{ fontSize:17,color:"#fff",marginTop:6 }}>{fmt(finalScore.total)}</div>
         <div style={{ display:"inline-block",marginTop:10,padding:"5px 16px",borderRadius:20,background:"rgba(255,255,255,0.06)",color:finalScore.tier.c,fontWeight:700,fontSize:13 }}>{finalScore.tier.n}</div>
         {saving && <div style={{ fontSize:12,color:G.muted,marginTop:10 }}>Saving...</div>}
+        {saveErr && (
+          <div style={{ fontSize:12,color:G.red,marginTop:10,lineHeight:1.6 }}>
+            Your result is above, but it could not be saved to the leaderboard — {saveErr}
+          </div>
+        )}
       </div>
       {times.map((t,i) => (
         <div key={i} style={{ display:"flex",justifyContent:"space-between",padding:"10px 14px",background:G.surf,border:`1px solid ${G.border}`,borderRadius:10,marginBottom:6 }}>
