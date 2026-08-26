@@ -143,7 +143,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
         </div>
         {onTakeNew && (
           <button type="button" className="btn" onClick={onTakeNew}
-            style={{ width: "100%", marginTop: 14, padding: "12px", borderRadius: 10, background: G.grad, color: "#000", fontWeight: 700, fontSize: 14 }}>
+            style={{ width: "100%", marginTop: 14, padding: "12px", borderRadius: 10, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 14 }}>
             Take the first assessment
           </button>
         )}
@@ -187,7 +187,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
                 <button key={r.id} type="button" className="btn" onClick={() => setAgainstId(r.id)}
                   style={{
                     padding: "5px 10px", borderRadius: 7, fontSize: 11, fontWeight: 700,
-                    background: on ? "rgba(212,175,55,0.14)" : G.surf2,
+                    background: on ? "#E8EEF8" : G.surf2,
                     color: on ? G.gold : G.muted,
                     border: `1px solid ${on ? G.borderHi : G.border}`,
                   }}>{fmtDate(r.assessed_at)}</button>
@@ -209,7 +209,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
         const down = a !== null && b !== null && b < a;
         const tone = up ? G.green : down ? G.amber : G.text;
         return (
-          <div key={cap.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${up ? "rgba(34,197,94,0.3)" : G.border}`, borderRadius: 9, marginBottom: 7 }}>
+          <div key={cap.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${up ? "#C9E3D8" : G.border}`, borderRadius: 9, marginBottom: 7 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: G.text }}>{cap.name}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: tone }}>
@@ -290,7 +290,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
             What this changed in the sessions
           </H>
           {movement.gained.length > 0 && (
-            <div style={{ padding: "11px 13px", background: "rgba(34,197,94,0.07)", border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 9, marginBottom: 7 }}>
+            <div style={{ padding: "11px 13px", background: "#E6F2ED", border: `1px solid #C9E3D8`, borderRadius: 9, marginBottom: 7 }}>
               <div style={{ fontSize: 11, color: G.green, fontWeight: 700, marginBottom: 6 }}>
                 ✓ NOW IN THE SESSIONS ({movement.gained.length})
               </div>
@@ -300,7 +300,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
             </div>
           )}
           {movement.lost.length > 0 && (
-            <div style={{ padding: "11px 13px", background: "rgba(245,158,11,0.07)", border: `1px solid ${G.amber}`, borderRadius: 9, marginBottom: 7 }}>
+            <div style={{ padding: "11px 13px", background: "#FBF2E3", border: `1px solid ${G.amber}`, borderRadius: 9, marginBottom: 7 }}>
               <div style={{ fontSize: 11, color: G.amber, fontWeight: 700, marginBottom: 6 }}>
                 HELD BACK AGAIN ({movement.lost.length})
               </div>

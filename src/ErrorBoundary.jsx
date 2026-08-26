@@ -39,18 +39,18 @@ export class ErrorBoundary extends Component {
 
     return (
       <div style={{
-        minHeight: "100vh", background: "#0d0d0d", color: "#fff",
+        minHeight: "100vh", background: "#F3F6FA", color: "#0E2035",
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 24, fontFamily: "Inter, system-ui, sans-serif",
+        padding: 24, fontFamily: "'Public Sans', ui-sans-serif, system-ui, sans-serif",
       }}>
         <div style={{ maxWidth: 420, width: "100%" }}>
-          <div style={{ fontSize: 12, letterSpacing: 2, color: "#d4af37", textTransform: "uppercase", fontWeight: 700 }}>
+          <div style={{ fontSize: 11, letterSpacing: ".09em", color: "#5C6D84", textTransform: "uppercase", fontWeight: 600 }}>
             Physical Definition
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: "14px 0 0" }}>
+          <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 27, fontWeight: 400, lineHeight: 1.15, margin: "12px 0 0" }}>
             Something in the app broke.
           </h1>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#aaa", marginTop: 12 }}>
+          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#5C6D84", marginTop: 12 }}>
             This is a fault in the app, not something you did. Anything already
             saved is safe — sets are written as you finish them, not at the end.
           </p>
@@ -58,13 +58,13 @@ export class ErrorBoundary extends Component {
             type="button"
             onClick={() => window.location.reload()}
             style={{
-              width: "100%", marginTop: 20, padding: "13px", borderRadius: 10, border: "none",
-              background: "linear-gradient(135deg,#d4af37,#f0d060)", color: "#000",
-              fontWeight: 700, fontSize: 15, cursor: "pointer",
+              width: "100%", marginTop: 22, minHeight: 52, borderRadius: 12, border: "none",
+              background: "linear-gradient(180deg,#16304F,#0E2035)", color: "#FCFCFD",
+              fontWeight: 600, fontSize: 15, cursor: "pointer",
             }}>
             Reload the app
           </button>
-          <div style={{ fontSize: 11, color: "#555", marginTop: 16, lineHeight: 1.6, wordBreak: "break-word" }}>
+          <div style={{ fontSize: 11.5, color: "#93A2B7", marginTop: 16, lineHeight: 1.6, wordBreak: "break-word" }}>
             If it keeps happening, send your trainer this line: {message || "unknown error"}
           </div>
         </div>

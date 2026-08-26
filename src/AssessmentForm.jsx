@@ -158,7 +158,7 @@ export function AssessmentForm({
                 setSaving(false);
               }
             }}
-            style={{ flex: 1, padding: "12px", borderRadius: 10, background: G.grad, color: "#000", fontWeight: 700, fontSize: 13 }}>
+            style={{ flex: 1, padding: "12px", borderRadius: 10, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 13 }}>
             {saving ? "Changing…" : `Move to ${systemName(suggestion.systemId)}`}
           </button>
           <button type="button" className="btn" onClick={onClose} disabled={saving}
@@ -196,7 +196,7 @@ export function AssessmentForm({
                   onClick={() => setParqAns(p => ({ ...p, [q.id]: val }))}
                   style={{
                     background: v === val ? (val ? G.red : G.green) : G.surf2,
-                    color: v === val ? "#fff" : G.muted,
+                    color: v === val ? "#FCFCFD" : G.muted,
                     border: `1px solid ${v === val ? "transparent" : G.border}`,
                   }}>{label}</button>
               ))}
@@ -205,7 +205,7 @@ export function AssessmentForm({
         );
       })}
       {parqFlags.length > 0 && (
-        <div style={{ marginTop: 10, padding: "10px 12px", background: "rgba(239,68,68,0.08)", border: `1px solid ${G.red}`, borderRadius: 8 }}>
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "#FBECEC", border: `1px solid ${G.red}`, borderRadius: 8 }}>
           <div style={{ fontSize: 11, color: G.red, fontWeight: 700 }}>⚠ {parqFlags.length} flagged</div>
           <div style={{ fontSize: 11, color: G.muted, marginTop: 5, lineHeight: 1.5 }}>
             Saving this records the answers and marks them for review. It does not clear them to train.
@@ -229,7 +229,7 @@ export function AssessmentForm({
                   onClick={() => setLevel(cap.id, l.level)}
                   style={{
                     textAlign: "left", padding: "8px 11px", borderRadius: 8, fontSize: 11.5,
-                    background: on ? "rgba(212,175,55,0.14)" : G.surf2,
+                    background: on ? "#E8EEF8" : G.surf2,
                     color: on ? G.gold : G.muted,
                     border: `1px solid ${on ? G.borderHi : G.border}`,
                     fontWeight: on ? 700 : 500,
@@ -295,7 +295,7 @@ export function AssessmentForm({
             </div>
           </div>
           {verdict.blocked.map(b => (
-            <div key={b.name} style={{ padding: "7px 10px", background: "rgba(239,68,68,0.06)", border: `1px solid ${G.border}`, borderRadius: 7, marginBottom: 5 }}>
+            <div key={b.name} style={{ padding: "7px 10px", background: "#FBECEC", border: `1px solid ${G.border}`, borderRadius: 7, marginBottom: 5 }}>
               <div style={{ fontSize: 11.5, color: G.text }}>{b.name}</div>
               {b.reasons.map(r => (
                 <div key={r.id} style={{ fontSize: 10, color: G.red, marginTop: 2 }}>
@@ -318,7 +318,7 @@ export function AssessmentForm({
 
       <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
         <button type="button" className="btn" onClick={save} disabled={saving}
-          style={{ flex: 1, padding: "12px", borderRadius: 10, background: G.grad, color: "#000", fontWeight: 700, fontSize: 14 }}>
+          style={{ flex: 1, padding: "12px", borderRadius: 10, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 14 }}>
           {saving ? "Saving…" : "Save assessment"}
         </button>
         <button type="button" className="btn" onClick={onClose}

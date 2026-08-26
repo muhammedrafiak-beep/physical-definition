@@ -136,7 +136,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
           ctx.drawImage(res.image,0,0,cv.width,cv.height);
           if (res.poseLandmarks) {
             drawConnectors(ctx,res.poseLandmarks,window.POSE_CONNECTIONS,{color:"rgba(34,197,94,0.8)",lineWidth:3});
-            drawLandmarks(ctx,res.poseLandmarks,{color:"#d4af37",fillColor:"rgba(212,175,55,0.3)",lineWidth:2,radius:5});
+            drawLandmarks(ctx,res.poseLandmarks,{color:"#8FB4EA",fillColor:"rgba(212,175,55,0.3)",lineWidth:2,radius:5});
             analyze(res.poseLandmarks.map(p=>({...p,x:1-p.x})));
           }
           ctx.restore();
@@ -181,11 +181,11 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
 
   useEffect(() => { return () => { stopCamera(); }; }, []);
 
-  const G = { gold:"#d4af37", bg:"#0d0d0d", surf:"#181818", surf2:"#1a1a1a", green:"#22c55e", red:"#ef4444", muted:"#666", text:"#fff" };
+  const G = { gold:"#8FB4EA", bg:"#0E2035", surf:"#152B45", surf2:"#1B3350", green:"#22c55e", red:"#ef4444", muted:"#666", text:"#fff" };
 
   if (showPrivacy) return (
     <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
-      <div style={{ background:G.surf,borderRadius:20,padding:28,maxWidth:360,width:"100%",border:"1px solid #2a2a2a" }}>
+      <div style={{ background:G.surf,borderRadius:20,padding:28,maxWidth:360,width:"100%",border:"1px solid #24405F" }}>
         <div style={{ fontSize:40,textAlign:"center",marginBottom:16 }}>🔒</div>
         <div style={{ fontSize:18,fontWeight:700,color:G.gold,textAlign:"center",marginBottom:8 }}>Your Privacy is Protected</div>
         <div style={{ fontSize:13,color:"#aaa",lineHeight:1.8,marginBottom:20 }}>
@@ -212,7 +212,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
   return (
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,display:"flex",flexDirection:"column",userSelect:"none" }}>
       {/* Header */}
-      <div style={{ padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #1a1a1a",flexShrink:0 }}>
+      <div style={{ padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #1B3350",flexShrink:0 }}>
         <div style={{ fontSize:15,fontWeight:600,color:G.gold,display:"flex",alignItems:"center",gap:8 }}>
           🤖 AI Form Check
           {running && <span style={{ width:8,height:8,borderRadius:"50%",background:G.green,boxShadow:`0 0 8px ${G.green}`,display:"inline-block" }}/>}
@@ -223,7 +223,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
       {/* Exercise tabs */}
       <div style={{ display:"flex",gap:6,padding:"10px 16px",overflowX:"auto",flexShrink:0,scrollbarWidth:"none" }}>
         {exercises.map(ex => (
-          <button key={ex} onClick={() => switchEx(ex)} style={{ padding:"6px 14px",borderRadius:20,border:`1px solid ${curEx===ex?G.gold:"#2a2a2a"}`,background:curEx===ex?G.gold:"transparent",color:curEx===ex?"#000":"#666",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",fontWeight:curEx===ex?700:400 }}>
+          <button key={ex} onClick={() => switchEx(ex)} style={{ padding:"6px 14px",borderRadius:20,border:`1px solid ${curEx===ex?G.gold:"#24405F"}`,background:curEx===ex?G.gold:"transparent",color:curEx===ex?"#000":"#666",fontSize:12,cursor:"pointer",whiteSpace:"nowrap",fontWeight:curEx===ex?700:400 }}>
             {exLabels[ex]}
           </button>
         ))}
@@ -237,11 +237,11 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
         {/* HUD overlay */}
         {running && (
           <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:16,pointerEvents:"none" }}>
-            <div style={{ background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",display:"inline-flex",flexDirection:"column",alignItems:"center",width:"fit-content",border:"1px solid #2a2a2a" }}>
+            <div style={{ background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",display:"inline-flex",flexDirection:"column",alignItems:"center",width:"fit-content",border:"1px solid #24405F" }}>
               <div style={{ fontSize:11,color:G.muted,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2 }}>{cfg.label}</div>
               <div style={{ fontSize:56,fontWeight:700,color:G.gold,lineHeight:1 }}>{curEx==="plank" ? plankSec+"s" : reps}{targetNum && curEx!=="plank" ? <span style={{ fontSize:22,color:"#666" }}>/{targetNum}</span> : null}</div>
             </div>
-            <div style={{ position:"absolute",top:"50%",right:16,transform:"translateY(-50%)",background:"rgba(0,0,0,0.7)",borderRadius:12,padding:"12px 14px",textAlign:"center",border:"1px solid #2a2a2a" }}>
+            <div style={{ position:"absolute",top:"50%",right:16,transform:"translateY(-50%)",background:"rgba(0,0,0,0.7)",borderRadius:12,padding:"12px 14px",textAlign:"center",border:"1px solid #24405F" }}>
               <div style={{ fontSize:26,fontWeight:600,color:G.gold }}>{angle}°</div>
               <div style={{ fontSize:10,color:G.muted,textTransform:"uppercase",letterSpacing:1 }}>{cfg.angleLabel}</div>
             </div>
@@ -249,7 +249,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
               <div style={{ padding:"8px 16px",borderRadius:20,fontSize:13,fontWeight:600,display:"inline-flex",alignItems:"center",gap:6,width:"fit-content",background:formGood?"rgba(34,197,94,0.85)":"rgba(239,68,68,0.85)",color:formGood?"#000":"#fff" }}>
                 {formGood ? "✅ Good Form" : "⚠️ Fix Form"}
               </div>
-              <div style={{ background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)",padding:"10px 14px",borderRadius:12,fontSize:13,color:"#e5e5e5",border:"1px solid #2a2a2a",maxWidth:280 }}>
+              <div style={{ background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)",padding:"10px 14px",borderRadius:12,fontSize:13,color:"#e5e5e5",border:"1px solid #24405F",maxWidth:280 }}>
                 {formTip || cfg.tip}
               </div>
               <div style={{ fontSize:11,color:"rgba(255,255,255,0.2)" }}>© Physical Definition · {clientName || ""}</div>
@@ -262,7 +262,7 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
           <div style={{ position:"absolute",inset:0,background:"#111",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14 }}>
             {loading ? (
               <>
-                <div style={{ width:44,height:44,border:"3px solid #1a1a1a",borderTopColor:G.gold,borderRadius:"50%",animation:"spin 0.8s linear infinite" }}/>
+                <div style={{ width:44,height:44,border:"3px solid #1B3350",borderTopColor:G.gold,borderRadius:"50%",animation:"spin 0.8s linear infinite" }}/>
                 <div style={{ color:G.gold,fontSize:14,fontWeight:500 }}>Loading AI model...</div>
               </>
             ) : (
@@ -277,11 +277,11 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
       </div>
 
       {/* Controls */}
-      <div style={{ padding:"12px 16px",display:"flex",gap:8,borderTop:"1px solid #1a1a1a",flexShrink:0 }}>
+      <div style={{ padding:"12px 16px",display:"flex",gap:8,borderTop:"1px solid #1B3350",flexShrink:0 }}>
         <button onClick={running ? stopCamera : startCamera} style={{ flex:1,padding:"14px",border:"none",borderRadius:12,fontSize:15,fontWeight:700,cursor:"pointer",background:running?G.red:G.gold,color:running?"#fff":"#000" }}>
           {loading ? "Loading..." : running ? "⏹ Stop Camera" : "📷 Start Camera"}
         </button>
-        <button onClick={() => { stageRef.current="up"; repsRef.current=0; setReps(0); setPlankSec(0); }} style={{ padding:"14px 18px",border:"1px solid #2a2a2a",borderRadius:12,background:"transparent",color:"#999",fontSize:14,cursor:"pointer" }}>↺</button>
+        <button onClick={() => { stageRef.current="up"; repsRef.current=0; setReps(0); setPlankSec(0); }} style={{ padding:"14px 18px",border:"1px solid #24405F",borderRadius:12,background:"transparent",color:"#999",fontSize:14,cursor:"pointer" }}>↺</button>
       </div>
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
