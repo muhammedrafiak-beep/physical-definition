@@ -145,9 +145,30 @@ function flattenWorkout(workoutSystem, dayFilter, levels) {
     ? workoutSystem.days.filter((d) => d.name === dayFilter)
     : workoutSystem.days;
   days.forEach((day) => {
-    (day.exercises || []).forEach((ex) => {
-      if (gate(ex)) list.push({ dayName: day.name, exercise: ex });
-    });
+    // A circuit is the whole list repeated, not each exercise repeated. The
+    // rounds used to live only in the day's NAME — "Repeat 3-4 rounds" — so
+    // the player ran the list once and called the session finished. Somebody
+    // following it did a third of the programme they were given.
+    //
+    // Warm-up and cool-down stay outside the loop: they are done once.
+    const rounds = Math.max(1, Math.min(10, Number(day.rounds) || 1));
+    for (let round = 1; round <= rounds; round++) {
+      (day.exercises || []).forEach((ex) => {
+        if (!gate(ex)) return;
+        // A descending ladder — 21-15-9 and the like — is one exercise whose
+        // reps change every round. Without this the player would repeat the
+        // first number three times, which is a different and much harder
+        // workout than the one written down.
+        const reps = Array.isArray(ex.repsByRound) && ex.repsByRound[round - 1] !== undefined
+          ? String(ex.repsByRound[round - 1])
+          : ex.reps;
+        list.push({
+          dayName: day.name,
+          exercise: reps === ex.reps ? ex : { ...ex, reps },
+          round, rounds,
+        });
+      });
+    }
   });
   resolveCooldown(workoutSystem).forEach(ex => list.push({ dayName: "🧘 Cool-down", exercise: ex }));
   return list;
@@ -161,6 +182,8 @@ function countHeldBack(workoutSystem, dayFilter, levels) {
   const days = dayFilter ? workoutSystem.days.filter(d => d.name === dayFilter) : workoutSystem.days;
   let n = 0;
   for (const day of days) {
+    // Counted once per movement, not once per round — "3 movements are not in
+    // this session yet" is the useful sentence, not "9".
     for (const ex of day.exercises || []) {
       if (!meetsRequirement(levels, getExerciseRequirement(ex.name))) n++;
     }
@@ -476,6 +499,15 @@ export function WorkoutPlayer({
     const key = `${exIdx}:${setIdx}`;
     if (savedRef.current.has(key)) return;
 
+    // The stored set number has to be unique for this exercise across the
+    // whole session, and a circuit brings the same exercise back every round.
+    // Without the round in here, round 2 would upsert straight over round 1
+    // (the table is unique on session + exercise + set_no) and a three-round
+    // circuit would be recorded as one.
+    const setsPerRound = parseSets(item.exercise.sets);
+    const roundNo = Number(item.round) || 1;
+    const setNo = (roundNo - 1) * setsPerRound + setIdx;
+
     const timed = isTimedExercise(item.exercise.reps);
     const weight = timed ? null : parseFloat(entry.weight);
     const reps = timed ? null : parseInt(entry.reps, 10);
@@ -497,7 +529,7 @@ export function WorkoutPlayer({
         action: "sets.add",
         sessionId,
         exercise_name: item.exercise.name,
-        set_no: setIdx,
+        set_no: setNo,
         weight_kg: Number.isFinite(weight) ? weight : null,
         reps_done: Number.isFinite(reps) ? reps : null,
         duration_sec: timed ? held : null,
@@ -647,6 +679,7 @@ export function WorkoutPlayer({
       <div style={playerCardStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px" }}>
           <span style={{ color: "#999", fontSize: 13, fontWeight: 600 }}>
+            {current.rounds > 1 && <span style={{ color: accentColor }}>Round {current.round}/{current.rounds} &middot; </span>}
             {current.dayName} &middot; Exercise {exIdx + 1}/{queue.length}
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

@@ -277,11 +277,15 @@ const WORKOUT_SYSTEMS = [
   {
     id: "circuit", level: "beginner", name: "Circuit Training", nameAr: "التدريب الدائري",
     color: "#60a5fa", emoji: "🔄",
-    desc: "All exercises back-to-back with minimal rest — fat burn + conditioning",
+    desc: "Every exercise back-to-back with little rest, three times through — start at three rounds and add a fourth when three stop being hard",
     descAr: "جميع التمارين متتالية مع راحة قليلة",
     days: [
       {
-        name: "Circuit A — Full Body (Repeat 3-4 rounds)",
+        name: "Circuit A — Full Body",
+        // The rounds are DATA, not a line in the title. Written as a name, the
+        // player had no way to know about them and ran the list once — a third
+        // of the session, delivered as if it were the whole thing.
+        rounds: 3,
         exercises: [
           { name: "Jump Squats", sets: "1", reps: "15", rest: "15s", notes: "Explosive" },
           { name: "Push-ups", sets: "1", reps: "15", rest: "15s", notes: "" },
@@ -293,7 +297,11 @@ const WORKOUT_SYSTEMS = [
         ]
       },
       {
-        name: "Circuit B — Upper Body Focus (Repeat 3-4 rounds)",
+        name: "Circuit B — Upper Body Focus",
+        // The rounds are DATA, not a line in the title. Written as a name, the
+        // player had no way to know about them and ran the list once — a third
+        // of the session, delivered as if it were the whole thing.
+        rounds: 3,
         exercises: [
           { name: "Pull-ups / Assisted Pull-ups", sets: "1", reps: "10", rest: "15s", notes: "" },
           { name: "Dumbbell Press", sets: "1", reps: "12", rest: "15s", notes: "" },
@@ -305,7 +313,11 @@ const WORKOUT_SYSTEMS = [
         ]
       },
       {
-        name: "Circuit C — Lower Body + Core (Repeat 3-4 rounds)",
+        name: "Circuit C — Lower Body + Core",
+        // The rounds are DATA, not a line in the title. Written as a name, the
+        // player had no way to know about them and ran the list once — a third
+        // of the session, delivered as if it were the whole thing.
+        rounds: 3,
         exercises: [
           { name: "Goblet Squat", sets: "1", reps: "15", rest: "15s", notes: "" },
           { name: "Hip Thrust", sets: "1", reps: "15", rest: "15s", notes: "" },
@@ -401,22 +413,47 @@ const WORKOUT_SYSTEMS = [
   {
     id: "crossfit", level: "advanced", name: "CrossFit Style", nameAr: "أسلوب كروسفيت",
     color: "#0ea5e9", emoji: "🏆",
-    desc: "Functional fitness — strength, cardio, and gymnastics combined",
+    desc: "Functional fitness — strength, cardio and gymnastics combined. The benchmark workouts here are scaled: add rounds and load over months, and only once the movements are clean",
     descAr: "لياقة وظيفية — قوة وكارديو وجمباز معاً",
     days: [
+      // ── Why these two are scaled from the published versions ──
+      //
+      // "Fran" as written is 45 thrusters at 42.5 kg and 45 pull-ups for time;
+      // "Cindy" is as many rounds as possible in 20 minutes, which is commonly
+      // 15-20 rounds — 75-100 pull-ups and 150-200 push-ups. Two things in the
+      // literature say a person meeting this through an app should not be
+      // handed those numbers:
+      //
+      //   - Novices in CrossFit are injured at 9.5-10.6 per 1000 hours against
+      //     0.74-3.3 for experienced participants; 14.9% were injured inside
+      //     eight weeks, lower back and knee first. An introductory class made
+      //     no measurable difference. (Pediatr/Sports Med prospective cohort,
+      //     PMC7077206.)
+      //   - The rhabdomyolysis case reviews centre on exactly this shape of
+      //     work: high-repetition pull-ups and chin-ups, 100+ push-ups, and
+      //     "Murph". The two biggest risk factors are being unfamiliar with
+      //     the training and coming back after a break. (Apunts systematic
+      //     review, 63 cases.)
+      //
+      // So the ladder is shorter, the pull is horizontal, and the AMRAP has a
+      // round ceiling instead of an open clock. The published versions are
+      // named in the notes as what these progress towards — scaled is not the
+      // same as hidden.
       {
-        name: "WOD 1 — \"Fran\" Style",
+        name: "WOD 1 — \"Fran\" (scaled)",
+        rounds: 3,
         exercises: [
-          { name: "Thrusters (Barbell 42.5kg)", sets: "3 rounds", reps: "21-15-9", rest: "As needed", notes: "For time" },
-          { name: "Pull-ups", sets: "3 rounds", reps: "21-15-9", rest: "As needed", notes: "For time" },
+          { name: "Thrusters (Barbell 30kg)", sets: "1", reps: "15", repsByRound: [15, 12, 9], rest: "As needed", notes: "For time. Rx is 42.5kg — earn it over months, not weeks" },
+          { name: "Ring Rows", sets: "1", reps: "15", repsByRound: [15, 12, 9], rest: "As needed", notes: "Rx is strict pull-ups. High-rep pull-ups are the single most common trigger in the rhabdomyolysis case reports — this is the horizontal version of the same pull" },
         ]
       },
       {
-        name: "WOD 2 — AMRAP 20 min",
+        name: "WOD 2 — \"Cindy\" (5 rounds, 20 min cap)",
+        rounds: 5,
         exercises: [
-          { name: "5 Pull-ups", sets: "AMRAP", reps: "As many rounds as possible", rest: "0s", notes: "20 min clock" },
-          { name: "10 Push-ups", sets: "AMRAP", reps: "", rest: "0s", notes: "" },
-          { name: "15 Air Squats", sets: "AMRAP", reps: "", rest: "0s", notes: "" },
+          { name: "Pull-ups", sets: "1", reps: "5", rest: "0s", notes: "Band-assisted or ring rows if 5 strict is not there yet" },
+          { name: "Push-ups", sets: "1", reps: "10", rest: "0s", notes: "" },
+          { name: "Air Squats", sets: "1", reps: "15", rest: "60s", notes: "Rest here, then the next round. Stop at 20 minutes even if rounds are left" },
         ]
       },
       {

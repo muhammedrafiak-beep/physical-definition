@@ -213,6 +213,11 @@ export const EXERCISE_META = {
   "Supine Figure-4 Glute Stretch":               { p: ["Mobility"], s: ["Glutes","Hip Abductors"], eq: ["bodyweight"] },
   "T-Bar Row":                                   { p: ["Mid Back"], s: ["Lats","Biceps"], eq: ["barbell","machine"] },
   "Thrusters (Barbell 42.5kg)":                  { p: ["Quads","Delts"], s: ["Glutes","Cardio"], eq: ["barbell"] },
+  "Thrusters (Barbell 30kg)":                    { p: ["Quads","Delts"], s: ["Glutes","Cardio"], eq: ["barbell"] },
+  // The horizontal pull that stands in for high-rep pull-ups in the scaled
+  // benchmark workouts. Same muscles, a fraction of the systemic cost.
+  "Ring Rows":                                   { p: ["Mid Back"], s: ["Lats","Biceps","Rear Delts"], eq: ["rings"] },
+  "Air Squats":                                  { p: ["Quads"], s: ["Glutes","Core"], eq: ["bodyweight"] },
   "Thrusters (DB)":                              { p: ["Quads","Delts"], s: ["Glutes","Cardio"], eq: ["dumbbell"] },
   "Torso Rotations":                             { p: ["Mobility"], s: ["Obliques"], eq: ["bodyweight"] },
   "Tricep Dips":                                 { p: ["Triceps"], s: ["Chest","Front Delts"], eq: ["bodyweight"] },
@@ -263,6 +268,9 @@ export function getExerciseEquipment(name) {
 const UNLOADED_EQ = new Set([
   "bodyweight", "mat", "chair", "wall", "towel", "table", "box", "step",
   "pull-up bar", "dip bars", "parallel bars", "band", "bench", "foam roller",
+  // Rings hold bodyweight, the same as a bar does. Asking for a weight on a
+  // ring row is the noise that stops people logging at all.
+  "rings",
 ]);
 
 export function usesExternalLoad(name) {
