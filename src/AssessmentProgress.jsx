@@ -118,7 +118,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
 
   const H = ({ children, sub }) => (
     <div style={{ marginTop: 22, marginBottom: 10 }}>
-      <div style={{ fontSize: 11, color: G.gold, letterSpacing: 1.6, textTransform: "uppercase", fontWeight: 700 }}>{children}</div>
+      <div style={{ fontSize: 10, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600 }}>{children}</div>
       {sub && <div style={{ fontSize: 11, color: G.muted, marginTop: 4, lineHeight: 1.5 }}>{sub}</div>}
     </div>
   );
@@ -134,16 +134,16 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
   if (!now) {
     return (
       <div>
-        <div className="sf gd" style={{ fontSize: 19, fontWeight: 700 }}>Progress</div>
+        <div className="sf" style={{ fontSize: 26, lineHeight: 1.15, color: G.text }}>Progress</div>
         <div style={{ fontSize: 12, color: G.muted, marginTop: 3 }}>{client?.name}</div>
-        <div style={{ marginTop: 20, padding: "16px 14px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 10, fontSize: 12, color: G.text, lineHeight: 1.65 }}>
+        <div style={{ marginTop: 20, padding: "16px 14px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 12, fontSize: 12, color: G.text, lineHeight: 1.65 }}>
           No assessment recorded yet. Until there is one, this client's programme
           is chosen from age and intake answers alone — which is a guess about a
           body, and the thing the assessment exists to replace.
         </div>
         {onTakeNew && (
           <button type="button" className="btn" onClick={onTakeNew}
-            style={{ width: "100%", marginTop: 14, padding: "12px", borderRadius: 10, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 14 }}>
+            style={{ width: "100%", marginTop: 16, minHeight: 52, borderRadius: 12, background: G.grad, color: "#FCFCFD", fontWeight: 600, fontSize: 15 }}>
             Take the first assessment
           </button>
         )}
@@ -156,7 +156,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
 
   return (
     <div>
-      <div className="sf gd" style={{ fontSize: 19, fontWeight: 700 }}>Progress</div>
+      <div className="sf" style={{ fontSize: 26, lineHeight: 1.15, color: G.text }}>Progress</div>
       <div style={{ fontSize: 12, color: G.muted, marginTop: 3 }}>
         {client?.name} · {client?.age}y · {rows.length} assessment{rows.length === 1 ? "" : "s"}
       </div>
@@ -170,7 +170,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
           {gap !== null && <div style={{ fontSize: 11, color: G.dim }}>({gap} days apart)</div>}
         </div>
       ) : (
-        <div style={{ marginTop: 14, padding: "12px 14px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 10, fontSize: 12, color: G.text, lineHeight: 1.65 }}>
+        <div style={{ marginTop: 14, padding: "12px 14px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 12, fontSize: 12, color: G.text, lineHeight: 1.65 }}>
           One assessment, taken {fmtDate(now.assessed_at)}. That is a starting
           point, not progress — there is nothing yet to hold it against. Take
           the next one and this screen fills in.
@@ -209,7 +209,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
         const down = a !== null && b !== null && b < a;
         const tone = up ? G.green : down ? G.amber : G.text;
         return (
-          <div key={cap.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${up ? "#C9E3D8" : G.border}`, borderRadius: 9, marginBottom: 7 }}>
+          <div key={cap.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${up ? "#C9E3D8" : G.border}`, borderRadius: 12, marginBottom: 7 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: G.text }}>{cap.name}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: tone }}>
@@ -238,7 +238,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
         const delta = a !== null && b !== null ? b - a : null;
         const better = delta === null ? null : t.higherIsBetter ? delta > 0 : delta < 0;
         return (
-          <div key={t.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 9, marginBottom: 7 }}>
+          <div key={t.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 12, marginBottom: 7 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: G.text }}>{t.name}</div>
@@ -290,7 +290,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
             What this changed in the sessions
           </H>
           {movement.gained.length > 0 && (
-            <div style={{ padding: "11px 13px", background: "#E6F2ED", border: `1px solid #C9E3D8`, borderRadius: 9, marginBottom: 7 }}>
+            <div style={{ padding: "11px 13px", background: "#E6F2ED", border: `1px solid #C9E3D8`, borderRadius: 12, marginBottom: 7 }}>
               <div style={{ fontSize: 11, color: G.green, fontWeight: 700, marginBottom: 6 }}>
                 ✓ NOW IN THE SESSIONS ({movement.gained.length})
               </div>
@@ -300,7 +300,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
             </div>
           )}
           {movement.lost.length > 0 && (
-            <div style={{ padding: "11px 13px", background: "#FBF2E3", border: `1px solid ${G.amber}`, borderRadius: 9, marginBottom: 7 }}>
+            <div style={{ padding: "11px 13px", background: "#FBF2E3", border: `1px solid ${G.amber}`, borderRadius: 12, marginBottom: 7 }}>
               <div style={{ fontSize: 11, color: G.amber, fontWeight: 700, marginBottom: 6 }}>
                 HELD BACK AGAIN ({movement.lost.length})
               </div>
@@ -320,7 +320,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
         <>
           <H>Notes</H>
           {[now, prev].filter(Boolean).filter((r) => r.notes).map((r) => (
-            <div key={r.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 9, marginBottom: 7 }}>
+            <div key={r.id} style={{ padding: "10px 12px", background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 12, marginBottom: 7 }}>
               <div style={{ fontSize: 10, color: G.muted, marginBottom: 4 }}>{fmtDate(r.assessed_at)}</div>
               <div style={{ fontSize: 12, color: G.text, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{r.notes}</div>
             </div>
@@ -330,7 +330,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
 
       {/* The honest scoping, kept on the screen rather than in a trainer's
           head — because this is the screen the client reads. */}
-      <div style={{ marginTop: 20, padding: "12px 14px", border: `1px solid ${G.border}`, borderRadius: 10, fontSize: 11, color: G.muted, lineHeight: 1.7 }}>
+      <div style={{ marginTop: 20, padding: "12px 14px", border: `1px solid ${G.border}`, borderRadius: 12, fontSize: 11, color: G.muted, lineHeight: 1.7 }}>
         Each line above is one test on one day. A test measures what it measures
         and nothing more — strong legs are strong legs, not a promise about a
         heart or about years. What this screen is for is the direction of
@@ -339,7 +339,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
 
       {onTakeNew && (
         <button type="button" className="btn" onClick={onTakeNew}
-          style={{ width: "100%", marginTop: 14, padding: "12px", borderRadius: 10, background: G.surf2, color: G.text, border: `1px solid ${G.borderHi}`, fontWeight: 700, fontSize: 13 }}>
+          style={{ width: "100%", marginTop: 16, minHeight: 52, borderRadius: 12, background: "#fff", color: G.text, border: `1px solid ${G.border}`, fontWeight: 700, fontSize: 13 }}>
           + Take a new assessment
         </button>
       )}
