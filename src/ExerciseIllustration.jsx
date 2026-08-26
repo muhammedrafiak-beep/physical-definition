@@ -1,4 +1,6 @@
-﻿export function ExerciseIllustration({ exerciseId, size=120 }) {
+﻿import { Icon } from "./Icons";
+
+export function ExerciseIllustration({ exerciseId, size=120 }) {
   const BASE = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos";
   const getImg = (id) => {
     const l = (id || "").toLowerCase();
@@ -60,11 +62,14 @@
     return null;
   };
   const img = getImg(exerciseId);
+  // The placeholder has to work on the light screens AND inside the dark
+  // player, so it paints nothing of its own: a dashed rule and a mark, both
+  // in the inherited colour at low opacity.
   if(!img) return (
     <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-      <div style={{ width: "100%", maxWidth: size * 2.2, height: 100, background: "#222", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
-        <div style={{ fontSize: 28 }}>🏋️</div>
-        <div style={{ fontSize: 10, color: "#888", fontWeight: 600 }}>No photo yet</div>
+      <div style={{ width: "100%", maxWidth: size * 2.2, minHeight: 108, border: "1px dashed currentColor", opacity: 0.35, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <Icon n="dumbbell" s={24} />
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".03em" }}>No photo yet</div>
       </div>
     </div>
   );

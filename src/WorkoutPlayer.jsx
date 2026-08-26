@@ -297,7 +297,14 @@ export function WorkoutPlayer({
   const [restRemaining, setRestRemaining] = useState(0);
   const [exerciseRemaining, setExerciseRemaining] = useState(null); // for duration-based exercises
   const [setStarted, setSetStarted] = useState(false);
+  // A clip whose file is missing left a black rectangle the height of the
+  // screen, indistinguishable from "still loading". If it fails to load we
+  // drop it and show the illustration instead. Declared here with the other
+  // hooks — below this component there are two early returns, and a hook
+  // after one of them is a hook React stops counting.
+  const [videoFailed, setVideoFailed] = useState(false);
   const [motivation, setMotivation] = useState(null);
+  useEffect(() => { setVideoFailed(false); }, [exIdx]);
   const [elapsed, setElapsed] = useState(0); // overall stopwatch, seconds
   const [saving, setSaving] = useState(false);
   const videoRef = useRef(null);
@@ -673,7 +680,7 @@ export function WorkoutPlayer({
   const lastLine = isWarmupOrCooldown(current) ? null : describeLast(lastByExercise[current.exercise.name]);
 
   const videoFile = getVideoForExercise(current.exercise.name);
-  const videoSrc = videoFile ? `${VIDEO_BASE}/${videoFile}` : null;
+  const videoSrc = videoFile && !videoFailed ? `${VIDEO_BASE}/${videoFile}` : null;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
   if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} targetReps={current?.exercise?.reps} clientName={client?.name} onRepsComplete={(n) => { aiRepsRef.current += (n||0); aiSetsRef.current += 1; setShowAI(false); handleSetDone(); }} />);
 
@@ -713,6 +720,7 @@ export function WorkoutPlayer({
                 preload="auto"
                 style={{ width: "100%", height: "100%", objectFit: "contain", background: "#0A1727", pointerEvents: "none", display: "block" }}
                 loop muted playsInline autoPlay
+                onError={() => setVideoFailed(true)}
               />
               {exerciseRemaining !== null && (
                 <div style={{

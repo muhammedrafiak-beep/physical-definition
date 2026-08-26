@@ -3448,7 +3448,7 @@ export default function App() {
               </div>
               <div className="card" style={{ padding: 14, marginBottom: 11 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div><div style={{ fontSize: 9, color: G.muted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>{t.bmi}</div><div style={{ fontSize: 36, fontWeight: 800, color: bmiColor }}>{bmi}</div><div style={{ fontSize: 12, fontWeight: 700, color: bmiColor }}>{bmiLabel}</div></div>
+                  <div><div style={{ fontSize: 10, color: G.muted, textTransform: "uppercase", letterSpacing: ".09em", fontWeight: 600, marginBottom: 6 }}>{t.bmi}</div><div className="sf" style={{ fontSize: 42, lineHeight: 1, color: bmiColor }}>{bmi}</div><div style={{ fontSize: 12, fontWeight: 700, color: bmiColor }}>{bmiLabel}</div></div>
                   <div style={{ fontSize: 11, color: G.muted, lineHeight: 2.1 }}>
                     {[["<18.5", isAr ? "نحيف" : "Underweight", G.amber], ["18.5–24.9", isAr ? "صحي" : "Healthy", G.green], ["25–29.9", isAr ? "زيادة وزن" : "Overweight", G.amber], ["≥30", isAr ? "بدانة" : "Obese", G.red]].map(([r, l, c]) => (
                       <div key={l} style={{ display: "flex", gap: 8 }}><span>{r}</span><span style={{ color: c, fontWeight: 700, minWidth: 70 }}>{l}</span></div>
