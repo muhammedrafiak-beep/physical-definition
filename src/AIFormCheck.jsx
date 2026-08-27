@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from "react";
+import { G as T } from "./theme";
 
 
 const drawConnectors = (ctx, landmarks, connections, style) => { if (!window.drawConnectors) return; window.drawConnectors(ctx, landmarks, connections, style); };
@@ -181,7 +182,11 @@ export function AIFormCheck({ onClose, exerciseName, clientName, targetReps, onR
 
   useEffect(() => { return () => { stopCamera(); }; }, []);
 
-  const G = { gold:"#8FB4EA", bg:"#0E2035", surf:"#152B45", surf2:"#1B3350", green:"#22c55e", red:"#ef4444", muted:"#666", text:"#fff" };
+  // The night palette, from the one place it is defined. The local copy this
+  // replaced had muted at #666 over a #0E2035 background — about 2.4:1, which
+  // is not readable, and this text is the coaching cue.
+  const G = { gold: T.nAccent, bg: T.nBg, surf: T.nSurf, surf2: T.nSurf2,
+              green: T.nGreen, red: T.nRed, muted: T.nMuted, text: T.nText };
 
   if (showPrivacy) return (
     <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>

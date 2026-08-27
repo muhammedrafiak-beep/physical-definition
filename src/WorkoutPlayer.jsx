@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
+import { useMedia, videoUrl } from "./media";
 import { AIFormCheck } from "./AIFormCheck";
 import { Icon } from "./Icons";
 import { usesExternalLoad, getExerciseRequirement, getWarmupSets, rampStep, roundToPlate } from "./exerciseMeta";
@@ -22,16 +23,6 @@ async function post(payload) {
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.error || "That didn't work.");
   return d;
-}
-
-const VIDEO_BASE = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos";
-const DEFAULT_VIDEO = "workout_all.mp4";
-
-function getVideoForExercise(exName) {
-  const l = (exName || "").toLowerCase();
-  const M = [["side plank",null],["plank shoulder",null],["wall push",null],["incline push","incline_pushups.mp4.mp4"],["push-up","pushups.mp4.mp4"],["pushup","pushups.mp4.mp4"],["push up","pushups.mp4.mp4"],["plank","plank.mp4.mp4"],["mountain climber","mountain_climbers.mp4.mp4"],["bicycle crunch","bicycle_crunches.mp4.mp4"],["dead bug","dead_bug.mp4.mp4"],["bird dog","bird_dog.mp4.mp4"],["superman","superman_hold.mp4.mp4"],["glute bridge","glute_bridges.mp4.mp4"],["bodyweight squat","bodyweight_squats.mp4.mp4"],["air squat","bodyweight_squats.mp4.mp4"],["jumping jack","jumping_jacks.mp4.mp4"],["arm swing","arm_swings.mp4.mp4"],["leg swing","leg_swings.mp4.mp4"],["hip circle","hip_circles.mp4.mp4"],["hip flexor","hip_flexor_stretch.mp4.mp4"],["knee circle","knee_circles.mp4.mp4"],["neck rotation","neck_rotations.mp4.mp4"],["shoulder rotation","shoulder_rotations.mp4.mp4"],["torso rotation","torso_rotations.mp4.mp4"],["chest stretch","chest_stretch.mp4.mp4"],["shoulder stretch","shoulder_stretch.mp4.mp4"],["quad stretch","standing_quad_stretch.mp4.mp4"],["hamstring stretch","hamstring_stretch.mp4.mp4"],["child","childs_pose.mp4.mp4"],["light jog","light_jog_in_place.mp4.mp4"],["light walk","light_walk_in_place.mp4.mp4"]];
-  for (const [k,v] of M) { if (l.includes(k)) return v; }
-  return null;
 }
 
 function parseRestSeconds(restStr) {
@@ -114,11 +105,11 @@ const COOLDOWN_EXERCISES = [
 // warm-up opens with jogging and jumping jacks, which is unsafe in front of the
 // senior, lower-back, shoulder and knee programmes. Only fall back to the shared
 // arrays when a system has not specified its own.
-function resolveWarmup(workoutSystem) {
+export function resolveWarmup(workoutSystem) {
   const w = workoutSystem && workoutSystem.warmup;
   return Array.isArray(w) && w.length ? w : WARMUP_EXERCISES;
 }
-function resolveCooldown(workoutSystem) {
+export function resolveCooldown(workoutSystem) {
   const c = workoutSystem && workoutSystem.cooldown;
   return Array.isArray(c) && c.length ? c : COOLDOWN_EXERCISES;
 }
@@ -306,6 +297,10 @@ export function WorkoutPlayer({
   // rather than added to the queue: the queue drives "Exercise 15/43" and the
   // progress bar, and a warm-up single is not an exercise. `rampDone` is how
   // many have been finished for the exercise now on screen.
+  // The exercise -> photo/video table, in place of the substring ladder that
+  // used to sit at the top of this file — a second, drifting copy of the one
+  // in App.jsx. Up here with the other hooks: there are early returns below.
+  const media = useMedia();
   const [rampDone, setRampDone] = useState(0);
   const [videoFailed, setVideoFailed] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
@@ -715,8 +710,8 @@ export function WorkoutPlayer({
   const showWeight = forceWeight || usesExternalLoad(current.exercise.name);
   const lastLine = isWarmupOrCooldown(current) ? null : describeLast(lastByExercise[current.exercise.name]);
 
-  const videoFile = getVideoForExercise(current.exercise.name);
-  const videoSrc = videoFile && !videoFailed ? `${VIDEO_BASE}/${videoFile}` : null;
+  const videoFile = videoUrl(media, current.exercise.name);
+  const videoSrc = videoFile && !videoFailed ? videoFile : null;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
   if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} targetReps={current?.exercise?.reps} clientName={client?.name} onRepsComplete={(n) => { aiRepsRef.current += (n||0); aiSetsRef.current += 1; setShowAI(false); handleSetDone(); }} />);
 

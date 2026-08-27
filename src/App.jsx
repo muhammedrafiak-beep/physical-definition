@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
-import { WorkoutPlayer } from "./WorkoutPlayer";
+import { useMedia, videoUrl, photoUrl, getMedia } from "./media";
+import { G } from "./theme";
+import { LibraryTab } from "./LibraryTab";
+import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
 import { Icon } from "./Icons";
@@ -221,67 +224,16 @@ function generatePDF(client, lang) {
   const mealPlanRaw = MEALS.find(m => m.id === client.mealPlanId);
   const mealPlan = mealPlanRaw ? scaleMealPlan(mealPlanRaw, target) : null;
 
-  // Build exercise GIF URLs for PDF using ExerciseDB cache
-  const BASE_IMG = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos";
+  // The same photo the app shows, from the same table. This used to be a
+  // FOURTH copy of the substring ladder — and it had already drifted from the
+  // other three: "high knee" resolved to the jogging photo here and to the
+  // barbell squat in the app, so the printed plan and the screen disagreed
+  // about the same exercise.
   const getGifForPDF = (exName) => {
-    const l = (exName || "").toLowerCase();let url = null;
-    if(l.includes("incline push")) url = BASE_IMG+"/Incline_Push_Ups.jpeg";
-    else if(l.includes("push-up")||l.includes("pushup")||l.includes("push up")) url = BASE_IMG+"/Push_Ups.jpeg";
-    else if(l.includes("incline dumbbell")||l.includes("incline press")) url = BASE_IMG+"/Incline_Dumbbell_Press.jpeg";
-    else if(l.includes("bench press")||l.includes("chest press")) url = BASE_IMG+"/Bench_Press.jpeg";
-    else if(l.includes("overhead press")||l.includes("military press")||l.includes("ohp")||l.includes("shoulder press")||l.includes("arnold")) url = BASE_IMG+"/Overhead_Press.jpeg";
-    else if(l.includes("squat")) url = BASE_IMG+"/Barbell_Squat.jpeg";
-    else if(l.includes("deadlift")) url = BASE_IMG+"/Deadlift.jpeg";
-    else if(l.includes("pull-up")||l.includes("pullup")||l.includes("chin-up")||l.includes("lat pulldown")||l.includes("pull up")) url = BASE_IMG+"/Pull_Up.jpeg";
-    else if(l.includes("barbell row")||l.includes("t-bar row")||l.includes("cable row")||l.includes("seated row")||l.includes("bent over row")) url = BASE_IMG+"/Barbell_Row.jpeg";
-    else if(l.includes("hammer curl")) url = BASE_IMG+"/Hammer_Curl.jpeg";
-    else if(l.includes("bicep curl")||l.includes("barbell curl")||l.includes("preacher curl")) url = BASE_IMG+"/Bicep_Curl.jpeg";
-    else if(l.includes("lateral raise")||l.includes("front raise")||l.includes("side delt")) url = BASE_IMG+"/Lateral_Raise.jpeg";
-    else if(l.includes("face pull")) url = BASE_IMG+"/Face_Pull.jpeg";
-    else if(l.includes("overhead tricep")||l.includes("overhead extension")) url = BASE_IMG+"/Overhead_Tricep_Extension.jpeg";
-    else if(l.includes("tricep dip")||l.includes("chair dip")) url = BASE_IMG+"/Tricep_Dips.jpeg";
-    else if(l.includes("tricep pushdown")||l.includes("rope pushdown")||l.includes("skull crusher")) url = BASE_IMG+"/Tricep_Pushdown.jpeg";
-    else if(l.includes("leg press")) url = BASE_IMG+"/Leg_Press.jpeg";
-    else if(l.includes("leg extension")||l.includes("band seated leg")) url = BASE_IMG+"/Leg_Extension.jpeg";
-    else if(l.includes("leg curl")) url = BASE_IMG+"/Leg_Curl.jpeg";
-    else if(l.includes("calf raise")||l.includes("calf")) url = BASE_IMG+"/Calf_Raise.jpeg";
-    else if(l.includes("lunge")||l.includes("reverse lunge")||l.includes("step-up")||l.includes("split squat")) url = BASE_IMG+"/Lunge.jpeg";
-    else if(l.includes("superman")) url = BASE_IMG+"/Superman_Hold.jpeg";
-    else if(l.includes("plank shoulder")||l.includes("shoulder tap")) url = BASE_IMG+"/Plank_Shoulder_Taps.jpeg";
-    else if(l.includes("plank")) url = BASE_IMG+"/Plank.jpeg";
-    else if(l.includes("glute bridge")) url = BASE_IMG+"/Glute_Bridges.jpeg";
-    else if(l.includes("wall sit")) url = BASE_IMG+"/Wall_Sit.jpeg";
-    else if(l.includes("burpee")) url = BASE_IMG+"/Burpees.jpeg";
-    else if(l.includes("mountain climber")) url = BASE_IMG+"/Mountain_Climbers.jpeg";
-    else if(l.includes("bicycle crunch")) url = BASE_IMG+"/Bicycle_Crunches.jpeg";
-    else if(l.includes("straight leg raise")) url = BASE_IMG+"/Straight_Leg_Raises.jpeg";
-    else if(l.includes("foam roller")) url = BASE_IMG+"/Foam_Roller_Quad.jpeg";
-    else if(l.includes("clamshell")) url = BASE_IMG+"/Clamshells.jpeg";
-    else if(l.includes("stationary bike")||l.includes("pool walking")) url = BASE_IMG+"/Stationary_Bike.jpeg";
-    else if(l.includes("pilates ring")||l.includes("inner thigh")) url = BASE_IMG+"/Pilates_Ring_Squeeze.jpeg";
-    else if(l.includes("light jog")||l.includes("jog in place")) url = BASE_IMG+"/Light_Jog.jpeg";
-    else if(l.includes("jumping jack")) url = BASE_IMG+"/Jumping_Jacks.jpeg";
-    else if(l.includes("neck rotation")) url = BASE_IMG+"/Neck_Rotations.jpeg";
-    else if(l.includes("shoulder rotation")) url = BASE_IMG+"/Shoulder_Rotations.jpeg";
-    else if(l.includes("elbow circle")) url = BASE_IMG+"/Elbow_Circles.jpeg";
-    else if(l.includes("wrist circle")) url = BASE_IMG+"/Wrist_Circles.jpeg";
-    else if(l.includes("torso rotation")) url = BASE_IMG+"/Torso_Rotations.jpeg";
-    else if(l.includes("hip circle")) url = BASE_IMG+"/Hip_Circles.jpeg";
-    else if(l.includes("knee circle")) url = BASE_IMG+"/Knee_Circles.jpeg";
-    else if(l.includes("ankle rotation")) url = BASE_IMG+"/Ankle_Rotations.jpeg";
-    else if(l.includes("leg swing")) url = BASE_IMG+"/Leg_Swings.jpeg";
-    else if(l.includes("arm swing")) url = BASE_IMG+"/Arm_Swings.jpeg";
-    else if(l.includes("hip flexor")) url = BASE_IMG+"/Hip_Flexor_Stretch.jpeg";
-    else if(l.includes("light walk")) url = BASE_IMG+"/Light_Walk.jpeg";
-    else if(l.includes("quad stretch")) url = BASE_IMG+"/Standing_Quad_Stretch.jpeg";
-    else if(l.includes("hamstring stretch")) url = BASE_IMG+"/Hamstring_Stretch.jpeg";
-    else if(l.includes("chest stretch")) url = BASE_IMG+"/Chest_Stretch.jpeg";
-    else if(l.includes("shoulder stretch")) url = BASE_IMG+"/Shoulder_Stretch.jpeg";
-    else if(l.includes("child")) url = BASE_IMG+"/Childs_Pose.jpeg";
-    else if(l.includes("deep breath")) url = BASE_IMG+"/Deep_Breathing.jpeg";
-    else if(l.includes("bodyweight squat")) url = BASE_IMG+"/Barbell_Squat.jpeg";
-    else if(l.includes("high knee")) url = BASE_IMG+"/Light_Jog.jpeg";
-    return url ? `<img src="${url}" alt="${exName}" style="width:160px;height:100px;object-fit:contain;border-radius:8px;background:#fff;" />` : `<div style="width:160px;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
+    const url = photoUrl(getMedia(), exName);
+    return url
+      ? `<img src="${url}" alt="${exName}" style="width:160px;height:100px;object-fit:contain;border-radius:8px;background:#fff;" />`
+      : `<div style="width:160px;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
   };
 
   const workoutHTML = workoutSystem ? `
@@ -291,7 +243,7 @@ function generatePDF(client, lang) {
       <div class="day-block">
         <div class="day-title" style="color:#f59e0b">🔥 Warm-up</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
-          ${[{name:"Light Jog in Place",sets:1,reps:"2 min",rest:"10s"},{name:"Jumping Jacks",sets:1,reps:"60 sec",rest:"10s"},{name:"Neck Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Shoulder Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Elbow Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Wrist Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Torso Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Hip Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Knee Circles",sets:1,reps:"30 sec",rest:"10s"},{name:"Ankle Rotations",sets:1,reps:"30 sec",rest:"10s"},{name:"Leg Swings",sets:1,reps:"30 sec",rest:"10s"},{name:"Arm Swings",sets:1,reps:"30 sec",rest:"10s"},{name:"Bodyweight Squat",sets:1,reps:"10",rest:"20s"},{name:"Hip Flexor Stretch",sets:1,reps:"30 sec",rest:"10s"}].map(ex => `
+          ${resolveWarmup(workoutSystem).map(ex => `
             <div style="background:#fff8e7;border-radius:8px;overflow:hidden;border:1px solid #f59e0b30;">
               <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#fef3c7;">
                 ${getGifForPDF(ex.name)}
@@ -330,7 +282,7 @@ function generatePDF(client, lang) {
       <div class="day-block">
         <div class="day-title" style="color:#22c55e">🧘 Cool-down & Stretching</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
-          ${[{name:"Light Walk in Place",sets:1,reps:"60 sec",rest:"10s"},{name:"Standing Quad Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Hamstring Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Hip Flexor Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Chest Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Shoulder Stretch",sets:1,reps:"30 sec",rest:"10s"},{name:"Childs Pose",sets:1,reps:"60 sec",rest:"10s"},{name:"Deep Breathing",sets:1,reps:"60 sec",rest:"10s"}].map(ex => `
+          ${resolveCooldown(workoutSystem).map(ex => `
             <div style="background:#f0fdf4;border-radius:8px;overflow:hidden;border:1px solid #22c55e30;">
               <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#dcfce7;">
                 ${getGifForPDF(ex.name)}
@@ -476,29 +428,6 @@ function generatePDF(client, lang) {
 // names RESOLVE to is the only thing that changed. `gold` means "the accent",
 // whatever colour the accent happens to be; renaming it would have been a
 // day of churn for a word.
-const G = {
-  bg: "#F3F6FA", surf: "#FFFFFF", surf2: "#F3F6FA",
-  border: "#E4E9F0", borderHi: "#CBD6E6",
-  gold: "#21509B",
-  grad: "linear-gradient(180deg,#16304F,#0E2035)",
-  text: "#0E2035", muted: "#5C6D84", dim: "#93A2B7",
-  green: "#12795A", red: "#A63A3A", amber: "#9A6212", blue: "#21509B",
-
-  // Additive. A dark theme can wash a colour over the page at 10% alpha and
-  // get a tint; over white the same wash goes grey. Light themes need the
-  // tint mixed properly, so each status colour gets a companion fill.
-  ink: "#0E2035", paper: "#FCFCFD", soft: "#F3F6FA",
-  // `dim` is decorative only — empty-state icons, hairlines, the chevron in a
-  // select. Anything a person has to READ uses `muted`, which is measured.
-  accent: "#21509B", accentSoft: "#E8EEF8", accentLine: "#D3E0F2",
-  greenSoft: "#E6F2ED", greenLine: "#C9E3D8",
-  amberSoft: "#FBF2E3", amberLine: "#EFE0C2",
-  redSoft: "#FBECEC", redLine: "#F0D6D6",
-
-  // NIGHT — the player only.
-  nBg: "#0E2035", nSurf: "#152B45", nSurf2: "#1B3350", nLine: "#24405F",
-  nText: "#FCFCFD", nMuted: "#8FA3BE", nAccent: "#8FB4EA",
-};
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -845,11 +774,9 @@ function getMuscleTargets(name) {
   return [["Full Body", "primary"]];
 }
 
-const VB = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/";
-const VM_LIST = [["side plank",null],["plank shoulder",null],["wall push",null],["incline push","incline_pushups.mp4.mp4"],["push-up","pushups.mp4.mp4"],["pushup","pushups.mp4.mp4"],["push up","pushups.mp4.mp4"],["plank","plank.mp4.mp4"],["mountain climber","mountain_climbers.mp4.mp4"],["bicycle crunch","bicycle_crunches.mp4.mp4"],["dead bug","dead_bug.mp4.mp4"],["bird dog","bird_dog.mp4.mp4"],["superman","superman_hold.mp4.mp4"],["glute bridge","glute_bridges.mp4.mp4"],["bodyweight squat","bodyweight_squats.mp4.mp4"],["air squat","bodyweight_squats.mp4.mp4"],["jumping jack","jumping_jacks.mp4.mp4"],["arm swing","arm_swings.mp4.mp4"],["leg swing","leg_swings.mp4.mp4"],["hip circle","hip_circles.mp4.mp4"],["hip flexor","hip_flexor_stretch.mp4.mp4"],["knee circle","knee_circles.mp4.mp4"],["neck rotation","neck_rotations.mp4.mp4"],["shoulder rotation","shoulder_rotations.mp4.mp4"],["torso rotation","torso_rotations.mp4.mp4"],["chest stretch","chest_stretch.mp4.mp4"],["shoulder stretch","shoulder_stretch.mp4.mp4"],["quad stretch","standing_quad_stretch.mp4.mp4"],["hamstring stretch","hamstring_stretch.mp4.mp4"],["child","childs_pose.mp4.mp4"],["light jog","light_jog_in_place.mp4.mp4"],["light walk","light_walk_in_place.mp4.mp4"]];
-const getVideoForExercise = (name) => { const n = (name||"").toLowerCase(); for (const [k,v] of VM_LIST) { if (n.includes(k)) return v ? VB+v : null; } return null; };
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
+  const media = useMedia();
   const muscles = getMuscleTargets(exercise.name);
   const equipment = getExerciseEquipment(exercise.name);
   const ytSearchUrl = getYTSearchUrl(exercise.name);
@@ -858,7 +785,7 @@ function ExerciseCard({ exercise, color, lang }) {
     <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
       {/* Uniform animation area — same dark bg, same size for all */}
       <div style={{ background: G.soft, padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
-        {(() => { const vid = getVideoForExercise(exercise.name); return vid ? (
+        {(() => { const vid = videoUrl(media, exercise.name); return vid ? (
           <video src={vid} autoPlay loop muted playsInline style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", borderRadius: 10, maxHeight: 200 }} />
         ) : <ExerciseIllustration exerciseId={exercise.name} size={118} />; })()}
         {/* muscle tags */}
@@ -916,10 +843,9 @@ function WorkoutSystemSelector({ client, onSelect, onClose, lang }) {
 
   return (
     <div dir={isAr ? "rtl" : "ltr"}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{t.chooseWorkout}</div>
-        <button className="btn" onClick={onClose} style={{ background: "none", color: G.muted, fontSize: 20 }}>✕</button>
-      </div>
+      {/* No ✕ of its own: Ovl draws one for every overlay, and two of them
+          side by side reads as a broken screen. */}
+      <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>{t.chooseWorkout}</div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {WORKOUT_SYSTEMS.map(ws => (
@@ -988,10 +914,7 @@ function MealSelector({ client, onSelect, onClose, lang }) {
 
   return (
     <div dir={isAr ? "rtl" : "ltr"}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{t.chooseMeal} {isAr ? "الخطة الغذائية" : "Meal Plan"}</div>
-        <button className="btn" onClick={onClose} style={{ background: "none", color: G.muted, fontSize: 20 }}>✕</button>
-      </div>
+      <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{t.chooseMeal} {isAr ? "الخطة الغذائية" : "Meal Plan"}</div>
       {client && <div style={{ fontSize: 12, color: G.muted, marginBottom: 14, background: G.surf2, borderRadius: 8, padding: "7px 12px" }}>{isAr ? "الهدف لـ" : "Target for"} {client.name}: <strong style={{ color: G.gold }}>{target} kcal</strong> <span style={{ fontSize: 10, color: G.muted }}>— {isAr ? "سيتم ضبط الكميات تلقائياً" : "portions auto-adjusted to match"}</span></div>}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {MEALS.map(p => {
@@ -2260,7 +2183,7 @@ export default function App() {
   const activeCount = clients.filter(c => c.status === "Active").length;
   const goals = clients.reduce((a, c) => { a[c.goal] = (a[c.goal] || 0) + 1; return a; }, {});
   const GOALS = isAr ? GOALS_AR : GOALS_EN;
-  const NAV = [{ id: "dashboard", l: t.dashboard, i: "◈" }, { id: "clients", l: t.clients, i: "◎" }, { id: "plans", l: t.plans, i: "▤" }, { id: "requests", l: `${t.requests}${regs.length ? `(${regs.length})` : ""}`, i: "📋" }, { id: "history", l: "History", i: "📊" }];
+  const NAV = [{ id: "dashboard", l: t.dashboard, i: "◈" }, { id: "clients", l: t.clients, i: "◎" }, { id: "plans", l: t.plans, i: "▤" }, { id: "library", l: "Library", i: "▦" }, { id: "requests", l: `${t.requests}${regs.length ? `(${regs.length})` : ""}`, i: "📋" }, { id: "history", l: "History", i: "📊" }];
 
   // LOADING
   if (loading) return (
@@ -2839,6 +2762,8 @@ export default function App() {
 
         {/* PLANS */}
         {aTab === "plans" && <PlansTab clients={clients} selC={selC} setSelC={setSelC} setClients={setClients} lang={lang} onUpdate={dbUpdateClient} />}
+
+        {aTab === "library" && <LibraryTab token={adminToken()} />}
 
         {/* HISTORY */}
         {aTab === "history" && (
