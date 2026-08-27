@@ -77,6 +77,11 @@ function subscribe(fn) {
 }
 function getSnapshot() { return state; }
 
+// For code that is not a component. The PDF builder is a plain function, and
+// by the time anybody clicks Download the map loaded at startup is long since
+// in. If it somehow is not, the exercise prints without a picture.
+export function getMedia() { return state; }
+
 export function useMedia() {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

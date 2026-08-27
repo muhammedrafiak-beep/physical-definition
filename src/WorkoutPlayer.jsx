@@ -105,11 +105,11 @@ const COOLDOWN_EXERCISES = [
 // warm-up opens with jogging and jumping jacks, which is unsafe in front of the
 // senior, lower-back, shoulder and knee programmes. Only fall back to the shared
 // arrays when a system has not specified its own.
-function resolveWarmup(workoutSystem) {
+export function resolveWarmup(workoutSystem) {
   const w = workoutSystem && workoutSystem.warmup;
   return Array.isArray(w) && w.length ? w : WARMUP_EXERCISES;
 }
-function resolveCooldown(workoutSystem) {
+export function resolveCooldown(workoutSystem) {
   const c = workoutSystem && workoutSystem.cooldown;
   return Array.isArray(c) && c.length ? c : COOLDOWN_EXERCISES;
 }
