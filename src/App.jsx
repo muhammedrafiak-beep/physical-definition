@@ -843,10 +843,9 @@ function WorkoutSystemSelector({ client, onSelect, onClose, lang }) {
 
   return (
     <div dir={isAr ? "rtl" : "ltr"}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{t.chooseWorkout}</div>
-        <button className="btn" onClick={onClose} style={{ background: "none", color: G.muted, fontSize: 20 }}>✕</button>
-      </div>
+      {/* No ✕ of its own: Ovl draws one for every overlay, and two of them
+          side by side reads as a broken screen. */}
+      <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>{t.chooseWorkout}</div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {WORKOUT_SYSTEMS.map(ws => (
@@ -915,10 +914,7 @@ function MealSelector({ client, onSelect, onClose, lang }) {
 
   return (
     <div dir={isAr ? "rtl" : "ltr"}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <div className="sf gd" style={{ fontSize: 20, fontWeight: 700 }}>{t.chooseMeal} {isAr ? "الخطة الغذائية" : "Meal Plan"}</div>
-        <button className="btn" onClick={onClose} style={{ background: "none", color: G.muted, fontSize: 20 }}>✕</button>
-      </div>
+      <div className="sf gd" style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{t.chooseMeal} {isAr ? "الخطة الغذائية" : "Meal Plan"}</div>
       {client && <div style={{ fontSize: 12, color: G.muted, marginBottom: 14, background: G.surf2, borderRadius: 8, padding: "7px 12px" }}>{isAr ? "الهدف لـ" : "Target for"} {client.name}: <strong style={{ color: G.gold }}>{target} kcal</strong> <span style={{ fontSize: 10, color: G.muted }}>— {isAr ? "سيتم ضبط الكميات تلقائياً" : "portions auto-adjusted to match"}</span></div>}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {MEALS.map(p => {
