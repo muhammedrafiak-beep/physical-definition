@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Icon } from "./Icons";
+import { G } from "./theme";
 
 // No Supabase client here any more. Both views used to read workout_logs
 // straight from the browser with the anon key, which is public — so anyone
@@ -11,7 +12,6 @@ import { Icon } from "./Icons";
 // (#fff on a dark card, #666 for every label), which is how a restyle leaves
 // one screen behind: nothing references a name, so nothing follows when the
 // name changes.
-const G = { text: "#0E2035", muted: "#5C6D84", dim: "#93A2B7", line: "#E4E9F0", accent: "#21509B", accentSoft: "#E8EEF8", green: "#12795A", paper: "#FCFCFD" };
 
 const token = (key) => {
   try { return sessionStorage.getItem(key) || ""; } catch { return ""; }

@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { ExerciseIllustration } from "./ExerciseIllustration";
+import { useMedia, videoUrl } from "./media";
+import { G } from "./theme";
+import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer } from "./WorkoutPlayer";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
@@ -476,29 +479,6 @@ function generatePDF(client, lang) {
 // names RESOLVE to is the only thing that changed. `gold` means "the accent",
 // whatever colour the accent happens to be; renaming it would have been a
 // day of churn for a word.
-const G = {
-  bg: "#F3F6FA", surf: "#FFFFFF", surf2: "#F3F6FA",
-  border: "#E4E9F0", borderHi: "#CBD6E6",
-  gold: "#21509B",
-  grad: "linear-gradient(180deg,#16304F,#0E2035)",
-  text: "#0E2035", muted: "#5C6D84", dim: "#93A2B7",
-  green: "#12795A", red: "#A63A3A", amber: "#9A6212", blue: "#21509B",
-
-  // Additive. A dark theme can wash a colour over the page at 10% alpha and
-  // get a tint; over white the same wash goes grey. Light themes need the
-  // tint mixed properly, so each status colour gets a companion fill.
-  ink: "#0E2035", paper: "#FCFCFD", soft: "#F3F6FA",
-  // `dim` is decorative only — empty-state icons, hairlines, the chevron in a
-  // select. Anything a person has to READ uses `muted`, which is measured.
-  accent: "#21509B", accentSoft: "#E8EEF8", accentLine: "#D3E0F2",
-  greenSoft: "#E6F2ED", greenLine: "#C9E3D8",
-  amberSoft: "#FBF2E3", amberLine: "#EFE0C2",
-  redSoft: "#FBECEC", redLine: "#F0D6D6",
-
-  // NIGHT — the player only.
-  nBg: "#0E2035", nSurf: "#152B45", nSurf2: "#1B3350", nLine: "#24405F",
-  nText: "#FCFCFD", nMuted: "#8FA3BE", nAccent: "#8FB4EA",
-};
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -845,11 +825,9 @@ function getMuscleTargets(name) {
   return [["Full Body", "primary"]];
 }
 
-const VB = "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/";
-const VM_LIST = [["side plank",null],["plank shoulder",null],["wall push",null],["incline push","incline_pushups.mp4.mp4"],["push-up","pushups.mp4.mp4"],["pushup","pushups.mp4.mp4"],["push up","pushups.mp4.mp4"],["plank","plank.mp4.mp4"],["mountain climber","mountain_climbers.mp4.mp4"],["bicycle crunch","bicycle_crunches.mp4.mp4"],["dead bug","dead_bug.mp4.mp4"],["bird dog","bird_dog.mp4.mp4"],["superman","superman_hold.mp4.mp4"],["glute bridge","glute_bridges.mp4.mp4"],["bodyweight squat","bodyweight_squats.mp4.mp4"],["air squat","bodyweight_squats.mp4.mp4"],["jumping jack","jumping_jacks.mp4.mp4"],["arm swing","arm_swings.mp4.mp4"],["leg swing","leg_swings.mp4.mp4"],["hip circle","hip_circles.mp4.mp4"],["hip flexor","hip_flexor_stretch.mp4.mp4"],["knee circle","knee_circles.mp4.mp4"],["neck rotation","neck_rotations.mp4.mp4"],["shoulder rotation","shoulder_rotations.mp4.mp4"],["torso rotation","torso_rotations.mp4.mp4"],["chest stretch","chest_stretch.mp4.mp4"],["shoulder stretch","shoulder_stretch.mp4.mp4"],["quad stretch","standing_quad_stretch.mp4.mp4"],["hamstring stretch","hamstring_stretch.mp4.mp4"],["child","childs_pose.mp4.mp4"],["light jog","light_jog_in_place.mp4.mp4"],["light walk","light_walk_in_place.mp4.mp4"]];
-const getVideoForExercise = (name) => { const n = (name||"").toLowerCase(); for (const [k,v] of VM_LIST) { if (n.includes(k)) return v ? VB+v : null; } return null; };
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
+  const media = useMedia();
   const muscles = getMuscleTargets(exercise.name);
   const equipment = getExerciseEquipment(exercise.name);
   const ytSearchUrl = getYTSearchUrl(exercise.name);
@@ -858,7 +836,7 @@ function ExerciseCard({ exercise, color, lang }) {
     <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
       {/* Uniform animation area — same dark bg, same size for all */}
       <div style={{ background: G.soft, padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
-        {(() => { const vid = getVideoForExercise(exercise.name); return vid ? (
+        {(() => { const vid = videoUrl(media, exercise.name); return vid ? (
           <video src={vid} autoPlay loop muted playsInline style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", borderRadius: 10, maxHeight: 200 }} />
         ) : <ExerciseIllustration exerciseId={exercise.name} size={118} />; })()}
         {/* muscle tags */}
@@ -2260,7 +2238,7 @@ export default function App() {
   const activeCount = clients.filter(c => c.status === "Active").length;
   const goals = clients.reduce((a, c) => { a[c.goal] = (a[c.goal] || 0) + 1; return a; }, {});
   const GOALS = isAr ? GOALS_AR : GOALS_EN;
-  const NAV = [{ id: "dashboard", l: t.dashboard, i: "◈" }, { id: "clients", l: t.clients, i: "◎" }, { id: "plans", l: t.plans, i: "▤" }, { id: "requests", l: `${t.requests}${regs.length ? `(${regs.length})` : ""}`, i: "📋" }, { id: "history", l: "History", i: "📊" }];
+  const NAV = [{ id: "dashboard", l: t.dashboard, i: "◈" }, { id: "clients", l: t.clients, i: "◎" }, { id: "plans", l: t.plans, i: "▤" }, { id: "library", l: "Library", i: "▦" }, { id: "requests", l: `${t.requests}${regs.length ? `(${regs.length})` : ""}`, i: "📋" }, { id: "history", l: "History", i: "📊" }];
 
   // LOADING
   if (loading) return (
@@ -2839,6 +2817,8 @@ export default function App() {
 
         {/* PLANS */}
         {aTab === "plans" && <PlansTab clients={clients} selC={selC} setSelC={setSelC} setClients={setClients} lang={lang} onUpdate={dbUpdateClient} />}
+
+        {aTab === "library" && <LibraryTab token={adminToken()} />}
 
         {/* HISTORY */}
         {aTab === "history" && (

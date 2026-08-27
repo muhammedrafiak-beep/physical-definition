@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icons";
+import { G } from "./theme";
 
 // The leaderboard used to be read and written straight from here with the
 // anon key — the last place in src/ that did. Two things were wrong with it:
@@ -27,7 +28,6 @@ async function api(action, payload = {}) {
 // Every client screen is a 600px column. PD-100 opens over the top of one,
 // so it has to be the same column or the page appears to change size.
 const PAGE = { width:"100%", maxWidth:600, margin:"0 auto" };
-const G = { gold:"#21509B", accent:"#21509B", accentLine:"#D3E0F2", bg:"#F3F6FA", surf:"#FFFFFF", surf2:"#F3F6FA", green:"#12795A", red:"#A63A3A", muted:"#5C6D84", dim:"#93A2B7", text:"#0E2035", border:"#E4E9F0", accentSoft:"#E8EEF8", paper:"#FCFCFD" };
 
 const STATIONS = [
   { id:"jumpSquat", name:"Jump Squats", emoji:"⚡", reps:20, muscles:"Quads · Glutes · Calves", sys:"ATP-PC · explosive" },
