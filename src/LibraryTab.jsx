@@ -77,23 +77,29 @@ const mb = (n) => `${(n / 1048576).toFixed(n < 1048576 ? 2 : 1)} MB`;
 // function: a Vercel function body caps around 4.5 MB and the demo videos are
 // larger than that.
 async function putToSignedUrl(url, file) {
-  // Storage accepts a signed upload either as a raw body or as multipart. The
-  // raw body is simpler; the official client uses multipart in browsers, so
-  // that is the fallback if a gateway anywhere in between dislikes the first.
-  const direct = await fetch(url, {
-    method: "PUT",
-    headers: { "content-type": file.type || "application/octet-stream", "cache-control": "max-age=31536000" },
-    body: file,
-  });
-  if (direct.ok) return;
-
+  // MULTIPART FIRST, and the reason is cache-control. Storage accepts a signed
+  // upload as either a raw body or multipart, and the raw body was the obvious
+  // choice — but the cache-control header does not survive it. Every uploaded
+  // photo came back `no-cache`, so a client re-downloaded every illustration on
+  // every page load, on mobile data, which is the one thing this was supposed
+  // to avoid. The multipart form carries `cacheControl` and it sticks.
+  //
+  // Paths are unique per upload, so a year is safe: a replacement gets a new
+  // name and the old URL is simply never asked for again.
   const form = new FormData();
   form.append("cacheControl", "31536000");
   form.append("", file);
   const multi = await fetch(url, { method: "PUT", body: form });
-  if (!multi.ok) {
-    const msg = await multi.text().catch(() => "");
-    throw new Error(msg.slice(0, 140) || `Upload failed (${multi.status})`);
+  if (multi.ok) return;
+
+  const direct = await fetch(url, {
+    method: "PUT",
+    headers: { "content-type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!direct.ok) {
+    const msg = await direct.text().catch(() => "");
+    throw new Error(msg.slice(0, 140) || `Upload failed (${direct.status})`);
   }
 }
 
