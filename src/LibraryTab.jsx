@@ -77,29 +77,28 @@ const mb = (n) => `${(n / 1048576).toFixed(n < 1048576 ? 2 : 1)} MB`;
 // function: a Vercel function body caps around 4.5 MB and the demo videos are
 // larger than that.
 async function putToSignedUrl(url, file) {
-  // MULTIPART FIRST, and the reason is cache-control. Storage accepts a signed
-  // upload as either a raw body or multipart, and the raw body was the obvious
-  // choice — but the cache-control header does not survive it. Every uploaded
-  // photo came back `no-cache`, so a client re-downloaded every illustration on
-  // every page load, on mobile data, which is the one thing this was supposed
-  // to avoid. The multipart form carries `cacheControl` and it sticks.
+  // Storage accepts a signed upload as either a raw body or a multipart form.
+  // Raw first because it is simpler and it is the one verified working here;
+  // the multipart form is what the official client sends from a browser, so it
+  // is the fallback if anything in between dislikes the first.
   //
-  // Paths are unique per upload, so a year is safe: a replacement gets a new
-  // name and the old URL is simply never asked for again.
-  const form = new FormData();
-  form.append("cacheControl", "31536000");
-  form.append("", file);
-  const multi = await fetch(url, { method: "PUT", body: form });
-  if (multi.ok) return;
-
+  // Neither carries cache-control — Storage ignores it on this route, and both
+  // were measured returning `no-cache` afterwards. Caching is handled at the
+  // app's own origin instead; see the /media rewrite in vercel.json.
   const direct = await fetch(url, {
     method: "PUT",
     headers: { "content-type": file.type || "application/octet-stream" },
     body: file,
   });
-  if (!direct.ok) {
-    const msg = await direct.text().catch(() => "");
-    throw new Error(msg.slice(0, 140) || `Upload failed (${direct.status})`);
+  if (direct.ok) return;
+
+  const form = new FormData();
+  form.append("cacheControl", "31536000");
+  form.append("", file);
+  const multi = await fetch(url, { method: "PUT", body: form });
+  if (!multi.ok) {
+    const msg = await multi.text().catch(() => "");
+    throw new Error(msg.slice(0, 140) || `Upload failed (${multi.status})`);
   }
 }
 

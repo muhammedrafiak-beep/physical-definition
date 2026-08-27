@@ -1,6 +1,16 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/media/photos/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/$1" },
+    { "source": "/media/videos/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/media/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+      ]
+    }
   ]
 }
