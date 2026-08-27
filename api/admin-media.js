@@ -144,12 +144,17 @@ export default async function handler(req, res) {
         const { data, error } = await db.storage.from(kind.bucket).createSignedUploadUrl(path);
         if (error) throw error;
 
-        return res.status(200).json({
-          path,
-          // Absolute, so the browser needs no knowledge of the storage origin.
-          url: `${SUPABASE_URL.replace(/\/+$/, "")}/storage/v1${data.signedUrl}`,
-          token: data.token,
-        });
+        // supabase-js returns `signedUrl` ALREADY absolute. Prefixing the
+        // storage origin onto it — which this did on the first attempt —
+        // produces "https://…/storage/v1https://…/storage/v1/object/upload/…"
+        // and a request that goes nowhere. Handle both shapes rather than
+        // depending on which one a future version of the client returns.
+        const signed = String(data.signedUrl || "");
+        const url = /^https?:\/\//i.test(signed)
+          ? signed
+          : `${SUPABASE_URL.replace(/\/+$/, "")}/storage/v1${signed.startsWith("/") ? "" : "/"}${signed}`;
+
+        return res.status(200).json({ path, url, token: data.token });
       }
 
       // The bytes are up. Point the exercise at them.
