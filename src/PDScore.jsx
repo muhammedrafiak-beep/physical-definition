@@ -24,6 +24,9 @@ async function api(action, payload = {}) {
 // Kept local so this screen can be read on its own. Mirrors the DAY palette
 // in App.jsx; `night` is the camera view, which is held over live video and
 // therefore stays dark whatever the rest of the app does.
+// Every client screen is a 600px column. PD-100 opens over the top of one,
+// so it has to be the same column or the page appears to change size.
+const PAGE = { width:"100%", maxWidth:600, margin:"0 auto" };
 const G = { gold:"#21509B", accent:"#21509B", accentLine:"#D3E0F2", bg:"#F3F6FA", surf:"#FFFFFF", surf2:"#F3F6FA", green:"#12795A", red:"#A63A3A", muted:"#5C6D84", dim:"#93A2B7", text:"#0E2035", border:"#E4E9F0", accentSoft:"#E8EEF8", paper:"#FCFCFD" };
 
 const STATIONS = [
@@ -275,24 +278,20 @@ export function PDScore({ client, onClose }) {
   if(screen==="intro") return (
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto" }}>
       {hiddenVideo}
-      <div style={{ padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${G.border}`,position:"sticky",top:0,background:G.bg,zIndex:2 }}>
+      <div style={{ borderBottom:`1px solid ${G.border}`,position:"sticky",top:0,background:G.bg,zIndex:2 }}>
+      <div style={{ ...PAGE,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center" }}>
         <div>
           <div className="sf" style={{ fontSize:24,color:G.text,lineHeight:1.15 }}>PD-100</div>
           <div style={{ fontSize:10,color:G.muted,letterSpacing:1.5,textTransform:"uppercase",marginTop:1 }}>Physical Definition Benchmark</div>
         </div>
         <button onClick={onClose} aria-label="Close" style={{ background:"#fff",border:`1px solid ${G.border}`,borderRadius:11,color:G.muted,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n="close" s={15} c={G.muted} w={2} /></button>
       </div>
-      <div style={{ padding:16 }}>
-        <div style={{ background:"#E8EEF8",border:`1px solid #D3E0F2`,borderRadius:14,padding:15,marginBottom:14 }}>
-          <div style={{ fontSize:16,fontWeight:700,color:G.gold,marginBottom:5 }}>The Physical Definition 100</div>
-          <div style={{ fontSize:13,color:G.muted,lineHeight:1.7 }}>
-            Our own fitness benchmark — the one test every Physical Definition client is measured by. 100 reps across 5 movements, pure bodyweight, no equipment except a pull-up bar, done straight through for time.
-          </div>
-          <div style={{ display:"flex",gap:7,flexWrap:"wrap",marginTop:11 }}>
-            {["100 reps","5 movements","Bodyweight only","AI counted","For time"].map(x => (
-              <span key={x} style={{ fontSize:11,padding:"4px 10px",borderRadius:20,background:"#F3F6FA",border:`1px solid ${G.border}`,color:G.muted }}>{x}</span>
-            ))}
-          </div>
+      </div>
+      <div style={{ ...PAGE,padding:16 }}>
+        <div style={{ display:"flex",gap:7,flexWrap:"wrap",marginBottom:16 }}>
+          {["100 reps","5 movements","Bodyweight only","AI counted","For time"].map(x => (
+            <span key={x} style={{ fontSize:11.5,padding:"6px 12px",borderRadius:20,background:"#fff",border:`1px solid ${G.border}`,color:G.muted }}>{x}</span>
+          ))}
         </div>
 
         {best && (
@@ -394,6 +393,7 @@ export function PDScore({ client, onClose }) {
   if(screen==="done" && finalScore) return (
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto",padding:20 }}>
       {hiddenVideo}
+      <div style={PAGE}>
       <div style={{ textAlign:"center",paddingTop:30,marginBottom:22 }}>
         <div style={{ display:"flex",justifyContent:"center",marginBottom:14 }}><div style={{ width:58,height:58,borderRadius:19,background:G.accentSoft,display:"flex",alignItems:"center",justifyContent:"center" }}><Icon n="score" s={26} c={G.accent} /></div></div>
         <div style={{ fontSize:11,color:G.muted,letterSpacing:".09em",textTransform:"uppercase",fontWeight:600 }}>PD Score</div>
@@ -416,6 +416,7 @@ export function PDScore({ client, onClose }) {
       <button onClick={() => { setScreen("intro"); loadBoard(); }} style={{ width:"100%",padding:15,background:G.gold,border:"none",borderRadius:12,fontWeight:800,fontSize:15,cursor:"pointer",marginTop:16 }}>
         View leaderboard
       </button>
+    </div>
     </div>
   );
 

@@ -639,7 +639,26 @@ function systemExerciseNames(client) {
   return seen;
 }
 
-const Ovl = ({ show, close, ch, mw = 520 }) => { if (!show) return null; return (<div style={{ position: "fixed", inset: 0, background: "rgba(14,32,53,0.42)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 1000, padding: 16, overflowY: "auto" }} onClick={close}><div className="card" style={{ width: "100%", maxWidth: mw, padding: 22, border: `1px solid ${G.borderHi}`, marginTop: 20, marginBottom: 20 }} onClick={e => e.stopPropagation()}>{ch}</div></div>); };
+// Every overlay in the app: edit a client, share credentials, run an
+// assessment. It used to close ONLY by clicking the backdrop — an affordance
+// nobody can see, and on a phone the card fills the screen so there is barely
+// any backdrop left to hit. The assessment overlay in particular had no way
+// out at all short of reloading. There is a close button now, in the corner
+// of every one of them, at 44px.
+const Ovl = ({ show, close, ch, mw = 520 }) => {
+  if (!show) return null;
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(14,32,53,0.42)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 1000, padding: 16, overflowY: "auto" }} onClick={close}>
+      <div className="card" style={{ position: "relative", width: "100%", maxWidth: mw, padding: 22, border: `1px solid ${G.borderHi}`, marginTop: 20, marginBottom: 20 }} onClick={e => e.stopPropagation()}>
+        <button type="button" className="btn" onClick={close} aria-label="Close"
+          style={{ position: "absolute", top: 12, insetInlineEnd: 12, width: 40, height: 40, borderRadius: 12, background: "#fff", border: `1px solid ${G.border}`, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+          <Icon n="close" s={15} c={G.muted} w={2} />
+        </button>
+        <div style={{ paddingInlineEnd: 44 }}>{ch}</div>
+      </div>
+    </div>
+  );
+};
 // Flags are not languages: a flag names a country, and this button also has
 // to work for an Arabic speaker sitting in Qatar. The word alone says it, in
 // the script it switches to.
@@ -2925,17 +2944,20 @@ export default function App() {
       <Ovl show={!!assessC} close={() => setAssessC(null)} mw={560} ch={
         assessC ? (
           <div>
-            <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-              {[["progress", "↗ Progress"], ["new", "📏 New assessment"]].map(([id, label]) => {
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              {[["progress", "progress", "Progress"], ["new", "ruler", "New assessment"]].map(([id, icon, label]) => {
                 const on = assessTab === id;
                 return (
                   <button key={id} type="button" className="btn" onClick={() => setAssessTab(id)}
                     style={{
-                      flex: 1, padding: "9px", borderRadius: 9, fontSize: 12, fontWeight: 700,
-                      background: on ? "#E8EEF8" : G.surf2,
-                      color: on ? G.gold : G.muted,
-                      border: `1px solid ${on ? G.borderHi : G.border}`,
-                    }}>{label}</button>
+                      flex: 1, minHeight: 44, borderRadius: 11, fontSize: 13, fontWeight: 600,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                      background: on ? G.accentSoft : "#fff",
+                      color: on ? G.accent : G.muted,
+                      border: `1px solid ${on ? G.accentLine : G.border}`,
+                    }}>
+                    <Icon n={icon} s={14} c={on ? G.accent : G.muted} />{label}
+                  </button>
                 );
               })}
             </div>

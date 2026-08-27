@@ -104,7 +104,7 @@ export function AssessmentForm({
 
   const H = ({ children, sub }) => (
     <div style={{ marginTop: 22, marginBottom: 10 }}>
-      <div style={{ fontSize: 11, color: G.gold, letterSpacing: 1.6, textTransform: "uppercase", fontWeight: 700 }}>{children}</div>
+      <div style={{ fontSize: 10, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600 }}>{children}</div>
       {sub && <div style={{ fontSize: 11, color: G.muted, marginTop: 4, lineHeight: 1.5 }}>{sub}</div>}
     </div>
   );
@@ -112,11 +112,11 @@ export function AssessmentForm({
   if (suggestion) {
     return (
       <div>
-        <div className="sf gd" style={{ fontSize: 19, fontWeight: 700 }}>Saved</div>
+        <div className="sf" style={{ fontSize: 26, lineHeight: 1.15, color: G.text }}>Saved</div>
         <div style={{ fontSize: 12, color: G.muted, marginTop: 3 }}>{client?.name}</div>
 
         <div style={{ marginTop: 18, padding: "14px 15px", background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 10 }}>
-          <div style={{ fontSize: 11, color: G.gold, letterSpacing: 1.4, textTransform: "uppercase", fontWeight: 700 }}>
+          <div style={{ fontSize: 10, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600 }}>
             What you measured does not match the programme
           </div>
           <div style={{ fontSize: 13, color: G.text, marginTop: 10, lineHeight: 1.7 }}>
@@ -158,11 +158,11 @@ export function AssessmentForm({
                 setSaving(false);
               }
             }}
-            style={{ flex: 1, padding: "12px", borderRadius: 10, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 13 }}>
+            style={{ flex: 1, padding: "12px", borderRadius: 12, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 13 }}>
             {saving ? "Changing…" : `Move to ${systemName(suggestion.systemId)}`}
           </button>
           <button type="button" className="btn" onClick={onClose} disabled={saving}
-            style={{ padding: "12px 16px", borderRadius: 10, background: G.surf2, color: G.muted, border: `1px solid ${G.border}`, fontSize: 13 }}>
+            style={{ padding: "12px 16px", borderRadius: 12, background: G.surf2, color: G.muted, border: `1px solid ${G.border}`, fontSize: 13 }}>
             Keep as is
           </button>
         </div>
@@ -172,7 +172,7 @@ export function AssessmentForm({
 
   return (
     <div>
-      <div className="sf gd" style={{ fontSize: 19, fontWeight: 700 }}>Assessment</div>
+      <div className="sf" style={{ fontSize: 26, lineHeight: 1.15, color: G.text }}>Assessment</div>
       <div style={{ fontSize: 12, color: G.muted, marginTop: 3 }}>
         {client?.name} · {client?.age}y
       </div>
@@ -318,11 +318,11 @@ export function AssessmentForm({
 
       <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
         <button type="button" className="btn" onClick={save} disabled={saving}
-          style={{ flex: 1, padding: "12px", borderRadius: 10, background: G.grad, color: "#FCFCFD", fontWeight: 700, fontSize: 14 }}>
+          style={{ flex: 1, minHeight: 52, borderRadius: 12, background: G.grad, color: "#FCFCFD", fontWeight: 600, fontSize: 15 }}>
           {saving ? "Saving…" : "Save assessment"}
         </button>
         <button type="button" className="btn" onClick={onClose}
-          style={{ padding: "12px 18px", borderRadius: 10, background: G.surf2, color: G.muted, border: `1px solid ${G.border}`, fontSize: 13 }}>
+          style={{ padding: "12px 18px", borderRadius: 12, background: G.surf2, color: G.muted, border: `1px solid ${G.border}`, fontSize: 13 }}>
           Cancel
         </button>
       </div>
