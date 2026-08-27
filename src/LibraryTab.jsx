@@ -273,6 +273,19 @@ export function LibraryTab({ token, clients }) {
     }
   };
 
+  // Deleting a stored file, as opposed to unlinking it from one exercise.
+  // The server refuses if anything still points at it, so the worst case here
+  // is an error message rather than a hole in somebody's programme.
+  const deleteFile = async (kind, path) => {
+    try {
+      await mediaPost({ action: "delete_file", kind, path }, token);
+      setBucket((b) => ({ ...b, [kind]: (b[kind] || []).filter((f) => f.name !== path) }));
+      setNote(`Deleted ${path}.`);
+    } catch (e) {
+      setErr(e.message);
+    }
+  };
+
   // ── Many files at once ───────────────────────────────────
   const startBulk = async (fileList) => {
     const files = [...fileList];
@@ -389,8 +402,9 @@ export function LibraryTab({ token, clients }) {
       </div>
 
       {picker && (
-        <BucketPicker picker={picker} base={base} loadBucket={loadBucket}
+        <BucketPicker picker={picker} base={base} loadBucket={loadBucket} rows={rows}
           onClose={() => setPicker(null)}
+          onDelete={deleteFile}
           onChoose={(path) => simple(picker.name, picker.kind, "reuse", { path })} />
       )}
 
@@ -445,12 +459,17 @@ function Sheet({ children, onClose, mw = 560 }) {
 // 74 empty ones mostly get filled: the right picture usually exists already
 // under another exercise's name — Dumbbell Curl wants the file Barbell Curl is
 // using, and shooting it again would be silly.
-function BucketPicker({ picker, base, loadBucket, onClose, onChoose }) {
+function BucketPicker({ picker, base, loadBucket, rows, onClose, onChoose, onDelete }) {
   const [files, setFiles] = useState(null);
   const [q, setQ] = useState("");
+  const [confirm, setConfirm] = useState("");
   useEffect(() => { loadBucket(picker.kind).then(setFiles).catch(() => setFiles([])); }, [picker.kind, loadBucket]);
 
+  // Which files nothing points at any more — the only ones offered for
+  // deletion, and the reason a stray upload is not stuck in here forever.
+  const used = new Set((rows || []).map((r) => (picker.kind === "photo" ? r.photo : r.video)).filter(Boolean));
   const shown = (files || []).filter((f) => f.name.toLowerCase().includes(q.trim().toLowerCase()));
+  const unused = shown.filter((f) => !used.has(f.name)).length;
 
   return (
     <Sheet onClose={onClose} mw={620}>
@@ -458,7 +477,12 @@ function BucketPicker({ picker, base, loadBucket, onClose, onChoose }) {
         Already uploaded
       </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: G.text, margin: "4px 0 12px" }}>{picker.name}</div>
-      <input className="inp" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search files…" style={{ marginBottom: 12 }} />
+      <input className="inp" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search files…" style={{ marginBottom: 8 }} />
+      {unused > 0 && (
+        <div style={{ fontSize: 11.5, color: G.muted, marginBottom: 12 }}>
+          {unused} of these are not used by any exercise — those can be deleted.
+        </div>
+      )}
 
       {files === null && <div style={{ fontSize: 13, color: G.muted }}>Reading the bucket…</div>}
       {files && shown.length === 0 && <div style={{ fontSize: 13, color: G.muted }}>Nothing matches.</div>}
@@ -466,11 +490,20 @@ function BucketPicker({ picker, base, loadBucket, onClose, onChoose }) {
       {picker.kind === "photo" ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(96px,1fr))", gap: 8 }}>
           {shown.map((f) => (
-            <button key={f.name} className="btn" onClick={() => onChoose(f.name)} title={f.name}
-              style={{ padding: 0, borderRadius: 10, overflow: "hidden", border: `1px solid ${G.border}`, background: G.soft, aspectRatio: "1", cursor: "pointer" }}>
-              <img src={`${base.photo}/${f.name}`} alt={f.name} loading="lazy"
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            </button>
+            <div key={f.name} style={{ position: "relative" }}>
+              <button className="btn" onClick={() => onChoose(f.name)} title={f.name}
+                style={{ padding: 0, borderRadius: 10, overflow: "hidden", border: `1px solid ${used.has(f.name) ? G.border : G.amberLine}`, background: G.soft, aspectRatio: "1", cursor: "pointer", width: "100%" }}>
+                <img src={`${base.photo}/${f.name}`} alt={f.name} loading="lazy"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              </button>
+              {!used.has(f.name) && (
+                <button className="btn" title={`Delete ${f.name}`}
+                  onClick={() => (confirm === f.name ? onDelete(picker.kind, f.name) : setConfirm(f.name))}
+                  style={{ position: "absolute", top: 4, insetInlineEnd: 4, minWidth: 22, height: 22, padding: "0 6px", borderRadius: 7, fontSize: 10, fontWeight: 700, background: confirm === f.name ? G.red : "rgba(255,255,255,0.92)", color: confirm === f.name ? "#fff" : G.red, border: `1px solid ${G.redLine}` }}>
+                  {confirm === f.name ? "Sure?" : "✕"}
+                </button>
+              )}
+            </div>
           ))}
         </div>
       ) : (
@@ -572,21 +605,18 @@ function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick }) {
       </button>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: G.text, lineHeight: 1.3 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: G.text, lineHeight: 1.3, marginBottom: 8 }}>
           {r.name}
           {used && <span style={{ marginInlineStart: 7, fontSize: 9.5, fontWeight: 700, letterSpacing: ".04em", padding: "2px 6px", borderRadius: 20, background: G.accentSoft, color: G.accent, border: `1px solid ${G.accentLine}`, verticalAlign: "middle" }}>IN USE</span>}
         </div>
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 5, marginBottom: 8 }}>
-          <Tag ok={!!r.photo} verified={r.photoVerified} label="Photo" />
-          <Tag ok={!!r.video} verified={r.videoVerified} label="Video" />
-        </div>
 
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <Controls kind="photo" r={r} busy={busy} src={photoSrc}
-            onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
-          <Controls kind="video" r={r} busy={busy} src={videoSrc}
-            onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
-        </div>
+        {/* One line per kind. They used to share a single row of nine buttons
+            with "Use existing", "Right" and "Remove" appearing twice, and
+            nothing said which half belonged to the photo. */}
+        <MediaLine kind="photo" r={r} busy={busy} src={photoSrc}
+          onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
+        <MediaLine kind="video" r={r} busy={busy} src={videoSrc}
+          onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
       </div>
     </div>
   );
@@ -594,10 +624,10 @@ function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick }) {
 
 function Tag({ ok, verified, label }) {
   const [bg, line, fg, text] = !ok
-    ? [G.soft, G.border, G.muted, `No ${label.toLowerCase()}`]
+    ? [G.soft, G.border, G.muted, "none"]
     : verified
-      ? [G.greenSoft, G.greenLine, G.green, `${label} ✓`]
-      : [G.amberSoft, G.amberLine, G.amber, `${label} — not checked`];
+      ? [G.greenSoft, G.greenLine, G.green, "checked ✓"]
+      : [G.amberSoft, G.amberLine, G.amber, "not checked"];
   return (
     <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".02em", padding: "3px 8px", borderRadius: 20, background: bg, color: fg, border: `1px solid ${line}` }}>
       {text}
@@ -605,7 +635,7 @@ function Tag({ ok, verified, label }) {
   );
 }
 
-function Controls({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick }) {
+function MediaLine({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick }) {
   const ref = useRef(null);
   const state = busy[`${r.name}|${kind}`];
   const has = kind === "photo" ? !!r.photo : !!r.video;
@@ -624,17 +654,23 @@ function Controls({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick })
   );
 
   return (
-    <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "5px 0" }}>
       <input ref={ref} type="file" accept={K.accept} style={{ display: "none" }}
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; onUpload(r.name, kind, f); }} />
 
+      <span style={{ width: 44, flexShrink: 0, fontSize: 9.5, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: G.dim }}>
+        {K.label}
+      </span>
+
+      <Tag ok={has} verified={verified} label={K.label} />
+
       {state
-        ? <span style={{ fontSize: 11.5, color: G.muted, fontWeight: 600, padding: "6px 4px" }}>
-            {state === "uploading" ? `Uploading ${kind}…` : "Saving…"}
+        ? <span style={{ fontSize: 11.5, color: G.muted, fontWeight: 600 }}>
+            {state === "uploading" ? "Uploading…" : "Saving…"}
           </span>
         : (
           <>
-            {btn(has ? `Replace ${kind}` : `Add ${kind}`, () => ref.current?.click(), has ? "quiet" : "solid")}
+            {btn(has ? "Replace" : "Add", () => ref.current?.click(), has ? "quiet" : "solid")}
             {btn("Use existing", () => onPick({ name: r.name, kind }))}
             {has && !verified && btn("Right", () => onSimple(r.name, kind, "confirm"))}
             {has && src && kind === "video" && btn("Play", () => onPreview({ kind, src, name: r.name }))}

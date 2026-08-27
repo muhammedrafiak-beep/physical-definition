@@ -258,6 +258,31 @@ export default async function handler(req, res) {
         return res.status(200).json({ media: toMedia(data) });
       }
 
+      // Remove a file from the bucket for good — and ONLY one that nothing
+      // points at any more. The guard is not politeness: one photo usually
+      // serves several exercises, and deleting is the one action here that
+      // cannot be undone. Unlinking is what `clear` is for.
+      case "delete_file": {
+        const kind = KINDS[String(body.kind || "")];
+        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+
+        const path = String(body.path || "").trim();
+        if (!path) return res.status(400).json({ error: "path is required" });
+
+        const { data: users, error: useErr } = await db
+          .from("exercise_media").select("exercise_name").eq(kind.column, path).limit(3);
+        if (useErr) throw useErr;
+        if (users?.length) {
+          return res.status(409).json({
+            error: `Still in use by ${users.map((u) => u.exercise_name).join(", ")}. Remove it from those first.`,
+          });
+        }
+
+        const { error } = await db.storage.from(kind.bucket).remove([path]);
+        if (error) throw error;
+        return res.status(200).json({ ok: true, path });
+      }
+
       // What is already in the buckets, so a photo can be reused rather than
       // uploaded twice.
       case "files": {
