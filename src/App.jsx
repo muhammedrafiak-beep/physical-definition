@@ -2763,7 +2763,7 @@ export default function App() {
         {/* PLANS */}
         {aTab === "plans" && <PlansTab clients={clients} selC={selC} setSelC={setSelC} setClients={setClients} lang={lang} onUpdate={dbUpdateClient} />}
 
-        {aTab === "library" && <LibraryTab token={adminToken()} />}
+        {aTab === "library" && <LibraryTab token={adminToken()} clients={clients} />}
 
         {/* HISTORY */}
         {aTab === "history" && (

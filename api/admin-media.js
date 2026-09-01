@@ -42,7 +42,8 @@ const KINDS = {
 };
 
 const COLUMNS =
-  "exercise_name, photo_path, video_path, photo_verified, video_verified, updated_at, updated_by";
+  "exercise_name, photo_path, video_path, photo_verified, video_verified, " +
+  "brief, brief_reviewed, updated_at, updated_by";
 
 function toMedia(r) {
   return {
@@ -51,6 +52,10 @@ function toMedia(r) {
     video: r.video_path || null,
     photoVerified: !!r.photo_verified,
     videoVerified: !!r.video_verified,
+    // Admin only. This is how to SHOOT the clip, and it never leaves this
+    // endpoint — `media-map`, which is public, does not select it.
+    brief: r.brief || null,
+    briefReviewed: !!r.brief_reviewed,
     updatedAt: r.updated_at || null,
     updatedBy: r.updated_by || null,
   };
@@ -256,6 +261,56 @@ export default async function handler(req, res) {
         if (error) throw error;
 
         return res.status(200).json({ media: toMedia(data) });
+      }
+
+      // The shooting brief. Rafi edits it, and marking it reviewed is his
+      // signature on the form guidance — everything seeded starts unreviewed.
+      case "brief.save": {
+        const name = String(body.exercise_name || "").trim();
+        if (!name) return res.status(400).json({ error: "exercise_name is required" });
+
+        const b = body.brief;
+        if (b !== null && (typeof b !== "object" || Array.isArray(b))) {
+          return res.status(400).json({ error: "brief must be an object, or null to clear it" });
+        }
+
+        const patch = {
+          brief: b || null,
+          updated_at: new Date().toISOString(),
+          updated_by: admin.sub || admin.email || "admin",
+        };
+        if (typeof body.reviewed === "boolean") patch.brief_reviewed = body.reviewed;
+
+        const { data, error } = await db
+          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
+        if (error) throw error;
+
+        return res.status(200).json({ media: toMedia(data) });
+      }
+
+      // Remove a file from the bucket for good — and ONLY one that nothing
+      // points at any more. The guard is not politeness: one photo usually
+      // serves several exercises, and deleting is the one action here that
+      // cannot be undone. Unlinking is what `clear` is for.
+      case "delete_file": {
+        const kind = KINDS[String(body.kind || "")];
+        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+
+        const path = String(body.path || "").trim();
+        if (!path) return res.status(400).json({ error: "path is required" });
+
+        const { data: users, error: useErr } = await db
+          .from("exercise_media").select("exercise_name").eq(kind.column, path).limit(3);
+        if (useErr) throw useErr;
+        if (users?.length) {
+          return res.status(409).json({
+            error: `Still in use by ${users.map((u) => u.exercise_name).join(", ")}. Remove it from those first.`,
+          });
+        }
+
+        const { error } = await db.storage.from(kind.bucket).remove([path]);
+        if (error) throw error;
+        return res.status(200).json({ ok: true, path });
       }
 
       // What is already in the buckets, so a photo can be reused rather than

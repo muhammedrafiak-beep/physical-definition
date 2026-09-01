@@ -29,7 +29,15 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Server is not configured" });
   }
 
-  const base = `${SUPABASE_URL.replace(/\/+$/, "")}/storage/v1/object/public`;
+  // Same-origin paths, not Supabase URLs.
+  //
+  // The public object endpoint returns `Cache-Control: no-cache` for most of
+  // the bucket and sends no ETag, so a client re-downloaded every photo and
+  // every clip on every page load — on mobile data, in a gym. Storage ignores
+  // cacheControl on a signed upload (raw body and multipart form both tried)
+  // and offers no way to set it afterwards, so `vercel.json` rewrites
+  // /media/* to Storage and puts the cache header on the way out.
+  const base = "/media";
 
   try {
     const db = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -55,8 +63,8 @@ export default async function handler(req, res) {
     // finished wondering whether it worked.
     res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=600");
     return res.status(200).json({
-      photoBase: `${base}/exercise-photos`,
-      videoBase: `${base}/exercise-videos`,
+      photoBase: `${base}/photos`,
+      videoBase: `${base}/videos`,
       m,
     });
   } catch (e) {
@@ -64,6 +72,6 @@ export default async function handler(req, res) {
     // A failure here must not blank every illustration in the app: the client
     // treats an empty map as "no photos yet" and keeps working.
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).json({ photoBase: `${base}/exercise-photos`, videoBase: `${base}/exercise-videos`, m: {} });
+    return res.status(200).json({ photoBase: `${base}/photos`, videoBase: `${base}/videos`, m: {} });
   }
 }
