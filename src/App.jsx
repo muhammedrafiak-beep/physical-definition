@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { MediaFrame } from "./MediaFrame";
-import { photoUrl, getMedia } from "./media";
+import { photoUrl, spriteFor, getMedia } from "./media";
 import { G } from "./theme";
 import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
@@ -224,16 +224,50 @@ function generatePDF(client, lang) {
   const mealPlanRaw = MEALS.find(m => m.id === client.mealPlanId);
   const mealPlan = mealPlanRaw ? scaleMealPlan(mealPlanRaw, target) : null;
 
-  // The same photo the app shows, from the same table. This used to be a
+  // The same picture the app shows, from the same table. This used to be a
   // FOURTH copy of the substring ladder — and it had already drifted from the
   // other three: "high knee" resolved to the jogging photo here and to the
   // barbell squat in the app, so the printed plan and the screen disagreed
   // about the same exercise.
+  //
+  // The photo comes first here, and only here. On screen the clip leads, but a
+  // printed page cannot play one — and a still frame lifted from a clip is not
+  // something we have. So: photo, then one frame of the model, then the
+  // placeholder. That order is deliberate and is the reverse of the screen's.
+  //
+  // WHY THE MODEL IS CROPPED WITH AN <img> AND NOT A BACKGROUND. The screen
+  // version steps `background-position`, which is right there and wrong here:
+  // browsers drop background images when printing unless the user has ticked
+  // "Background graphics", so the box would come out empty on somebody else's
+  // printer. An <img> always prints. The wrapper crops it to one cell instead.
   const getGifForPDF = (exName) => {
-    const url = photoUrl(getMedia(), exName);
-    return url
-      ? `<img src="${url}" alt="${exName}" style="width:160px;height:100px;object-fit:contain;border-radius:8px;background:#fff;" />`
-      : `<div style="width:160px;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
+    const media = getMedia();
+
+    const url = photoUrl(media, exName);
+    if (url) {
+      return `<img src="${url}" alt="${exName}" style="width:160px;height:100px;object-fit:contain;border-radius:8px;background:#fff;" />`;
+    }
+
+    const sp = spriteFor(media, exName);
+    if (sp) {
+      // The middle frame. The two ends are the rest position on one sheet or
+      // the other — the squat starts standing, the glute bridge ends flat on
+      // the floor — and neither says what the exercise is.
+      const i = Math.floor((sp.frames - 1) / 2);
+      const col = i % sp.cols;
+      const row = Math.floor(i / sp.cols);
+      // The frame is 9:16, so it gets 100px of height and the width that
+      // follows, centred in the same 160x100 box the photos use. Nothing on
+      // the page moves depending on which kind of picture an exercise has.
+      const w = Math.round(100 * 9 / 16);
+      return `<div style="width:160px;height:100px;display:flex;align-items:center;justify-content:center;">`
+        + `<div style="width:${w}px;height:100px;overflow:hidden;position:relative;border-radius:8px;background:#fff;">`
+        + `<img src="${sp.url}" alt="${exName}" style="position:absolute;width:${sp.cols * 100}%;height:${sp.rows * 100}%;`
+        + `left:-${col * 100}%;top:-${row * 100}%;max-width:none;" />`
+        + `</div></div>`;
+    }
+
+    return `<div style="width:160px;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
   };
 
   const workoutHTML = workoutSystem ? `
