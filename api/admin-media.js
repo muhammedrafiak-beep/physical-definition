@@ -106,6 +106,29 @@ function toMedia(r) {
   };
 }
 
+// Every write here targets one exercise by name, and the name is the primary
+// key — so a name that is not in the table matches no row, `.single()` reports
+// that as an error, and it used to surface as the catch-all 500: "That didn't
+// work. Try again." for something that will never work however many times it
+// is tried. `sign_upload` already answers this case properly; the writes that
+// follow it did not.
+//
+// Returns null having already answered, so the caller returns immediately.
+async function writeRow(db, res, name, patch) {
+  const { data, error } = await db
+    .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
+
+  if (error) {
+    // PGRST116 is PostgREST for "one row requested, none came back".
+    if (error.code === "PGRST116") {
+      res.status(404).json({ error: `No exercise called "${name}" in the library.` });
+      return null;
+    }
+    throw error;
+  }
+  return data;
+}
+
 // A filename Storage and a CDN can both live with, derived from the exercise
 // name so the bucket stays readable to a human browsing it.
 function slug(name) {
@@ -244,9 +267,8 @@ export default async function handler(req, res) {
           patch.sprite_frames = g.frames;
         }
 
-        const { data, error } = await db
-          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
-        if (error) throw error;
+        const data = await writeRow(db, res, name, patch);
+        if (!data) return;
 
         return res.status(200).json({ media: toMedia(data) });
       }
@@ -282,9 +304,8 @@ export default async function handler(req, res) {
           patch.sprite_frames = g.frames;
         }
 
-        const { data, error } = await db
-          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
-        if (error) throw error;
+        const data = await writeRow(db, res, name, patch);
+        if (!data) return;
 
         return res.status(200).json({ media: toMedia(data) });
       }
@@ -313,9 +334,8 @@ export default async function handler(req, res) {
           patch.sprite_frames = null;
         }
 
-        const { data, error } = await db
-          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
-        if (error) throw error;
+        const data = await writeRow(db, res, name, patch);
+        if (!data) return;
 
         return res.status(200).json({ media: toMedia(data) });
       }
@@ -330,12 +350,12 @@ export default async function handler(req, res) {
         const name = String(body.exercise_name || "").trim();
         if (!name) return res.status(400).json({ error: "exercise_name is required" });
 
-        const { data, error } = await db.from("exercise_media").update({
+        const data = await writeRow(db, res, name, {
           [kind.verified]: true,
           updated_at: new Date().toISOString(),
           updated_by: admin.sub || admin.email || "admin",
-        }).eq("exercise_name", name).select(COLUMNS).single();
-        if (error) throw error;
+        });
+        if (!data) return;
 
         return res.status(200).json({ media: toMedia(data) });
       }
@@ -358,12 +378,12 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: `display must be auto, ${KIND_NAMES.join(", ")}` });
         }
 
-        const { data, error } = await db.from("exercise_media").update({
+        const data = await writeRow(db, res, name, {
           display: want,
           updated_at: new Date().toISOString(),
           updated_by: admin.sub || admin.email || "admin",
-        }).eq("exercise_name", name).select(COLUMNS).single();
-        if (error) throw error;
+        });
+        if (!data) return;
 
         return res.status(200).json({ media: toMedia(data) });
       }
@@ -386,9 +406,8 @@ export default async function handler(req, res) {
         };
         if (typeof body.reviewed === "boolean") patch.brief_reviewed = body.reviewed;
 
-        const { data, error } = await db
-          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
-        if (error) throw error;
+        const data = await writeRow(db, res, name, patch);
+        if (!data) return;
 
         return res.status(200).json({ media: toMedia(data) });
       }
