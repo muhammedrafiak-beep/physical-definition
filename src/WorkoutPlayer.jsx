@@ -754,15 +754,19 @@ export function WorkoutPlayer({
                 onError={() => setVideoFailed(true)}
                 onLoadedData={() => setVideoReady(true)}
               />
-              {/* The clips are 1–3 MB and sit on object storage. Until one has
-                  a frame to show, a <video> paints nothing — which on a phone
-                  meant a black screen the height of the display, with no way
-                  to tell it from a broken app. The illustration holds the
-                  space, and the spinner says which of the two it is. */}
+              {/* The clips are 1–3 MB and sit on object storage, so there is a
+                  moment before one paints. That moment used to be filled with
+                  the still photo — which meant the exercise appeared to change
+                  medium as it loaded, and the photo was what you saw first
+                  when the clip is the point. A spinner on the player's own
+                  ground says "loading" without pretending to be the demo.
+
+                  The photo is still what shows when there is no clip at all,
+                  and when one fails to load — and it is what the printed plan
+                  is built from. It is a fallback here, not the first thing. */}
               {!videoReady && (
-                <div style={{ position: "absolute", inset: 0, background: "#152B45", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, color: "#8FA3BE", padding: 16 }}>
-                  <ExerciseIllustration exerciseId={current.exercise.name} size={150} />
-                  <div className="sp" style={{ width: 22, height: 22, borderWidth: 2 }} />
+                <div style={{ position: "absolute", inset: 0, background: "#0A1727", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="sp" style={{ width: 26, height: 26, borderWidth: 2 }} />
                 </div>
               )}
               {exerciseRemaining !== null && (
@@ -870,6 +874,30 @@ export function WorkoutPlayer({
               )}
             </div>
           )}
+
+          {/* "Good set." — over the media, not under it.
+              This used to be a block in the normal flow between the info panel
+              and the buttons. The media area is `flex: 1`, so every time the
+              message appeared it took ~60px off the video and gave them back
+              1.5 seconds later: the clip visibly jumped, twice a set. As a
+              toast it changes nothing about the layout, and it reads better —
+              it lands ON the work rather than in a strip below it. */}
+          {motivation && (
+            <div style={{
+              position: "absolute", left: 0, right: 0, bottom: 14,
+              display: "flex", justifyContent: "center", pointerEvents: "none",
+              animation: "fi .25s ease",
+            }}>
+              <div style={{
+                background: "rgba(18,121,90,0.94)", color: "#FCFCFD",
+                borderRadius: 999, padding: "10px 22px",
+                fontSize: 16, fontWeight: 800, letterSpacing: "-.01em",
+                boxShadow: "0 6px 20px rgba(0,0,0,.35)",
+              }}>
+                {motivation}
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ padding: "18px 18px 0" }}>
@@ -903,11 +931,6 @@ export function WorkoutPlayer({
           )}
         </div>
 
-        {motivation && (
-          <div style={{ margin: "0 18px 8px", background: "#12795A", color: "#FCFCFD", borderRadius: 10, padding: "12px", textAlign: "center", fontSize: 18, fontWeight: 800 }}>
-            {motivation}
-          </div>
-        )}
         <div style={{ padding: "0 18px 20px", display: "flex", gap: 10, flexWrap: "wrap" }}>
           {phase === "exercise" ? (
             !setStarted ? (

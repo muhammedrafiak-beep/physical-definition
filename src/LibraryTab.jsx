@@ -171,6 +171,7 @@ export function LibraryTab({ token, clients }) {
   const [preview, setPreview] = useState(null);
   const [picker, setPicker] = useState(null); // { name, kind }
   const [bulk, setBulk] = useState(null);     // { kind, items, running, done }
+  const [briefFor, setBriefFor] = useState(null); // exercise name
   const [dragging, setDragging] = useState(false);
 
   const load = useCallback(async () => {
@@ -275,6 +276,16 @@ export function LibraryTab({ token, clients }) {
     } finally {
       mark(name, kind, null);
       setPicker(null);
+    }
+  };
+
+  const saveBrief = async (name, brief, reviewed) => {
+    try {
+      const d = await mediaPost({ action: "brief.save", exercise_name: name, brief, reviewed }, token);
+      patch(d.media);
+      setNote(`Brief saved for ${name}.`);
+    } catch (e) {
+      setErr(e.message);
     }
   };
 
@@ -402,9 +413,17 @@ export function LibraryTab({ token, clients }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {shown.map((r) => (
           <Row key={r.name} r={r} base={base} busy={busy} used={inUse.has(r.name)}
-            onUpload={upload} onSimple={simple} onPreview={setPreview} onPick={setPicker} />
+            onUpload={upload} onSimple={simple} onPreview={setPreview} onPick={setPicker}
+            onBrief={setBriefFor} />
         ))}
       </div>
+
+      {briefFor && (
+        <PromptSheet
+          row={(rows || []).find((r) => r.name === briefFor)}
+          onClose={() => setBriefFor(null)}
+          onSave={saveBrief} />
+      )}
 
       {picker && (
         <BucketPicker picker={picker} base={base} loadBucket={loadBucket} rows={rows}
@@ -582,7 +601,7 @@ function BulkReview({ bulk, rows, setBulk, onRun, onCancel }) {
   );
 }
 
-function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick }) {
+function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick, onBrief }) {
   const photoSrc = r.photo ? `${base.photo}/${r.photo}` : null;
   const videoSrc = r.video ? `${base.video}/${r.video}` : null;
   const [over, setOver] = useState(false);
@@ -621,7 +640,8 @@ function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick }) {
         <MediaLine kind="photo" r={r} busy={busy} src={photoSrc}
           onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
         <MediaLine kind="video" r={r} busy={busy} src={videoSrc}
-          onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
+          onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick}
+          onBrief={onBrief} />
       </div>
     </div>
   );
@@ -640,7 +660,7 @@ function Tag({ ok, verified, label }) {
   );
 }
 
-function MediaLine({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick }) {
+function MediaLine({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick, onBrief }) {
   const ref = useRef(null);
   const state = busy[`${r.name}|${kind}`];
   const has = kind === "photo" ? !!r.photo : !!r.video;
@@ -677,11 +697,102 @@ function MediaLine({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick }
           <>
             {btn(has ? "Replace" : "Add", () => ref.current?.click(), has ? "quiet" : "solid")}
             {btn("Use existing", () => onPick({ name: r.name, kind }))}
+            {kind === "video" && onBrief && (
+              <button className="btn" onClick={() => onBrief(r.name)}
+                style={{ padding: "6px 11px", fontSize: 11.5, fontWeight: 600, borderRadius: 9,
+                  background: r.brief ? (r.briefReviewed ? G.greenSoft : G.amberSoft) : "#fff",
+                  color: r.brief ? (r.briefReviewed ? G.green : G.amber) : G.muted,
+                  border: `1px solid ${r.brief ? (r.briefReviewed ? G.greenLine : G.amberLine) : G.border}` }}>
+                Prompt{r.brief ? (r.briefReviewed ? " ✓" : " •") : ""}
+              </button>
+            )}
             {has && !verified && btn("Right", () => onSimple(r.name, kind, "confirm"))}
             {has && src && kind === "video" && btn("Play", () => onPreview({ kind, src, name: r.name }))}
             {has && btn("Remove", () => onSimple(r.name, kind, "clear"), "danger")}
           </>
         )}
     </div>
+  );
+}
+
+// ── The video prompt ───────────────────────────────────────
+//
+// ADMIN ONLY, and it is not instructions for a camera — Rafi generates these
+// clips in Google Flow from a character model he built, "@PD Anatomy Model".
+// So what belongs here is the PROMPT: the text he pastes into Flow to get
+// this exercise, in that character, with the anatomy overlay on the right
+// muscles. One exercise, one prompt, one paste.
+//
+// It is stored as plain text rather than fields because it is copied whole
+// and never parsed. The screen's only jobs are: show it, let him fix it,
+// and get it onto the clipboard in one tap.
+function PromptSheet({ row, onClose, onSave }) {
+  const [text, setText] = useState(() => row?.brief?.prompt || "");
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  if (!row) return null;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Clipboard refused (no permission, insecure context). Select it instead
+      // so the keyboard still works — better than a button that does nothing.
+      const el = document.getElementById("pd-prompt-box");
+      if (el) { el.focus(); el.select(); }
+    }
+  };
+
+  const commit = async (reviewed) => {
+    setSaving(true);
+    await onSave(row.name, text.trim() ? { prompt: text.trim() } : null, reviewed);
+    setSaving(false);
+    onClose();
+  };
+
+  return (
+    <Sheet onClose={onClose} mw={720}>
+      <div style={{ fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: G.muted, fontWeight: 700 }}>
+        Video prompt
+      </div>
+      <div style={{ fontSize: 19, fontWeight: 600, color: G.text, margin: "4px 0 2px", fontFamily: "'Instrument Serif',Georgia,serif" }}>
+        {row.name}
+      </div>
+      <div style={{ fontSize: 11.5, color: G.muted, marginBottom: 14 }}>
+        Paste this into Flow. Only you see it — nothing here reaches a client.
+      </div>
+
+      {row.brief?.prompt && !row.briefReviewed && (
+        <div style={{ background: G.amberSoft, border: `1px solid ${G.amberLine}`, borderRadius: 10, padding: "9px 12px", marginBottom: 12, fontSize: 12, color: G.amber }}>
+          Written from the movement and its target muscles, not checked by you yet. Read it before you generate.
+        </div>
+      )}
+
+      <textarea id="pd-prompt-box" className="inp" value={text} rows={16}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="No prompt yet — write one, or paste the one you used."
+        style={{ minHeight: 0, resize: "vertical", padding: "12px 14px", fontSize: 12.5, lineHeight: 1.65,
+                 fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }} />
+
+      <button className="btn" onClick={copy} disabled={!text.trim()}
+        style={{ width: "100%", minHeight: 46, marginTop: 10, borderRadius: 12, fontSize: 13, fontWeight: 600,
+                 background: copied ? G.greenSoft : G.soft, color: copied ? G.green : G.text,
+                 border: `1px solid ${copied ? G.greenLine : G.border}`, opacity: text.trim() ? 1 : 0.5 }}>
+        {copied ? "Copied ✓" : "Copy prompt"}
+      </button>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+        <button className="btn" onClick={() => commit(true)} disabled={saving}
+          style={{ flex: 1, minWidth: 150, minHeight: 48, borderRadius: 12, background: G.accent, color: "#fff", fontWeight: 600, fontSize: 13, border: "none", opacity: saving ? 0.6 : 1 }}>
+          {saving ? "Saving…" : "Save and mark checked"}
+        </button>
+        <button className="btn" onClick={() => commit(false)} disabled={saving}
+          style={{ minHeight: 48, padding: "0 16px", borderRadius: 12, background: "#fff", color: G.muted, fontWeight: 600, fontSize: 13, border: `1px solid ${G.border}` }}>
+          Save only
+        </button>
+      </div>
+    </Sheet>
   );
 }

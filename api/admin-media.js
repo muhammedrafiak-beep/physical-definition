@@ -42,7 +42,8 @@ const KINDS = {
 };
 
 const COLUMNS =
-  "exercise_name, photo_path, video_path, photo_verified, video_verified, updated_at, updated_by";
+  "exercise_name, photo_path, video_path, photo_verified, video_verified, " +
+  "brief, brief_reviewed, updated_at, updated_by";
 
 function toMedia(r) {
   return {
@@ -51,6 +52,10 @@ function toMedia(r) {
     video: r.video_path || null,
     photoVerified: !!r.photo_verified,
     videoVerified: !!r.video_verified,
+    // Admin only. This is how to SHOOT the clip, and it never leaves this
+    // endpoint — `media-map`, which is public, does not select it.
+    brief: r.brief || null,
+    briefReviewed: !!r.brief_reviewed,
     updatedAt: r.updated_at || null,
     updatedBy: r.updated_by || null,
   };
@@ -253,6 +258,31 @@ export default async function handler(req, res) {
           updated_at: new Date().toISOString(),
           updated_by: admin.sub || admin.email || "admin",
         }).eq("exercise_name", name).select(COLUMNS).single();
+        if (error) throw error;
+
+        return res.status(200).json({ media: toMedia(data) });
+      }
+
+      // The shooting brief. Rafi edits it, and marking it reviewed is his
+      // signature on the form guidance — everything seeded starts unreviewed.
+      case "brief.save": {
+        const name = String(body.exercise_name || "").trim();
+        if (!name) return res.status(400).json({ error: "exercise_name is required" });
+
+        const b = body.brief;
+        if (b !== null && (typeof b !== "object" || Array.isArray(b))) {
+          return res.status(400).json({ error: "brief must be an object, or null to clear it" });
+        }
+
+        const patch = {
+          brief: b || null,
+          updated_at: new Date().toISOString(),
+          updated_by: admin.sub || admin.email || "admin",
+        };
+        if (typeof body.reviewed === "boolean") patch.brief_reviewed = body.reviewed;
+
+        const { data, error } = await db
+          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
         if (error) throw error;
 
         return res.status(200).json({ media: toMedia(data) });
