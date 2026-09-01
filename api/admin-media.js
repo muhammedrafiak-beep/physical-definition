@@ -1,8 +1,8 @@
 // POST /api/admin-media   { action, ... }
 // Authorization: Bearer <admin session token>
 //
-// Which photo and which video belong to which exercise — and how Rafi changes
-// that without a developer.
+// Which photo, which clip and which model sprite belong to which exercise —
+// and how Rafi changes that without a developer.
 //
 // Before this, the answer lived in three hardcoded substring ladders in three
 // source files (ExerciseIllustration.jsx, App.jsx VM_LIST, and WorkoutPlayer.jsx
@@ -28,21 +28,58 @@ import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import { requireAdmin, missingEnv } from "./_lib/admin.js";
 
-const PHOTO_BUCKET = "exercise-photos";
-const VIDEO_BUCKET = "exercise-videos";
+const PHOTO_BUCKET  = "exercise-photos";
+const VIDEO_BUCKET  = "exercise-videos";
+const SPRITE_BUCKET = "exercise-sprites";
 
 // Extension allowlist, not a MIME allowlist: the extension is what ends up in
 // the public URL and what the browser sniffs. Anything not listed is refused
 // rather than stored under a name nothing will play.
 const KINDS = {
-  photo: { bucket: PHOTO_BUCKET, column: "photo_path", verified: "photo_verified",
-           ext: ["jpg", "jpeg", "png", "webp"], maxBytes: 8 * 1024 * 1024 },
-  video: { bucket: VIDEO_BUCKET, column: "video_path", verified: "video_verified",
-           ext: ["mp4", "webm", "mov", "m4v"], maxBytes: 60 * 1024 * 1024 },
+  photo:  { bucket: PHOTO_BUCKET,  column: "photo_path",  verified: "photo_verified",
+            ext: ["jpg", "jpeg", "png", "webp"], maxBytes: 8 * 1024 * 1024 },
+  video:  { bucket: VIDEO_BUCKET,  column: "video_path",  verified: "video_verified",
+            ext: ["mp4", "webm", "mov", "m4v"], maxBytes: 60 * 1024 * 1024 },
+  // One image holding a grid of frames of the PD Anatomy Model — the same
+  // character the Flow clips are generated from — stepped through in order.
+  // It is what an exercise shows when there is no clip and no photo, so the
+  // library is never a dashed rectangle; and being one cached image, it costs
+  // a fraction of a video on a gym's mobile data.
+  sprite: { bucket: SPRITE_BUCKET, column: "sprite_path", verified: "sprite_verified",
+            ext: ["webp", "png", "jpg", "jpeg", "avif"], maxBytes: 25 * 1024 * 1024,
+            grid: true },
 };
 
+const KIND_NAMES = Object.keys(KINDS);
+const kindError = () => `kind must be one of: ${KIND_NAMES.join(", ")}`;
+
+// The grid the two sheets built so far use: 6 across, 4 down, 24 frames of
+// 360x640. Stored per row rather than assumed, because a longer movement will
+// want more frames and nothing should break when it does.
+const DEFAULT_GRID = { cols: 6, rows: 4, frames: 24 };
+
+// A grid has to be whole and positive, and the frames have to fit the cells
+// it claims — a zero column count divides by zero in the client's frame maths,
+// and a frame count past the grid scrubs into empty space.
+function readGrid(body) {
+  const n = (v, d) => {
+    const x = Math.trunc(Number(v));
+    return Number.isFinite(x) && x > 0 ? x : d;
+  };
+  const cols = n(body.cols, DEFAULT_GRID.cols);
+  const rows = n(body.rows, DEFAULT_GRID.rows);
+  const frames = n(body.frames, Math.min(DEFAULT_GRID.frames, cols * rows));
+  if (cols > 24 || rows > 24) return { error: "A sprite grid can be at most 24 by 24." };
+  if (frames > cols * rows) {
+    return { error: `${frames} frames do not fit a ${cols} by ${rows} grid.` };
+  }
+  return { cols, rows, frames };
+}
+
 const COLUMNS =
-  "exercise_name, photo_path, video_path, photo_verified, video_verified, " +
+  "exercise_name, photo_path, video_path, sprite_path, " +
+  "photo_verified, video_verified, sprite_verified, " +
+  "sprite_cols, sprite_rows, sprite_frames, display, " +
   "brief, brief_reviewed, updated_at, updated_by";
 
 function toMedia(r) {
@@ -50,8 +87,16 @@ function toMedia(r) {
     name: r.exercise_name,
     photo: r.photo_path || null,
     video: r.video_path || null,
+    sprite: r.sprite_path || null,
     photoVerified: !!r.photo_verified,
     videoVerified: !!r.video_verified,
+    spriteVerified: !!r.sprite_verified,
+    spriteGrid: r.sprite_path
+      ? { cols: r.sprite_cols, rows: r.sprite_rows, frames: r.sprite_frames }
+      : null,
+    // Which of the three the client shows. "auto" resolves at render time;
+    // anything else is Rafi overriding that for this one exercise.
+    display: r.display || "auto",
     // Admin only. This is how to SHOOT the clip, and it never leaves this
     // endpoint — `media-map`, which is public, does not select it.
     brief: r.brief || null,
@@ -105,7 +150,7 @@ export default async function handler(req, res) {
         if (error) throw error;
         return res.status(200).json({
           media: (data || []).map(toMedia),
-          buckets: { photo: PHOTO_BUCKET, video: VIDEO_BUCKET },
+          buckets: { photo: PHOTO_BUCKET, video: VIDEO_BUCKET, sprite: SPRITE_BUCKET },
           storageUrl: `${SUPABASE_URL.replace(/\/+$/, "")}/storage/v1`,
         });
       }
@@ -115,7 +160,7 @@ export default async function handler(req, res) {
       // abandoned upload leaves the exercise showing what it showed before.
       case "sign_upload": {
         const kind = KINDS[String(body.kind || "")];
-        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+        if (!kind) return res.status(400).json({ error: kindError() });
 
         const name = String(body.exercise_name || "").trim();
         if (!name) return res.status(400).json({ error: "exercise_name is required" });
@@ -165,7 +210,7 @@ export default async function handler(req, res) {
       // The bytes are up. Point the exercise at them.
       case "commit": {
         const kind = KINDS[String(body.kind || "")];
-        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+        if (!kind) return res.status(400).json({ error: kindError() });
 
         const name = String(body.exercise_name || "").trim();
         const path = String(body.path || "").trim();
@@ -187,6 +232,18 @@ export default async function handler(req, res) {
           updated_at: new Date().toISOString(),
           updated_by: admin.sub || admin.email || "admin",
         };
+
+        // A sprite is meaningless without its grid: the client has to know how
+        // to cut the sheet up. Stored with the path, in the same write, so a
+        // row can never hold one without the other.
+        if (kind.grid) {
+          const g = readGrid(body);
+          if (g.error) return res.status(400).json({ error: g.error });
+          patch.sprite_cols = g.cols;
+          patch.sprite_rows = g.rows;
+          patch.sprite_frames = g.frames;
+        }
+
         const { data, error } = await db
           .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
         if (error) throw error;
@@ -198,7 +255,7 @@ export default async function handler(req, res) {
       // same photo serving several exercises, which is most of the library.
       case "reuse": {
         const kind = KINDS[String(body.kind || "")];
-        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+        if (!kind) return res.status(400).json({ error: kindError() });
 
         const name = String(body.exercise_name || "").trim();
         const path = String(body.path || "").trim();
@@ -211,12 +268,22 @@ export default async function handler(req, res) {
           return res.status(404).json({ error: "There is no such file in the bucket." });
         }
 
-        const { data, error } = await db.from("exercise_media").update({
+        const patch = {
           [kind.column]: path,
           [kind.verified]: true,
           updated_at: new Date().toISOString(),
           updated_by: admin.sub || admin.email || "admin",
-        }).eq("exercise_name", name).select(COLUMNS).single();
+        };
+        if (kind.grid) {
+          const g = readGrid(body);
+          if (g.error) return res.status(400).json({ error: g.error });
+          patch.sprite_cols = g.cols;
+          patch.sprite_rows = g.rows;
+          patch.sprite_frames = g.frames;
+        }
+
+        const { data, error } = await db
+          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
         if (error) throw error;
 
         return res.status(200).json({ media: toMedia(data) });
@@ -227,17 +294,27 @@ export default async function handler(req, res) {
       // several other exercises.
       case "clear": {
         const kind = KINDS[String(body.kind || "")];
-        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+        if (!kind) return res.status(400).json({ error: kindError() });
 
         const name = String(body.exercise_name || "").trim();
         if (!name) return res.status(400).json({ error: "exercise_name is required" });
 
-        const { data, error } = await db.from("exercise_media").update({
+        const patch = {
           [kind.column]: null,
           [kind.verified]: false,
           updated_at: new Date().toISOString(),
           updated_by: admin.sub || admin.email || "admin",
-        }).eq("exercise_name", name).select(COLUMNS).single();
+        };
+        // The grid describes a sheet that is no longer there. Leaving it
+        // behind would fail the row's own check constraint on the next write.
+        if (kind.grid) {
+          patch.sprite_cols = null;
+          patch.sprite_rows = null;
+          patch.sprite_frames = null;
+        }
+
+        const { data, error } = await db
+          .from("exercise_media").update(patch).eq("exercise_name", name).select(COLUMNS).single();
         if (error) throw error;
 
         return res.status(200).json({ media: toMedia(data) });
@@ -248,13 +325,41 @@ export default async function handler(req, res) {
       // things to check gets shorter.
       case "confirm": {
         const kind = KINDS[String(body.kind || "")];
-        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+        if (!kind) return res.status(400).json({ error: kindError() });
 
         const name = String(body.exercise_name || "").trim();
         if (!name) return res.status(400).json({ error: "exercise_name is required" });
 
         const { data, error } = await db.from("exercise_media").update({
           [kind.verified]: true,
+          updated_at: new Date().toISOString(),
+          updated_by: admin.sub || admin.email || "admin",
+        }).eq("exercise_name", name).select(COLUMNS).single();
+        if (error) throw error;
+
+        return res.status(200).json({ media: toMedia(data) });
+      }
+
+      // Which of the three sources this exercise shows.
+      //
+      // "auto" is the default and is what almost every row should stay on: the
+      // client picks the best thing present. The three named values are for
+      // the cases where the best thing present is not the right thing — a
+      // clip that came out badly, or a movement where the model reads more
+      // clearly than the footage. Naming a source that is missing is allowed
+      // and is not a trap: the client falls through the same chain rather than
+      // showing nothing, so this can never strand an exercise blank.
+      case "display.set": {
+        const name = String(body.exercise_name || "").trim();
+        if (!name) return res.status(400).json({ error: "exercise_name is required" });
+
+        const want = String(body.display || "").trim();
+        if (!["auto", ...KIND_NAMES].includes(want)) {
+          return res.status(400).json({ error: `display must be auto, ${KIND_NAMES.join(", ")}` });
+        }
+
+        const { data, error } = await db.from("exercise_media").update({
+          display: want,
           updated_at: new Date().toISOString(),
           updated_by: admin.sub || admin.email || "admin",
         }).eq("exercise_name", name).select(COLUMNS).single();
@@ -294,7 +399,7 @@ export default async function handler(req, res) {
       // cannot be undone. Unlinking is what `clear` is for.
       case "delete_file": {
         const kind = KINDS[String(body.kind || "")];
-        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+        if (!kind) return res.status(400).json({ error: kindError() });
 
         const path = String(body.path || "").trim();
         if (!path) return res.status(400).json({ error: "path is required" });
@@ -317,7 +422,7 @@ export default async function handler(req, res) {
       // uploaded twice.
       case "files": {
         const kind = KINDS[String(body.kind || "")];
-        if (!kind) return res.status(400).json({ error: "kind must be photo or video" });
+        if (!kind) return res.status(400).json({ error: kindError() });
 
         const { data, error } = await db.storage
           .from(kind.bucket).list("", { limit: 1000, sortBy: { column: "name", order: "asc" } });

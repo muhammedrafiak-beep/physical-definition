@@ -19,9 +19,28 @@ import { resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
 // knows the movement, looking at the picture.
 
 const KINDS = {
-  photo: { label: "Photo", accept: "image/jpeg,image/png,image/webp", max: 8 },
-  video: { label: "Video", accept: "video/mp4,video/webm,video/quicktime", max: 60 },
+  photo:  { label: "Photo", accept: "image/jpeg,image/png,image/webp", max: 8,
+            path: "photo", ok: "photoVerified" },
+  video:  { label: "Video", accept: "video/mp4,video/webm,video/quicktime", max: 60,
+            path: "video", ok: "videoVerified" },
+  // The PD Anatomy Model sheet — one image holding a grid of frames of the
+  // same character the clips are generated from. It is what an exercise shows
+  // when there is no clip and no photo, so nothing in the library is ever a
+  // dashed rectangle in front of a client.
+  sprite: { label: "Model", accept: "image/webp,image/png,image/jpeg,image/avif", max: 25,
+            path: "sprite", ok: "spriteVerified" },
 };
+
+// What a sheet is assumed to be unless Rafi says otherwise: the two built so
+// far are 6 across, 4 down, 24 frames.
+const DEFAULT_GRID = { cols: 6, rows: 4, frames: 24 };
+
+const SHOWN_AS = [
+  { id: "auto",   label: "Auto" },
+  { id: "video",  label: "Video" },
+  { id: "sprite", label: "Model" },
+  { id: "photo",  label: "Photo" },
+];
 
 const mediaPost = async (payload, token) => {
   const r = await fetch("/api/admin-media", {
@@ -143,6 +162,7 @@ const FILTERS = [
   { id: "inuse", label: "In use now" },
   { id: "nophoto", label: "No photo" },
   { id: "novideo", label: "No video" },
+  { id: "nothing", label: "Nothing to show" },
   { id: "unverified", label: "Not checked" },
   { id: "all", label: "All" },
 ];
@@ -161,8 +181,8 @@ function namesInSystem(sys) {
 
 export function LibraryTab({ token, clients }) {
   const [rows, setRows] = useState(null);
-  const [base, setBase] = useState({ photo: "", video: "" });
-  const [bucket, setBucket] = useState({ photo: null, video: null });
+  const [base, setBase] = useState({ photo: "", video: "", sprite: "" });
+  const [bucket, setBucket] = useState({ photo: null, video: null, sprite: null });
   const [err, setErr] = useState("");
   const [note, setNote] = useState("");
   const [q, setQ] = useState("");
@@ -180,7 +200,11 @@ export function LibraryTab({ token, clients }) {
       const d = await mediaPost({ action: "list" }, token);
       setRows(d.media || []);
       const root = `${d.storageUrl}/object/public`;
-      setBase({ photo: `${root}/${d.buckets.photo}`, video: `${root}/${d.buckets.video}` });
+      setBase({
+        photo: `${root}/${d.buckets.photo}`,
+        video: `${root}/${d.buckets.video}`,
+        sprite: `${root}/${d.buckets.sprite}`,
+      });
     } catch (e) {
       setErr(e.message);
       setRows([]);
@@ -207,14 +231,18 @@ export function LibraryTab({ token, clients }) {
 
   const counts = useMemo(() => {
     const r = rows || [];
-    const u = (x) => (x.photo && !x.photoVerified) || (x.video && !x.videoVerified);
+    const u = (x) => (x.photo && !x.photoVerified) || (x.video && !x.videoVerified) || (x.sprite && !x.spriteVerified);
+    // The only gap that reaches a client: no clip, no model, no photo. Missing
+    // one of the three is a preference; missing all three is a blank box.
+    const blank = (x) => !x.photo && !x.video && !x.sprite;
     return {
       all: r.length,
       inuse: r.filter((x) => inUse.has(x.name)).length,
       nophoto: r.filter((x) => !x.photo).length,
       novideo: r.filter((x) => !x.video).length,
+      nothing: r.filter(blank).length,
       unverified: r.filter(u).length,
-      inuseGap: r.filter((x) => inUse.has(x.name) && (!x.photo || !x.video)).length,
+      inuseGap: r.filter((x) => inUse.has(x.name) && blank(x)).length,
     };
   }, [rows, inUse]);
 
@@ -225,7 +253,8 @@ export function LibraryTab({ token, clients }) {
     if (filter === "inuse") r = r.filter((x) => inUse.has(x.name));
     if (filter === "nophoto") r = r.filter((x) => !x.photo);
     if (filter === "novideo") r = r.filter((x) => !x.video);
-    if (filter === "unverified") r = r.filter((x) => (x.photo && !x.photoVerified) || (x.video && !x.videoVerified));
+    if (filter === "nothing") r = r.filter((x) => !x.photo && !x.video && !x.sprite);
+    if (filter === "unverified") r = r.filter((x) => (x.photo && !x.photoVerified) || (x.video && !x.videoVerified) || (x.sprite && !x.spriteVerified));
     // What his clients will see first, first.
     return [...r].sort((a, b) => (inUse.has(b.name) ? 1 : 0) - (inUse.has(a.name) ? 1 : 0) || a.name.localeCompare(b.name));
   }, [rows, q, filter, inUse]);
@@ -241,7 +270,7 @@ export function LibraryTab({ token, clients }) {
   }, [bucket, token]);
 
   // One file onto one exercise.
-  const upload = async (name, kind, raw) => {
+  const upload = async (name, kind, raw, grid) => {
     if (!raw) return;
     setErr(""); setNote("");
     mark(name, kind, "uploading");
@@ -256,7 +285,8 @@ export function LibraryTab({ token, clients }) {
         { action: "sign_upload", kind, exercise_name: name, filename: file.name, size: file.size }, token);
       await putToSignedUrl(sign.url, file);
       mark(name, kind, "saving");
-      const d = await mediaPost({ action: "commit", kind, exercise_name: name, path: sign.path }, token);
+      const d = await mediaPost(
+        { action: "commit", kind, exercise_name: name, path: sign.path, ...(grid || {}) }, token);
       patch(d.media);
       setBucket((b) => ({ ...b, [kind]: null }));   // the bucket listing is stale now
     } catch (e) {
@@ -276,6 +306,21 @@ export function LibraryTab({ token, clients }) {
     } finally {
       mark(name, kind, null);
       setPicker(null);
+    }
+  };
+
+  // Which of the three this exercise shows. Naming one that is missing is
+  // allowed on purpose — the client falls through the same chain rather than
+  // going blank, so this can set an intention before the file exists.
+  const setDisplay = async (name, display) => {
+    mark(name, "display", "saving");
+    try {
+      const d = await mediaPost({ action: "display.set", exercise_name: name, display }, token);
+      patch(d.media);
+    } catch (e) {
+      setErr(`${name}: ${e.message}`);
+    } finally {
+      mark(name, "display", null);
     }
   };
 
@@ -363,7 +408,7 @@ export function LibraryTab({ token, clients }) {
           Library
         </div>
         <div style={{ fontSize: 12, color: G.muted, marginTop: 2 }}>
-          {counts.all} exercises · {counts.nophoto} without a photo · {counts.novideo} without a video
+          {counts.all} exercises · {counts.novideo} without a video · {counts.nothing} with nothing to show at all
           {counts.inuseGap > 0 && <> · <strong style={{ color: G.amber }}>{counts.inuseGap} of those are in a programme somebody is on</strong></>}
         </div>
         <div style={{ fontSize: 12, color: G.muted, marginTop: 6 }}>
@@ -414,7 +459,7 @@ export function LibraryTab({ token, clients }) {
         {shown.map((r) => (
           <Row key={r.name} r={r} base={base} busy={busy} used={inUse.has(r.name)}
             onUpload={upload} onSimple={simple} onPreview={setPreview} onPick={setPicker}
-            onBrief={setBriefFor} />
+            onBrief={setBriefFor} onDisplay={setDisplay} />
         ))}
       </div>
 
@@ -491,7 +536,7 @@ function BucketPicker({ picker, base, loadBucket, rows, onClose, onChoose, onDel
 
   // Which files nothing points at any more — the only ones offered for
   // deletion, and the reason a stray upload is not stuck in here forever.
-  const used = new Set((rows || []).map((r) => (picker.kind === "photo" ? r.photo : r.video)).filter(Boolean));
+  const used = new Set((rows || []).map((r) => r[KINDS[picker.kind].path]).filter(Boolean));
   const shown = (files || []).filter((f) => f.name.toLowerCase().includes(q.trim().toLowerCase()));
   const unused = shown.filter((f) => !used.has(f.name)).length;
 
@@ -511,14 +556,16 @@ function BucketPicker({ picker, base, loadBucket, rows, onClose, onChoose, onDel
       {files === null && <div style={{ fontSize: 13, color: G.muted }}>Reading the bucket…</div>}
       {files && shown.length === 0 && <div style={{ fontSize: 13, color: G.muted }}>Nothing matches.</div>}
 
-      {picker.kind === "photo" ? (
+      {picker.kind !== "video" ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(96px,1fr))", gap: 8 }}>
           {shown.map((f) => (
             <div key={f.name} style={{ position: "relative" }}>
               <button className="btn" onClick={() => onChoose(f.name)} title={f.name}
                 style={{ padding: 0, borderRadius: 10, overflow: "hidden", border: `1px solid ${used.has(f.name) ? G.border : G.amberLine}`, background: G.soft, aspectRatio: "1", cursor: "pointer", width: "100%" }}>
-                <img src={`${base.photo}/${f.name}`} alt={f.name} loading="lazy"
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                {/* A sprite sheet is contained, not cropped: cover would show
+                    one corner frame and every sheet would look alike. */}
+                <img src={`${base[picker.kind]}/${f.name}`} alt={f.name} loading="lazy"
+                  style={{ width: "100%", height: "100%", objectFit: picker.kind === "sprite" ? "contain" : "cover", display: "block" }} />
               </button>
               {!used.has(f.name) && (
                 <button className="btn" title={`Delete ${f.name}`}
@@ -601,9 +648,11 @@ function BulkReview({ bulk, rows, setBulk, onRun, onCancel }) {
   );
 }
 
-function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick, onBrief }) {
+function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick, onBrief, onDisplay }) {
   const photoSrc = r.photo ? `${base.photo}/${r.photo}` : null;
   const videoSrc = r.video ? `${base.video}/${r.video}` : null;
+  const spriteSrc = r.sprite ? `${base.sprite}/${r.sprite}` : null;
+  const blank = !r.photo && !r.video && !r.sprite;
   const [over, setOver] = useState(false);
 
   const drop = (e) => {
@@ -637,12 +686,64 @@ function Row({ r, base, busy, used, onUpload, onSimple, onPreview, onPick, onBri
         {/* One line per kind. They used to share a single row of nine buttons
             with "Use existing", "Right" and "Remove" appearing twice, and
             nothing said which half belonged to the photo. */}
-        <MediaLine kind="photo" r={r} busy={busy} src={photoSrc}
-          onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
         <MediaLine kind="video" r={r} busy={busy} src={videoSrc}
           onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick}
           onBrief={onBrief} />
+        <MediaLine kind="sprite" r={r} busy={busy} src={spriteSrc}
+          onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
+        <MediaLine kind="photo" r={r} busy={busy} src={photoSrc}
+          onUpload={onUpload} onSimple={onSimple} onPreview={onPreview} onPick={onPick} />
+
+        <ShownAs r={r} busy={busy} onDisplay={onDisplay} blank={blank} />
       </div>
+    </div>
+  );
+}
+
+// Which of the three a client sees.
+//
+// "Auto" is where nearly every exercise should stay: the clip if there is one,
+// then the model, then the photo. The named options are for the cases where
+// the best thing present is not the right thing — a clip that came out badly,
+// or a movement the model reads more clearly than the footage does.
+//
+// Naming a source that is not there is deliberately allowed. The client falls
+// through the same order rather than showing an empty box, so this can record
+// an intention before the file exists — and can never strand an exercise.
+function ShownAs({ r, busy, onDisplay, blank }) {
+  const current = r.display || "auto";
+  const state = busy[`${r.name}|display`];
+  const have = { video: !!r.video, sprite: !!r.sprite, photo: !!r.photo };
+
+  return (
+    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", padding: "7px 0 1px", marginTop: 3, borderTop: `1px solid ${G.border}` }}>
+      <span style={{ width: 44, flexShrink: 0, fontSize: 9.5, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: G.dim }}>
+        Shows
+      </span>
+
+      {SHOWN_AS.map((o) => {
+        const on = current === o.id;
+        // A named source with no file is not an error, but it should look like
+        // what it is: a choice that has nothing behind it yet.
+        const empty = o.id !== "auto" && !have[o.id];
+        return (
+          <button key={o.id} className="btn" disabled={!!state}
+            onClick={() => !on && onDisplay(r.name, o.id)}
+            style={{ padding: "5px 10px", fontSize: 11, fontWeight: 600, borderRadius: 20,
+              opacity: state ? 0.5 : 1,
+              background: on ? G.accent : "#fff",
+              color: on ? "#fff" : empty ? G.dim : G.muted,
+              border: `1px solid ${on ? G.accent : G.border}` }}>
+            {o.label}{empty ? " —" : ""}
+          </button>
+        );
+      })}
+
+      {blank && (
+        <span style={{ fontSize: 11, color: G.amber, fontWeight: 600 }}>
+          nothing to show yet
+        </span>
+      )}
     </div>
   );
 }
@@ -663,9 +764,17 @@ function Tag({ ok, verified, label }) {
 function MediaLine({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick, onBrief }) {
   const ref = useRef(null);
   const state = busy[`${r.name}|${kind}`];
-  const has = kind === "photo" ? !!r.photo : !!r.video;
-  const verified = kind === "photo" ? r.photoVerified : r.videoVerified;
   const K = KINDS[kind];
+  const has = !!r[K.path];
+  const verified = !!r[K.ok];
+
+  // How the sheet is cut up. Held here rather than posted blind, because a
+  // sheet uploaded with the wrong grid is not broken — it just scrubs into
+  // the neighbouring frame, which looks like a bad render rather than a
+  // setting, and Rafi would go back to Flow to fix a number in a form.
+  const [grid, setGrid] = useState(() => r.spriteGrid || DEFAULT_GRID);
+  useEffect(() => { if (r.spriteGrid) setGrid(r.spriteGrid); }, [r.spriteGrid]);
+  const isSprite = kind === "sprite";
 
   const btn = (label, onClick, tone) => (
     <button key={label} className="btn" onClick={onClick} disabled={!!state}
@@ -681,7 +790,7 @@ function MediaLine({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick, 
   return (
     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: "5px 0" }}>
       <input ref={ref} type="file" accept={K.accept} style={{ display: "none" }}
-        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; onUpload(r.name, kind, f); }} />
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; onUpload(r.name, kind, f, isSprite ? grid : undefined); }} />
 
       <span style={{ width: 44, flexShrink: 0, fontSize: 9.5, fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: G.dim }}>
         {K.label}
@@ -706,12 +815,49 @@ function MediaLine({ kind, r, busy, src, onUpload, onSimple, onPreview, onPick, 
                 Prompt{r.brief ? (r.briefReviewed ? " ✓" : " •") : ""}
               </button>
             )}
+            {isSprite && (
+              <GridBox grid={grid} setGrid={setGrid}
+                onSave={has ? () => onSimple(r.name, kind, "reuse", { path: r.sprite, ...grid }) : null} />
+            )}
             {has && !verified && btn("Right", () => onSimple(r.name, kind, "confirm"))}
-            {has && src && kind === "video" && btn("Play", () => onPreview({ kind, src, name: r.name }))}
+            {has && src && btn(kind === "video" ? "Play" : "Look", () => onPreview({ kind, src, name: r.name }))}
             {has && btn("Remove", () => onSimple(r.name, kind, "clear"), "danger")}
           </>
         )}
     </div>
+  );
+}
+
+// Frames across, frames down, and how many of the cells are used. Three
+// numbers because a sheet is not self-describing: 24 frames could be 6x4 or
+// 4x6 or 8x3, and the picture gives no way to tell which.
+function GridBox({ grid, setGrid, onSave }) {
+  const num = (key, title) => (
+    <input
+      type="number" min={1} max={24} title={title}
+      value={grid[key] ?? ""}
+      onChange={(e) => setGrid((g) => ({ ...g, [key]: Math.max(1, Math.min(576, Number(e.target.value) || 1)) }))}
+      style={{ width: 42, padding: "5px 6px", fontSize: 11.5, fontWeight: 600, textAlign: "center",
+        borderRadius: 8, border: `1px solid ${G.border}`, color: G.muted, background: "#fff" }} />
+  );
+
+  const bad = grid.frames > grid.cols * grid.rows;
+
+  return (
+    <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+      {num("cols", "Frames across")}
+      <span style={{ fontSize: 11, color: G.dim }}>×</span>
+      {num("rows", "Frames down")}
+      <span style={{ fontSize: 11, color: G.dim }}>=</span>
+      {num("frames", "Frames used")}
+      {bad && <span style={{ fontSize: 11, color: G.red, fontWeight: 600 }}>too many</span>}
+      {onSave && !bad && (
+        <button className="btn" onClick={onSave}
+          style={{ padding: "5px 9px", fontSize: 11, fontWeight: 600, borderRadius: 8, background: "#fff", color: G.muted, border: `1px solid ${G.border}` }}>
+          Set grid
+        </button>
+      )}
+    </span>
   );
 }
 

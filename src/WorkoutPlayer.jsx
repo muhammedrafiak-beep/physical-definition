@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
-import { ExerciseIllustration } from "./ExerciseIllustration";
-import { useMedia, videoUrl } from "./media";
+import { MediaFrame } from "./MediaFrame";
+import { useMedia, resolveMedia } from "./media";
 import { AIFormCheck } from "./AIFormCheck";
 import { Icon } from "./Icons";
 import { usesExternalLoad, getExerciseRequirement, getWarmupSets, rampStep, roundToPlate } from "./exerciseMeta";
@@ -710,8 +710,13 @@ export function WorkoutPlayer({
   const showWeight = forceWeight || usesExternalLoad(current.exercise.name);
   const lastLine = isWarmupOrCooldown(current) ? null : describeLast(lastByExercise[current.exercise.name]);
 
-  const videoFile = videoUrl(media, current.exercise.name);
-  const videoSrc = videoFile && !videoFailed ? videoFile : null;
+  // Not "is there a clip" any more — "what does this exercise show". The
+  // answer can be the clip, the PD Anatomy Model sprite, or the photo, in
+  // that order unless Rafi has named one in the Library. The spinner belongs
+  // only to the clip: a sprite and a photo are one cached image each and
+  // arrive without a gap worth covering.
+  const shows = resolveMedia(media, current.exercise.name);
+  const waitingOnVideo = shows.kind === "video" && !videoFailed && !videoReady;
   const progressPct = Math.round(((exIdx + (setIdx - 1) / totalSets) / queue.length) * 100);
   if (showAI) return (<AIFormCheck onClose={() => setShowAI(false)} exerciseName={current?.exercise?.name} targetReps={current?.exercise?.reps} clientName={client?.name} onRepsComplete={(n) => { aiRepsRef.current += (n||0); aiSetsRef.current += 1; setShowAI(false); handleSetDone(); }} />);
 
@@ -742,33 +747,19 @@ export function WorkoutPlayer({
         </div>
 
           <div style={{ position: "relative", width: "100%", flex: 1, background: "#0A1727", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {phase === "exercise" && videoSrc && (
-            <>
-              <video
-                key={videoSrc}
-                ref={videoRef}
-                src={videoSrc}
-                preload="auto"
-                style={{ width: "100%", height: "100%", objectFit: "contain", background: "#0A1727", pointerEvents: "none", display: "block" }}
-                loop muted playsInline autoPlay
-                onError={() => setVideoFailed(true)}
-                onLoadedData={() => setVideoReady(true)}
-              />
-              {/* The clips are 1–3 MB and sit on object storage, so there is a
-                  moment before one paints. That moment used to be filled with
-                  the still photo — which meant the exercise appeared to change
-                  medium as it loaded, and the photo was what you saw first
-                  when the clip is the point. A spinner on the player's own
-                  ground says "loading" without pretending to be the demo.
-
-                  The photo is still what shows when there is no clip at all,
-                  and when one fails to load — and it is what the printed plan
-                  is built from. It is a fallback here, not the first thing. */}
-              {!videoReady && (
-                <div style={{ position: "absolute", inset: 0, background: "#0A1727", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div className="sp" style={{ width: 26, height: 26, borderWidth: 2 }} />
-                </div>
-              )}
+          {phase === "exercise" && (
+            <MediaFrame
+              name={current.exercise.name}
+              videoRef={videoRef}
+              paused={isPaused}
+              skipVideo={videoFailed}
+              onVideoError={() => setVideoFailed(true)}
+              onVideoReady={() => setVideoReady(true)}
+              loading={waitingOnVideo}
+            >
+              {/* One copy of the clock, not one per branch. It used to be
+                  written out twice — once over the clip and once over the
+                  photo — and the two had already drifted apart in padding. */}
               {exerciseRemaining !== null && (
                 <div style={{
                   position: "absolute", top: 10, right: 10,
@@ -781,24 +772,7 @@ export function WorkoutPlayer({
                   {exerciseRemaining}s
                 </div>
               )}
-            </>
-          )}
-          {phase === "exercise" && !videoSrc && (
-            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#1B3350", padding: 8, position: "relative" }}>
-              <ExerciseIllustration exerciseId={current.exercise.name} size={180} />
-              {exerciseRemaining !== null && (
-                <div style={{
-                  position: "absolute", top: 10, right: 10,
-                  background: exerciseRemaining <= 5 ? "rgba(220,38,38,0.9)" : exerciseRemaining <= 10 ? "rgba(234,88,12,0.85)" : "rgba(0,0,0,0.75)",
-                  color: exerciseRemaining <= 10 ? "#fff" : accentColor,
-                  fontFamily: "monospace", fontWeight: 800, fontSize: 22,
-                  padding: "6px 14px", borderRadius: 8,
-                  animation: exerciseRemaining <= 5 ? "pulse 0.5s infinite" : "none",
-                }}>
-                  {exerciseRemaining}s
-                </div>
-              )}
-            </div>
+            </MediaFrame>
           )}
           {phase === "rest" && (
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0E2035", padding: 16 }}>
