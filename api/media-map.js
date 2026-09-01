@@ -77,10 +77,21 @@ export default async function handler(req, res) {
       m[r.exercise_name] = row;
     }
 
-    // A minute at the edge. Long enough that this almost never wakes a
-    // function, short enough that a photo Rafi uploads is live before he has
-    // finished wondering whether it worked.
-    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=600");
+    // A minute fresh at the edge, and at most a minute stale after that.
+    //
+    // `stale-while-revalidate` was 600, and the ten minutes it bought were the
+    // wrong trade. Measured on production: a display change was live on a
+    // cache-busted request and still absent from a plain one several minutes
+    // later, because the edge is entitled to keep serving the stale copy for
+    // the whole window while it revalidates behind the scenes. The comment
+    // here used to promise the change was live "before he has finished
+    // wondering whether it worked", and that was not true.
+    //
+    // 60 caps the worst case at about two minutes. The cost is a few more
+    // function invocations on a table of ~200 rows that changes when one
+    // person edits it — which is nothing, and buying ten minutes of doubt
+    // with it was a bad deal.
+    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=60");
     return res.status(200).json({
       photoBase: `${base}/photos`,
       videoBase: `${base}/videos`,
