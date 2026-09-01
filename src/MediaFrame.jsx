@@ -167,10 +167,13 @@ function Sprite({ url, cols, rows, frames, paused }) {
     return () => cancelAnimationFrame(raf.current);
   }, [paused, reduced, size, frames, url]);
 
-  // Reduced motion gets the end of the movement — the bottom of the squat is
-  // the frame that says what the exercise is.
+  // Reduced motion holds the MIDDLE frame, not an end one. The sheets do not
+  // agree on which end is which: the squat runs standing → bottom, and the
+  // glute bridge runs hips-up → hips-down. Either end is the rest position on
+  // one of them, and a still of somebody lying on the floor does not say what
+  // the exercise is. The middle is mid-movement on both.
   useEffect(() => {
-    if (reduced) setI(Math.max(0, frames - 1));
+    if (reduced) setI(Math.floor((frames - 1) / 2));
   }, [reduced, frames, url]);
 
   const { bgPos, frameAspect } = useMemo(() => {
