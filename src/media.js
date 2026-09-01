@@ -154,3 +154,35 @@ export function resolveMedia(media, name) {
   if (photo) return { kind: "photo", url: photo };
   return { kind: "none" };
 }
+
+// The same question, asked of a sheet of paper.
+//
+// It lives here, next to `resolveMedia`, for the reason the four substring
+// ladders existed: a rule about which picture belongs to an exercise, written
+// in two files, becomes two different rules. The printed plan and the screen
+// disagreeing about the same exercise is the exact bug that started all of
+// this.
+//
+// The order is NOT the screen's, and the difference is the point. On screen
+// the clip leads, because it shows the movement and a still only implies it.
+// Paper cannot play a clip, and a still lifted from one is not something we
+// have — so here the photo leads and the model fills the gap the photo leaves.
+//
+// An explicit choice still wins, where it can be honoured: "show the model"
+// means the model, in print as on screen. "Show the video" cannot be honoured
+// on paper at all, so it falls through to the same order as everything else
+// rather than printing nothing.
+export function printMedia(media, name) {
+  const sprite = spriteFor(media, name);
+  const photo = photoUrl(media, name);
+
+  const e = media?.m?.[name];
+  const want = (e && e[DISPLAY]) || "auto";
+
+  if (want === "sprite" && sprite) return { kind: "sprite", ...sprite };
+  if (want === "photo" && photo) return { kind: "photo", url: photo };
+
+  if (photo) return { kind: "photo", url: photo };
+  if (sprite) return { kind: "sprite", ...sprite };
+  return { kind: "none" };
+}
