@@ -1,8 +1,9 @@
 // GET /api/media-map
 //
-// Exercise name -> its photo and video. This is what replaced the three
-// hardcoded substring ladders in the bundle; the admin Library screen writes
-// the table, this reads it, and nobody edits a source file to change a photo.
+// Exercise name -> its photo, its clip, its model sprite, and which of the
+// three to show. This is what replaced the three hardcoded substring ladders
+// in the bundle; the admin Library screen writes the table, this reads it, and
+// nobody edits a source file to change a photo.
 //
 // Deliberately unauthenticated. Both buckets are public-read already, and the
 // exercise names ship to every browser inside workouts.js, so this adds no
@@ -46,16 +47,34 @@ export default async function handler(req, res) {
 
     const { data, error } = await db
       .from("exercise_media")
-      .select("exercise_name, photo_path, video_path")
+      .select("exercise_name, photo_path, video_path, sprite_path, " +
+              "sprite_cols, sprite_rows, sprite_frames, display")
       .order("exercise_name");
     if (error) throw error;
 
-    // [photo, video] rather than an object per row: ~200 entries, and the
+    // A positional array rather than an object per row: ~200 entries, and the
     // shorter form roughly halves what goes over a Qatari mobile connection.
+    //
+    //   [ photo, video, sprite, display, cols, rows, frames ]
+    //
+    // Trailing nulls are trimmed, so the common row — a photo and nothing
+    // else — is still two slots. `src/media.js` reads it back by index and is
+    // the only thing that knows this shape; keep the two in step.
     const m = {};
     for (const r of data || []) {
-      if (!r.photo_path && !r.video_path) continue;   // nothing to say
-      m[r.exercise_name] = [r.photo_path || null, r.video_path || null];
+      if (!r.photo_path && !r.video_path && !r.sprite_path) continue;   // nothing to say
+
+      const row = [
+        r.photo_path || null,
+        r.video_path || null,
+        r.sprite_path || null,
+        r.display && r.display !== "auto" ? r.display : null,
+        r.sprite_path ? r.sprite_cols || null : null,
+        r.sprite_path ? r.sprite_rows || null : null,
+        r.sprite_path ? r.sprite_frames || null : null,
+      ];
+      while (row.length > 2 && row[row.length - 1] === null) row.pop();
+      m[r.exercise_name] = row;
     }
 
     // A minute at the edge. Long enough that this almost never wakes a
@@ -65,6 +84,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       photoBase: `${base}/photos`,
       videoBase: `${base}/videos`,
+      spriteBase: `${base}/sprites`,
       m,
     });
   } catch (e) {
@@ -72,6 +92,11 @@ export default async function handler(req, res) {
     // A failure here must not blank every illustration in the app: the client
     // treats an empty map as "no photos yet" and keeps working.
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).json({ photoBase: `${base}/photos`, videoBase: `${base}/videos`, m: {} });
+    return res.status(200).json({
+      photoBase: `${base}/photos`,
+      videoBase: `${base}/videos`,
+      spriteBase: `${base}/sprites`,
+      m: {},
+    });
   }
 }

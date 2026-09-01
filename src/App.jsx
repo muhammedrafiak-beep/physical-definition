@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { ExerciseIllustration } from "./ExerciseIllustration";
-import { useMedia, videoUrl, photoUrl, getMedia } from "./media";
+import { MediaFrame } from "./MediaFrame";
+import { photoUrl, getMedia } from "./media";
 import { G } from "./theme";
 import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
@@ -776,18 +776,20 @@ function getMuscleTargets(name) {
 
 function ExerciseCard({ exercise, color, lang }) {
   const isAr = lang === "ar";
-  const media = useMedia();
   const muscles = getMuscleTargets(exercise.name);
   const equipment = getExerciseEquipment(exercise.name);
   const ytSearchUrl = getYTSearchUrl(exercise.name);
 
   return (
     <div style={{ background: G.surf2, borderRadius: 12, overflow: "hidden", border: `1px solid ${color}22` }}>
-      {/* Uniform animation area — same dark bg, same size for all */}
+      {/* Uniform animation area — which this comment claimed and the code did
+          not do: a clip drew a 9:16 box up to 200px tall and cropped to fill,
+          and an exercise without one fell to a 260px-wide image on a different
+          ground. Same box now, whatever is in it. */}
       <div style={{ background: G.soft, padding: "14px 8px 6px", display: "flex", flexDirection: "column", alignItems: "center", minHeight: 155 }}>
-        {(() => { const vid = videoUrl(media, exercise.name); return vid ? (
-          <video src={vid} autoPlay loop muted playsInline style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", borderRadius: 10, maxHeight: 200 }} />
-        ) : <ExerciseIllustration exerciseId={exercise.name} size={118} />; })()}
+        <div style={{ width: "100%", maxWidth: 118 }}>
+          <MediaFrame name={exercise.name} aspect={9 / 16} rounded={10} ground={G.soft} />
+        </div>
         {/* muscle tags */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 3, justifyContent: "center", marginTop: 7 }}>
           {muscles.map(([m, type], i) => (

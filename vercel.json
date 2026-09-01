@@ -3,6 +3,7 @@
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/media/photos/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/$1" },
     { "source": "/media/videos/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/$1" },
+    { "source": "/media/sprites/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-sprites/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
