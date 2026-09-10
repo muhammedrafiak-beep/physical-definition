@@ -26,6 +26,7 @@ import { requireClient } from "./_lib/client-auth.js";
 import { missingEnv } from "./_lib/admin.js";
 import { checkLimit, recordHit, bucket as rlBucket } from "./_lib/ratelimit.js";
 import { PARQ_QUESTIONS, EXPERIENCE, EQUIPMENT, LIMITATION } from "./_lib/assign.js";
+import { defaultTargets, cleanTargets, NUTRIENTS, offByBarcode, offSearch, portion } from "./_lib/nutrition.js";
 
 const BUCKET = "progress-photos";
 const SIGNED_URL_TTL_SEC = 60 * 60; // an hour is plenty for one screen
@@ -379,6 +380,152 @@ export default async function handler(req, res) {
       //
       // The answers are written to the CALLER'S row, taken from the token.
       // Nothing about which client is being screened comes from the browser.
+      // -- Food -------------------------------------------------
+      //
+      // Everything here is scoped to me.id like the rest of this file: the
+      // day's log, the day's targets, and the two lookups that fill them in.
+
+      case "food.day": {
+        const day = isoDate(body.date);
+
+        const [logs, tg] = await Promise.all([
+          db.from("food_logs")
+            .select("id, eaten_at, meal, name, brand, barcode, grams, " + NUTRIENTS.join(", "))
+            .eq("client_id", me.id)
+            .eq("eaten_on", day)
+            .order("eaten_at", { ascending: true }),
+          getTargets(db, me.id),
+        ]);
+        if (logs.error) throw logs.error;
+        const rows = logs.data || [];
+
+        return res.status(200).json({ date: day, targets: tg, entries: rows, totals: sumRows(rows) });
+      }
+
+      case "food.add": {
+        // A hundred and twenty items in a day is far past any real amount of
+        // logging. This is here so a retry loop cannot fill the table, not to
+        // police anybody's eating.
+        const rule = [{ key: rlBucket("food", "client", me.id), limit: 120, windowSec: 24 * 60 * 60 }];
+        const limited = await checkLimit(db, rule);
+        if (!limited.ok) return res.status(429).json({ error: "That's a lot of entries for one day." });
+
+        const name = clean(body.name, 120);
+        if (!name) return res.status(400).json({ error: "What was it? Give it a name." });
+
+        // Two ways in. A scanned or searched product arrives per 100g and is
+        // scaled here; something typed by hand arrives already totalled.
+        let vals;
+        if (body.per100) {
+          vals = portion(body.per100, body.grams);
+          if (!vals) return res.status(400).json({ error: "How much of it? Enter the weight in grams." });
+        } else {
+          vals = { grams: num(body.grams, 0, 5000) };
+          for (const k of NUTRIENTS) vals[k] = num(body[k], 0, 100000);
+        }
+
+        const row = {
+          client_id: me.id,
+          eaten_on: isoDate(body.date),
+          meal: clean(body.meal, 20),
+          name,
+          brand: clean(body.brand, 60),
+          barcode: clean(body.barcode, 32),
+          source: clean(body.source, 20) || "manual",
+          ...vals,
+        };
+
+        const { data, error } = await db.from("food_logs").insert([row]).select("id").single();
+        if (error) throw error;
+        await recordHit(db, rule);
+
+        return res.status(200).json({ ok: true, id: data.id });
+      }
+
+      case "food.delete": {
+        const id = num(body.id, 1, Number.MAX_SAFE_INTEGER);
+        if (!id) return res.status(400).json({ error: "Which entry?" });
+
+        // The client_id filter is the whole security model here: without it an
+        // id typed into devtools deletes somebody else's dinner.
+        const { error } = await db.from("food_logs").delete().eq("id", id).eq("client_id", me.id);
+        if (error) throw error;
+
+        return res.status(200).json({ ok: true });
+      }
+
+      case "food.lookup": {
+        const code = (clean(body.barcode, 32) || "").replace(/[^0-9]/g, "");
+        if (code.length < 6) return res.status(400).json({ error: "That barcode did not scan properly." });
+
+        // Cache first. The same tub of yoghurt gets scanned by every client in
+        // the gym, and Open Food Facts is a free service run on donations.
+        const { data: hit } = await db.from("food_barcodes").select("*").eq("barcode", code).maybeSingle();
+        if (hit) return res.status(200).json({ food: stripCache(hit), cached: true });
+
+        const rule = [{ key: rlBucket("offlookup", "client", me.id), limit: 200, windowSec: 24 * 60 * 60 }];
+        const limited = await checkLimit(db, rule);
+        if (!limited.ok) return res.status(429).json({ error: "Too many lookups today. Add it by hand for now." });
+        await recordHit(db, rule);
+
+        let food = null;
+        try { food = await offByBarcode(code); }
+        catch (e) { console.error("client-data: openfoodfacts lookup failed -", e?.message || e); }
+
+        // Not an error. Plenty of real products are simply not in the
+        // database, and the screen offers to add it by hand instead.
+        if (!food) return res.status(200).json({ food: null });
+
+        await db.from("food_barcodes").upsert([{
+          barcode: code, name: food.name, brand: food.brand, serving_g: food.serving_g,
+          kcal_100g: food.kcal_100g, protein_100g: food.protein_100g, carbs_100g: food.carbs_100g,
+          fat_100g: food.fat_100g, sugar_100g: food.sugar_100g, fibre_100g: food.fibre_100g,
+          sodium_100mg: food.sodium_100mg, sat_fat_100g: food.sat_fat_100g,
+          cholesterol_100mg: food.cholesterol_100mg, fetched_at: new Date().toISOString(),
+        }], { onConflict: "barcode" });
+
+        return res.status(200).json({ food });
+      }
+
+      case "food.search": {
+        const q = clean(body.q, 60);
+        if (!q || q.length < 2) return res.status(200).json({ foods: [] });
+
+        const rule = [{ key: rlBucket("offsearch", "client", me.id), limit: 200, windowSec: 24 * 60 * 60 }];
+        const limited = await checkLimit(db, rule);
+        if (!limited.ok) return res.status(429).json({ error: "Too many searches today." });
+        await recordHit(db, rule);
+
+        let foods = [];
+        try { foods = await offSearch(q); }
+        catch (e) { console.error("client-data: openfoodfacts search failed -", e?.message || e); }
+
+        return res.status(200).json({ foods });
+      }
+
+      case "food.targets.save": {
+        const patch = cleanTargets(body.targets);
+        if (!Object.keys(patch).length) return res.status(400).json({ error: "Nothing to save." });
+
+        // Any edit at all makes the row custom. From here on, the profile
+        // changing - a new weight, a new goal - stops rewriting these numbers
+        // underneath the person who set them.
+        const row = {
+          client_id: me.id, ...patch,
+          source: "custom", updated_at: new Date().toISOString(), updated_by: "client",
+        };
+        const { error } = await db.from("nutrition_targets").upsert([row], { onConflict: "client_id" });
+        if (error) throw error;
+
+        return res.status(200).json({ targets: await getTargets(db, me.id) });
+      }
+
+      case "food.targets.reset": {
+        const { error } = await db.from("nutrition_targets").delete().eq("client_id", me.id);
+        if (error) throw error;
+        return res.status(200).json({ targets: await getTargets(db, me.id) });
+      }
+
       case "parq.submit": {
         const answers = body.answers;
         if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
@@ -499,6 +646,54 @@ async function withSignedUrls(db, rows) {
   for (const s of data || []) if (s.path) byPath.set(s.path, s.signedUrl || null);
 
   return rows.map((r, i) => ({ ...r, photo_url: paths[i] ? byPath.get(paths[i]) || null : null }));
+}
+
+// The client's own calendar day. Sent by the browser, because a person in
+// Doha logging supper at 00:30 means today as they see it, not whatever UTC
+// thinks. Anything unparseable falls back to the server's date.
+function isoDate(v) {
+  const s = typeof v === "string" ? v.trim() : "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const d = new Date(s + "T00:00:00Z");
+    if (!Number.isNaN(d.getTime())) return s;
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
+function sumRows(rows) {
+  const t = {};
+  for (const k of NUTRIENTS) t[k] = 0;
+  for (const r of rows) {
+    for (const k of NUTRIENTS) {
+      const v = Number(r[k]);
+      if (Number.isFinite(v)) t[k] += v;
+    }
+  }
+  for (const k of NUTRIENTS) t[k] = Math.round(t[k] * 10) / 10;
+  return t;
+}
+
+// The stored row if there is one, otherwise the numbers worked out from the
+// profile. Nothing is written on a read: a client who never opens this screen
+// does not need a row, and one who does gets the same answer every time until
+// they change it themselves.
+async function getTargets(db, clientId) {
+  const { data } = await db.from("nutrition_targets").select("*").eq("client_id", clientId).maybeSingle();
+  if (data) return data;
+
+  const { data: c } = await db.from("clients")
+    .select("weight, height, age, gender, goal, pal").eq("id", clientId).maybeSingle();
+  return { client_id: clientId, ...defaultTargets(c || {}) };
+}
+
+// A cached barcode row, handed back in the same shape the live lookup returns.
+function stripCache(r) {
+  return {
+    barcode: r.barcode, name: r.name, brand: r.brand, serving_g: r.serving_g, image: null,
+    kcal_100g: r.kcal_100g, protein_100g: r.protein_100g, carbs_100g: r.carbs_100g,
+    fat_100g: r.fat_100g, sugar_100g: r.sugar_100g, fibre_100g: r.fibre_100g,
+    sodium_100mg: r.sodium_100mg, sat_fat_100g: r.sat_fat_100g, cholesterol_100mg: r.cholesterol_100mg,
+  };
 }
 
 function safeJson(s) {

@@ -4,6 +4,7 @@ import { printMedia, getMedia } from "./media";
 import { G } from "./theme";
 import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
+import { FoodDiary } from "./FoodDiary";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
 import { Icon } from "./Icons";
@@ -268,29 +269,36 @@ function generatePDF(client, lang) {
     return `<div style="width:160px;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
   };
 
-  const workoutHTML = workoutSystem ? `
-    <div class="section">
-      <div class="section-title" style="color:${workoutSystem.color}">⚡ ${isAr ? workoutSystem.nameAr : workoutSystem.name}</div>
-      <p style="color:#666;font-size:13px;margin-bottom:16px">${isAr ? workoutSystem.descAr : workoutSystem.desc}</p>
-      <div class="day-block">
-        <div class="day-title" style="color:#f59e0b">🔥 Warm-up</div>
+  // Warm-up and cool-down are now built from the day in front of the person,
+  // so they belong INSIDE each day rather than once at the top and once at the
+  // bottom. Printing one shared warm-up above three different days would say
+  // the opposite of what the app now does.
+  const prepGrid = (items, tint, soft, line) => `
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
-          ${resolveWarmup(workoutSystem).map(ex => `
-            <div style="background:#fff8e7;border-radius:8px;overflow:hidden;border:1px solid #f59e0b30;">
-              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#fef3c7;">
+          ${items.map(ex => `
+            <div style="background:${soft};border-radius:8px;overflow:hidden;border:1px solid ${line};">
+              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:${soft};">
                 ${getGifForPDF(ex.name)}
               </div>
               <div style="padding:8px;">
                 <div style="font-weight:700;font-size:11px;color:#111;margin-bottom:4px;">${ex.name}</div>
-                <span style="background:#f59e0b20;color:#f59e0b;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
+                <span style="background:${tint}20;color:${tint};font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
               </div>
             </div>
           `).join("")}
-        </div>
-      </div>
+        </div>`;
+
+  const workoutHTML = workoutSystem ? `
+    <div class="section">
+      <div class="section-title" style="color:${workoutSystem.color}">⚡ ${isAr ? workoutSystem.nameAr : workoutSystem.name}</div>
+      <p style="color:#666;font-size:13px;margin-bottom:16px">${isAr ? workoutSystem.descAr : workoutSystem.desc}</p>
       ${workoutSystem.days.map(day => `
         <div class="day-block">
           <div class="day-title">${day.name}</div>
+
+          <div class="day-title" style="color:#f59e0b;font-size:13px;">🔥 Warm-up</div>
+          ${prepGrid(resolveWarmup(workoutSystem, [day]), "#f59e0b", "#fff8e7", "#f59e0b30")}
+
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:12px;">
             ${day.exercises.map(ex => `
               <div style="background:#f9f9f9;border-radius:10px;overflow:hidden;border:1px solid #eee;">
@@ -309,24 +317,11 @@ function generatePDF(client, lang) {
               </div>
             `).join("")}
           </div>
+
+          <div class="day-title" style="color:#22c55e;font-size:13px;">🧘 Cool-down &amp; Stretching</div>
+          ${prepGrid(resolveCooldown(workoutSystem, [day]), "#22c55e", "#f0fdf4", "#22c55e30")}
         </div>
       `).join("")}
-      <div class="day-block">
-        <div class="day-title" style="color:#22c55e">🧘 Cool-down & Stretching</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
-          ${resolveCooldown(workoutSystem).map(ex => `
-            <div style="background:#f0fdf4;border-radius:8px;overflow:hidden;border:1px solid #22c55e30;">
-              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#dcfce7;">
-                ${getGifForPDF(ex.name)}
-              </div>
-              <div style="padding:8px;">
-                <div style="font-weight:700;font-size:11px;color:#111;margin-bottom:4px;">${ex.name}</div>
-                <span style="background:#22c55e20;color:#22c55e;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      </div>
     </div>
   ` : client.workoutPlan ? `
     <div class="section">
@@ -2540,6 +2535,12 @@ export default function App() {
                 })()
               ) : (
                 <div>
+                  {/* What they ATE comes first, then the plan for what
+                      they should. A plan with nothing recorded against
+                      it is a document; the diary is what makes it a
+                      habit, and burying it under the meal cards would
+                      have meant nobody found it. */}
+                  <FoodDiary />
                   {(() => {
                     const mp = MEALS.find(m => m.id === liveC.mealPlanId);
                     return mp ? (

@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { MediaFrame } from "./MediaFrame";
+import { warmupFor, cooldownFor } from "./prep";
 import { useMedia, resolveMedia } from "./media";
 import { AIFormCheck } from "./AIFormCheck";
 import { Icon } from "./Icons";
@@ -105,13 +106,31 @@ const COOLDOWN_EXERCISES = [
 // warm-up opens with jogging and jumping jacks, which is unsafe in front of the
 // senior, lower-back, shoulder and knee programmes. Only fall back to the shared
 // arrays when a system has not specified its own.
-export function resolveWarmup(workoutSystem) {
-  const w = workoutSystem && workoutSystem.warmup;
-  return Array.isArray(w) && w.length ? w : WARMUP_EXERCISES;
+//
+// Order of precedence, most specific first:
+//   1. the DAY's own list, where one has been written
+//   2. the SYSTEM's list - the four clinical programmes, written around
+//      a limitation, and never to be second-guessed by a generator
+//   3. built from what the day actually trains (src/prep.js)
+//   4. the old fixed lists, kept only for a call with nothing to go on
+//
+// Step 3 is the new one. It replaced a fourteen-item list that every one
+// of the ten general systems shared: wrist circles before leg day, knee
+// circles before chest day, and long enough that people skipped it.
+function pick(days, systemList, dayKey, builder, fallback) {
+  const list = Array.isArray(days) ? days.filter(Boolean) : [];
+  if (list.length === 1 && Array.isArray(list[0][dayKey]) && list[0][dayKey].length) return list[0][dayKey];
+  if (Array.isArray(systemList) && systemList.length) return systemList;
+  const built = builder(list);
+  return built && built.length ? built : fallback;
 }
-export function resolveCooldown(workoutSystem) {
-  const c = workoutSystem && workoutSystem.cooldown;
-  return Array.isArray(c) && c.length ? c : COOLDOWN_EXERCISES;
+export function resolveWarmup(workoutSystem, days) {
+  const all = days && days.length ? days : (workoutSystem && workoutSystem.days) || [];
+  return pick(all, workoutSystem && workoutSystem.warmup, "warmup", warmupFor, WARMUP_EXERCISES);
+}
+export function resolveCooldown(workoutSystem, days) {
+  const all = days && days.length ? days : (workoutSystem && workoutSystem.days) || [];
+  return pick(all, workoutSystem && workoutSystem.cooldown, "cooldown", cooldownFor, COOLDOWN_EXERCISES);
 }
 
 // `levels` are what this person was last measured able to do. Anything the
@@ -132,10 +151,12 @@ function flattenWorkout(workoutSystem, dayFilter, levels) {
     : () => true;
 
   const list = [];
-  resolveWarmup(workoutSystem).forEach(ex => list.push({ dayName: "Warm-up", exercise: ex, prep: true }));
+  // Which days first: the warm-up is built from them, so it cannot be
+  // queued before we know what is being trained.
   const days = dayFilter
     ? workoutSystem.days.filter((d) => d.name === dayFilter)
     : workoutSystem.days;
+  resolveWarmup(workoutSystem, days).forEach(ex => list.push({ dayName: "Warm-up", exercise: ex, prep: true }));
   days.forEach((day) => {
     // A circuit is the whole list repeated, not each exercise repeated. The
     // rounds used to live only in the day's NAME — "Repeat 3-4 rounds" — so
@@ -162,7 +183,7 @@ function flattenWorkout(workoutSystem, dayFilter, levels) {
       });
     }
   });
-  resolveCooldown(workoutSystem).forEach(ex => list.push({ dayName: "Cool-down", exercise: ex, prep: true }));
+  resolveCooldown(workoutSystem, days).forEach(ex => list.push({ dayName: "Cool-down", exercise: ex, prep: true }));
   return list;
 }
 
