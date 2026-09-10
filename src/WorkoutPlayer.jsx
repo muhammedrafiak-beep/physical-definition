@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { MediaFrame } from "./MediaFrame";
+import { warmupFor, cooldownFor } from "./prep";
 import { useMedia, resolveMedia } from "./media";
 import { AIFormCheck } from "./AIFormCheck";
 import { Icon } from "./Icons";
@@ -105,13 +106,31 @@ const COOLDOWN_EXERCISES = [
 // warm-up opens with jogging and jumping jacks, which is unsafe in front of the
 // senior, lower-back, shoulder and knee programmes. Only fall back to the shared
 // arrays when a system has not specified its own.
-export function resolveWarmup(workoutSystem) {
-  const w = workoutSystem && workoutSystem.warmup;
-  return Array.isArray(w) && w.length ? w : WARMUP_EXERCISES;
+//
+// Order of precedence, most specific first:
+//   1. the DAY's own list, where one has been written
+//   2. the SYSTEM's list - the four clinical programmes, written around
+//      a limitation, and never to be second-guessed by a generator
+//   3. built from what the day actually trains (src/prep.js)
+//   4. the old fixed lists, kept only for a call with nothing to go on
+//
+// Step 3 is the new one. It replaced a fourteen-item list that every one
+// of the ten general systems shared: wrist circles before leg day, knee
+// circles before chest day, and long enough that people skipped it.
+function pick(days, systemList, dayKey, builder, fallback) {
+  const list = Array.isArray(days) ? days.filter(Boolean) : [];
+  if (list.length === 1 && Array.isArray(list[0][dayKey]) && list[0][dayKey].length) return list[0][dayKey];
+  if (Array.isArray(systemList) && systemList.length) return systemList;
+  const built = builder(list);
+  return built && built.length ? built : fallback;
 }
-export function resolveCooldown(workoutSystem) {
-  const c = workoutSystem && workoutSystem.cooldown;
-  return Array.isArray(c) && c.length ? c : COOLDOWN_EXERCISES;
+export function resolveWarmup(workoutSystem, days) {
+  const all = days && days.length ? days : (workoutSystem && workoutSystem.days) || [];
+  return pick(all, workoutSystem && workoutSystem.warmup, "warmup", warmupFor, WARMUP_EXERCISES);
+}
+export function resolveCooldown(workoutSystem, days) {
+  const all = days && days.length ? days : (workoutSystem && workoutSystem.days) || [];
+  return pick(all, workoutSystem && workoutSystem.cooldown, "cooldown", cooldownFor, COOLDOWN_EXERCISES);
 }
 
 // `levels` are what this person was last measured able to do. Anything the
@@ -132,10 +151,12 @@ function flattenWorkout(workoutSystem, dayFilter, levels) {
     : () => true;
 
   const list = [];
-  resolveWarmup(workoutSystem).forEach(ex => list.push({ dayName: "Warm-up", exercise: ex, prep: true }));
+  // Which days first: the warm-up is built from them, so it cannot be
+  // queued before we know what is being trained.
   const days = dayFilter
     ? workoutSystem.days.filter((d) => d.name === dayFilter)
     : workoutSystem.days;
+  resolveWarmup(workoutSystem, days).forEach(ex => list.push({ dayName: "Warm-up", exercise: ex, prep: true }));
   days.forEach((day) => {
     // A circuit is the whole list repeated, not each exercise repeated. The
     // rounds used to live only in the day's NAME — "Repeat 3-4 rounds" — so
@@ -162,7 +183,7 @@ function flattenWorkout(workoutSystem, dayFilter, levels) {
       });
     }
   });
-  resolveCooldown(workoutSystem).forEach(ex => list.push({ dayName: "Cool-down", exercise: ex, prep: true }));
+  resolveCooldown(workoutSystem, days).forEach(ex => list.push({ dayName: "Cool-down", exercise: ex, prep: true }));
   return list;
 }
 
@@ -722,7 +743,7 @@ export function WorkoutPlayer({
 
   return (
     <div className="night" style={overlayStyle}>
-      <div style={playerCardStyle}>
+      <div className="pd-player" style={playerCardStyle}>
         {/* At 390px this wrapped onto two lines and shoved the clock around.
             The label truncates; the controls never move. */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "14px 16px" }}>
@@ -785,11 +806,11 @@ export function WorkoutPlayer({
                   so the common case is to touch nothing at all: whatever is on
                   screen is saved when the rest ends. */}
               {showLogger && (
-                <div style={{ width: "100%", maxWidth: 320 }}>
+                <div style={{ width: "100%", maxWidth: 340 }}>
                   <div style={{ fontSize: 11, color: "#7E93B0", textAlign: "center", marginBottom: 8, letterSpacing: 1 }}>
                     SET {setIdx} - ADJUST IF IT WAS DIFFERENT
                   </div>
-                  <div style={{ display: "flex", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     {showWeight && (
                       <NumField
                         label="WEIGHT (KG)" value={entry.weight} step={2.5} accent={accentColor}
@@ -941,7 +962,13 @@ function NumField({ label, value, step, accent, onChange }) {
     color: "#fff", fontSize: 20, fontWeight: 700, lineHeight: 1,
   };
   return (
-    <div style={{ flex: 1 }}>
+    // `minWidth: 0` is what keeps this on a phone. A flex item defaults to
+    // min-width:auto, so two of these side by side refused to shrink below
+    // their content and the REPS box was pushed clean off the right edge of
+    // a 390px screen the moment "+ add weight" was tapped — the set could
+    // not be logged at all. The 130px basis lets them stack instead of
+    // squeezing the input down to nothing on the narrowest phones.
+    <div style={{ flex: "1 1 130px", minWidth: 0 }}>
       <div style={{ fontSize: 9, color: "#7E93B0", letterSpacing: 1.2, textAlign: "center", marginBottom: 5 }}>{label}</div>
       <div style={{ display: "flex", gap: 5 }}>
         <button type="button" onClick={() => bump(-1)} style={btn}>-</button>
@@ -977,7 +1004,7 @@ const overlayStyle = {
   display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
 };
 const cardStyle = { background: "#152B45", borderRadius: 16, padding: 32, textAlign: "center", maxWidth: 360 };
-const playerCardStyle = { background: "#152B45", borderRadius: 0, width: "100%", maxWidth: "100%", height: "100vh", maxHeight: "100vh", overflow: "hidden", display: "flex", flexDirection: "column", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" };
+const playerCardStyle = { background: "#152B45", borderRadius: 0, width: "100%", maxWidth: "100%", overflow: "hidden", display: "flex", flexDirection: "column", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" };
 const iconBtnStyle = { background: "none", border: "none", color: "#8FA3BE", fontSize: 18, cursor: "pointer", padding: 4 };
 function primaryBtnStyle(accent) {
   return { flex: 1, background: accent, color: "#0E2035", border: "none", borderRadius: 10, padding: "14px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" };

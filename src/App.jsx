@@ -4,6 +4,7 @@ import { printMedia, getMedia } from "./media";
 import { G } from "./theme";
 import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
+import { FoodDiary } from "./FoodDiary";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
 import { Icon } from "./Icons";
@@ -268,29 +269,36 @@ function generatePDF(client, lang) {
     return `<div style="width:160px;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">🏋️</div>`;
   };
 
-  const workoutHTML = workoutSystem ? `
-    <div class="section">
-      <div class="section-title" style="color:${workoutSystem.color}">⚡ ${isAr ? workoutSystem.nameAr : workoutSystem.name}</div>
-      <p style="color:#666;font-size:13px;margin-bottom:16px">${isAr ? workoutSystem.descAr : workoutSystem.desc}</p>
-      <div class="day-block">
-        <div class="day-title" style="color:#f59e0b">🔥 Warm-up</div>
+  // Warm-up and cool-down are now built from the day in front of the person,
+  // so they belong INSIDE each day rather than once at the top and once at the
+  // bottom. Printing one shared warm-up above three different days would say
+  // the opposite of what the app now does.
+  const prepGrid = (items, tint, soft, line) => `
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
-          ${resolveWarmup(workoutSystem).map(ex => `
-            <div style="background:#fff8e7;border-radius:8px;overflow:hidden;border:1px solid #f59e0b30;">
-              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#fef3c7;">
+          ${items.map(ex => `
+            <div style="background:${soft};border-radius:8px;overflow:hidden;border:1px solid ${line};">
+              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:${soft};">
                 ${getGifForPDF(ex.name)}
               </div>
               <div style="padding:8px;">
                 <div style="font-weight:700;font-size:11px;color:#111;margin-bottom:4px;">${ex.name}</div>
-                <span style="background:#f59e0b20;color:#f59e0b;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
+                <span style="background:${tint}20;color:${tint};font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
               </div>
             </div>
           `).join("")}
-        </div>
-      </div>
+        </div>`;
+
+  const workoutHTML = workoutSystem ? `
+    <div class="section">
+      <div class="section-title" style="color:${workoutSystem.color}">⚡ ${isAr ? workoutSystem.nameAr : workoutSystem.name}</div>
+      <p style="color:#666;font-size:13px;margin-bottom:16px">${isAr ? workoutSystem.descAr : workoutSystem.desc}</p>
       ${workoutSystem.days.map(day => `
         <div class="day-block">
           <div class="day-title">${day.name}</div>
+
+          <div class="day-title" style="color:#f59e0b;font-size:13px;">🔥 Warm-up</div>
+          ${prepGrid(resolveWarmup(workoutSystem, [day]), "#f59e0b", "#fff8e7", "#f59e0b30")}
+
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:12px;">
             ${day.exercises.map(ex => `
               <div style="background:#f9f9f9;border-radius:10px;overflow:hidden;border:1px solid #eee;">
@@ -309,24 +317,11 @@ function generatePDF(client, lang) {
               </div>
             `).join("")}
           </div>
+
+          <div class="day-title" style="color:#22c55e;font-size:13px;">🧘 Cool-down &amp; Stretching</div>
+          ${prepGrid(resolveCooldown(workoutSystem, [day]), "#22c55e", "#f0fdf4", "#22c55e30")}
         </div>
       `).join("")}
-      <div class="day-block">
-        <div class="day-title" style="color:#22c55e">🧘 Cool-down & Stretching</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:10px;">
-          ${resolveCooldown(workoutSystem).map(ex => `
-            <div style="background:#f0fdf4;border-radius:8px;overflow:hidden;border:1px solid #22c55e30;">
-              <div style="padding:8px;display:flex;justify-content:center;align-items:center;min-height:70px;background:#dcfce7;">
-                ${getGifForPDF(ex.name)}
-              </div>
-              <div style="padding:8px;">
-                <div style="font-weight:700;font-size:11px;color:#111;margin-bottom:4px;">${ex.name}</div>
-                <span style="background:#22c55e20;color:#22c55e;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;">${ex.reps}</span>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      </div>
     </div>
   ` : client.workoutPlan ? `
     <div class="section">
@@ -2231,9 +2226,22 @@ export default function App() {
 
   // LOGIN
   if (screen === "login") return (
-    <div style={{ minHeight: "100vh", background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    // `pd-screen` is 100dvh, not 100vh. Centring inside 100vh on a phone
+    // centres against the address-bar-hidden height, which pushed the card
+    // down and dropped the WhatsApp button under the fold. The safe-area
+    // padding keeps the top and bottom of the card off the curve of a
+    // curved-edge screen.
+    <div className="pd-screen" style={{ background: G.bg, display: "flex", overflowY: "auto",
+      paddingLeft: "max(20px, env(safe-area-inset-left))", paddingRight: "max(20px, env(safe-area-inset-right))",
+      paddingTop: "max(16px, env(safe-area-inset-top))", paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
       <style>{CSS}</style>
-      <div style={{ width: "100%", maxWidth: 400 }}>
+      {/* `margin: auto` rather than `align-items: center`. Centring a
+          flex child that is taller than the box overflows it in BOTH
+          directions, and the part above the top edge cannot be scrolled
+          to - on a short phone the logo and the email field would simply
+          be unreachable. Auto margins centre it when there is room and
+          fall back to normal scrolling when there is not. */}
+      <div style={{ width: "100%", maxWidth: 400, margin: "auto" }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}><LangBtn lang={lang} setLang={setLang} /></div>
         <div className="card fd" style={{ padding: "32px 22px", border: `1px solid ${G.borderHi}` }} dir={isAr ? "rtl" : "ltr"}>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -2292,7 +2300,7 @@ export default function App() {
           </div>
           <LangBtn lang={lang} setLang={setLang} />
         </div>
-        <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto", paddingBottom: 92 }}>
+        <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto", paddingBottom: "calc(106px + env(safe-area-inset-bottom, 0px))" }}>
           {cTab === "profile" && (
             <div className="fd">
               <div style={{ marginBottom: 14 }}>
@@ -2527,6 +2535,12 @@ export default function App() {
                 })()
               ) : (
                 <div>
+                  {/* What they ATE comes first, then the plan for what
+                      they should. A plan with nothing recorded against
+                      it is a document; the diary is what makes it a
+                      habit, and burying it under the meal cards would
+                      have meant nobody found it. */}
+                  <FoodDiary />
                   {(() => {
                     const mp = MEALS.find(m => m.id === liveC.mealPlanId);
                     return mp ? (
@@ -2614,7 +2628,7 @@ export default function App() {
             "trophy". The selected tab is now stated three ways (ink icon, ink
             label, and a rule under it) rather than by colour alone.
             48px tall inside a 60px bar: comfortably past the 44px minimum. */}
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.surf, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.surf, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}>
           {[
             { id: "workout", l: "Train", i: "train" },
             { id: "nutrition", l: "Food", i: "food" },

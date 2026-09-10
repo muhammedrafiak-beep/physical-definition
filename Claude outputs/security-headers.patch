@@ -1,0 +1,106 @@
+From d0733bc7715e8fbababda27310b5d8312889ab94 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 9 Sep 2026 14:57:37 +0000
+Subject: [PATCH] Add baseline security response headers
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Sets four headers on every route in vercel.json:
+
+- Strict-Transport-Security — HTTPS is already forced by Vercel's
+  redirect, but that redirect is itself over plain HTTP on a first
+  visit. HSTS closes that window and covers subdomains.
+- X-Content-Type-Options: nosniff — stops the browser guessing a
+  content type, which is how an uploaded file can be coaxed into
+  executing as script.
+- X-Frame-Options: SAMEORIGIN — clickjacking. The app frames nothing
+  and is framed by nothing, so SAMEORIGIN costs us nothing today and
+  leaves room if an internal embed is ever wanted.
+- Referrer-Policy: strict-origin-when-cross-origin — keeps client ids
+  and page paths out of the Referer header on outbound requests.
+
+The existing /media Cache-Control rule is untouched; Vercel applies
+every matching header rule, so media responses now carry both.
+
+Not included, deliberately: Content-Security-Policy. A correct CSP for
+this app has to account for Vite's inline styles, MediaPipe and the
+Supabase storage origins, and a wrong one takes the app down. That is
+its own piece of work, to be done before any public launch alongside
+moving the session token out of sessionStorage into an HttpOnly cookie.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Up9gvoKwBY33hp53wGRqDA
+---
+ vercel.json | 51 +++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 45 insertions(+), 6 deletions(-)
+
+diff --git a/vercel.json b/vercel.json
+index ffe823a..719163c 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -1,16 +1,55 @@
+ {
+   "rewrites": [
+-    { "source": "/api/(.*)", "destination": "/api/$1" },
+-    { "source": "/media/photos/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/$1" },
+-    { "source": "/media/videos/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/$1" },
+-    { "source": "/media/sprites/(.*)", "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-sprites/$1" },
+-    { "source": "/(.*)", "destination": "/index.html" }
++    {
++      "source": "/api/(.*)",
++      "destination": "/api/$1"
++    },
++    {
++      "source": "/media/photos/(.*)",
++      "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-photos/$1"
++    },
++    {
++      "source": "/media/videos/(.*)",
++      "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-videos/$1"
++    },
++    {
++      "source": "/media/sprites/(.*)",
++      "destination": "https://lycpyoefqwgrkqgtrmrp.supabase.co/storage/v1/object/public/exercise-sprites/$1"
++    },
++    {
++      "source": "/(.*)",
++      "destination": "/index.html"
++    }
+   ],
+   "headers": [
++    {
++      "source": "/(.*)",
++      "headers": [
++        {
++          "key": "Strict-Transport-Security",
++          "value": "max-age=63072000; includeSubDomains; preload"
++        },
++        {
++          "key": "X-Content-Type-Options",
++          "value": "nosniff"
++        },
++        {
++          "key": "X-Frame-Options",
++          "value": "SAMEORIGIN"
++        },
++        {
++          "key": "Referrer-Policy",
++          "value": "strict-origin-when-cross-origin"
++        }
++      ]
++    },
+     {
+       "source": "/media/(.*)",
+       "headers": [
+-        { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
++        {
++          "key": "Cache-Control",
++          "value": "public, max-age=604800, stale-while-revalidate=86400"
++        }
+       ]
+     }
+   ]
+-- 
+2.43.0
+
