@@ -2231,9 +2231,22 @@ export default function App() {
 
   // LOGIN
   if (screen === "login") return (
-    <div style={{ minHeight: "100vh", background: G.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    // `pd-screen` is 100dvh, not 100vh. Centring inside 100vh on a phone
+    // centres against the address-bar-hidden height, which pushed the card
+    // down and dropped the WhatsApp button under the fold. The safe-area
+    // padding keeps the top and bottom of the card off the curve of a
+    // curved-edge screen.
+    <div className="pd-screen" style={{ background: G.bg, display: "flex", overflowY: "auto",
+      paddingLeft: "max(20px, env(safe-area-inset-left))", paddingRight: "max(20px, env(safe-area-inset-right))",
+      paddingTop: "max(16px, env(safe-area-inset-top))", paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
       <style>{CSS}</style>
-      <div style={{ width: "100%", maxWidth: 400 }}>
+      {/* `margin: auto` rather than `align-items: center`. Centring a
+          flex child that is taller than the box overflows it in BOTH
+          directions, and the part above the top edge cannot be scrolled
+          to - on a short phone the logo and the email field would simply
+          be unreachable. Auto margins centre it when there is room and
+          fall back to normal scrolling when there is not. */}
+      <div style={{ width: "100%", maxWidth: 400, margin: "auto" }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}><LangBtn lang={lang} setLang={setLang} /></div>
         <div className="card fd" style={{ padding: "32px 22px", border: `1px solid ${G.borderHi}` }} dir={isAr ? "rtl" : "ltr"}>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -2292,7 +2305,7 @@ export default function App() {
           </div>
           <LangBtn lang={lang} setLang={setLang} />
         </div>
-        <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto", paddingBottom: 92 }}>
+        <div style={{ padding: "20px 16px", maxWidth: 600, margin: "0 auto", paddingBottom: "calc(106px + env(safe-area-inset-bottom, 0px))" }}>
           {cTab === "profile" && (
             <div className="fd">
               <div style={{ marginBottom: 14 }}>
@@ -2614,7 +2627,7 @@ export default function App() {
             "trophy". The selected tab is now stated three ways (ink icon, ink
             label, and a rule under it) rather than by colour alone.
             48px tall inside a 60px bar: comfortably past the 44px minimum. */}
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.surf, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.surf, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}>
           {[
             { id: "workout", l: "Train", i: "train" },
             { id: "nutrition", l: "Food", i: "food" },

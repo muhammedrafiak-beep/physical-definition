@@ -26,3 +26,22 @@ body {
   min-height: 100svh;
   isolation: isolate;
 }
+
+/* The workout player fills the screen exactly once.
+   100vh on a phone is the LARGE viewport - the height the page would have if
+   the address bar were hidden - so the "Start set" and "Skip" buttons at the
+   bottom of the player sat underneath the browser chrome and could not be
+   tapped. 100dvh is the height actually visible right now. The 100vh line
+   stays first as the fallback for anything that does not know dvh. */
+.pd-player { height: 100vh; max-height: 100vh; height: 100dvh; max-height: 100dvh; }
+
+/* A full-screen screen, measured against what the phone is actually showing.
+
+   100vh on a phone is the LARGE viewport - the height the page would have if
+   the address bar were hidden. A screen that centres its content inside
+   100vh is therefore centring it inside a box taller than the window, which
+   pushes everything down and drops the last element off the bottom. That is
+   why the login card sat too low and the WhatsApp button fell under the fold.
+   100dvh is the height visible right now; the 100vh line above it stays as
+   the fallback for anything that does not know dvh. */
+.pd-screen { min-height: 100vh; min-height: 100dvh; }
