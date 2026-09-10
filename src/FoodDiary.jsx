@@ -470,8 +470,8 @@ function Scanner({ onCode, onError, busy }) {
         </>
       ) : (
         <div style={{ fontSize: 11.5, color: G.muted, marginBottom: 10, lineHeight: 1.5 }}>
-          This phone's browser cannot use the camera for barcodes. Type the number printed
-          under the barcode instead.
+          This browser cannot read barcodes with the camera - that only works on Android
+          Chrome. Type the number printed under the barcode instead; it looks up exactly the same thing.
         </div>
       )}
 

@@ -141,9 +141,14 @@ export async function offByBarcode(barcode) {
 }
 
 export async function offSearch(q) {
-  const url = "https://world.openfoodfacts.org/api/v2/search"
+  // Full-text search lives on the old CGI endpoint, NOT on /api/v2/search.
+  // v2 filters by tags — category, brand, label — and quietly returns an empty
+  // list for a plain word like "yoghurt", which is exactly what it did here
+  // before this comment existed.
+  const url = "https://world.openfoodfacts.org/cgi/search.pl"
     + `?search_terms=${encodeURIComponent(q)}`
-    + `&fields=${OFF_FIELDS}&page_size=12&sort_by=popularity_key`;
+    + "&search_simple=1&action=process&json=1&page_size=12"
+    + `&fields=${OFF_FIELDS}`;
   const r = await fetch(url, { headers: OFF_HEADERS });
   if (!r.ok) return [];
   const j = await r.json();
