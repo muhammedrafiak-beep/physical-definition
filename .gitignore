@@ -28,3 +28,9 @@ src/*.backup
 
 sprite-work/
 src/*.backup
+
+# Scratch that `git add -A` in push.cmd was sweeping into the repo:
+# roughly 5 MB of reference GIFs, contact sheets and old patches. None of
+# it is part of the app, and once committed it stays in the history for good.
+Claude outputs/
+scratchpad/
