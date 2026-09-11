@@ -5,6 +5,7 @@ import { G } from "./theme";
 import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
 import { FoodDiary } from "./FoodDiary";
+import { ClientFood } from "./ClientFood";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
 import { Icon } from "./Icons";
@@ -1200,6 +1201,13 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
               </div>
             )}
           </div>
+
+          {/* What they have actually been eating.
+
+              Under the nutrition PLAN on purpose: the plan says what was
+              asked for, this says what happened, and the second one is
+              only meaningful next to the first. */}
+          <ClientFood clientId={sc.id} clientName={sc.name} />
 
           {/* PDF DOWNLOAD */}
           <Btn ch={`📄 ${isAr ? "تحميل PDF الكامل" : "Download Full PDF (Client + Workout + Nutrition)"}`} v="gold" full onClick={() => generatePDF(sc, lang)} sx={{ padding: "13px", fontSize: 13, fontWeight: 700 }} />

@@ -18,6 +18,7 @@ import { createClient } from "@supabase/supabase-js";
 import { hashPassword } from "./_lib/password.js";
 import { requireAdmin, missingEnv, generatePassword } from "./_lib/admin.js";
 import { assignSystem } from "./_lib/assign.js";
+import { defaultTargets, NUTRIENTS } from "./_lib/nutrition.js";
 
 // Columns the browser may see. `password` and `password_hash` are absent by
 // design — do not add them.
@@ -171,6 +172,69 @@ export default async function handler(req, res) {
         const { error } = await db.from("clients").delete().eq("id", body.id);
         if (error) throw error;
         return res.status(200).json({ ok: true });
+      }
+
+      // -- What a client has actually been eating ---------------
+      //
+      // The client sees their own day; this is the same data from the
+      // trainer's side, a week at a time, because adherence is a pattern and
+      // one day of it says almost nothing. Sunday at 2,900 kcal is noise;
+      // five days in a row at 2,900 is the conversation.
+      case "client_food": {
+        const id = Number(body.client_id);
+        if (!Number.isFinite(id)) return res.status(400).json({ error: "Which client?" });
+
+        const days = Math.min(31, Math.max(1, Number(body.days) || 7));
+        const end = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date || ""))
+          ? String(body.date)
+          : new Date().toISOString().slice(0, 10);
+
+        const from = new Date(end + "T00:00:00Z");
+        from.setUTCDate(from.getUTCDate() - (days - 1));
+        const start = from.toISOString().slice(0, 10);
+
+        const [logs, tg, c] = await Promise.all([
+          db.from("food_logs")
+            .select("id, eaten_on, eaten_at, meal, name, brand, grams, " + NUTRIENTS.join(", "))
+            .eq("client_id", id)
+            .gte("eaten_on", start)
+            .lte("eaten_on", end)
+            .order("eaten_at", { ascending: true }),
+          db.from("nutrition_targets").select("*").eq("client_id", id).maybeSingle(),
+          db.from("clients").select("weight, height, age, gender, goal, pal").eq("id", id).maybeSingle(),
+        ]);
+        if (logs.error) throw logs.error;
+
+        const targets = tg.data || { client_id: id, ...defaultTargets(c.data || {}) };
+
+        // One bucket per calendar day, including the days with nothing in
+        // them. A gap is the most useful thing on this screen — a day with no
+        // row is a day nobody logged, and that is what the trainer needs to
+        // see rather than a list that quietly skips it.
+        const byDay = new Map();
+        for (let i = 0; i < days; i++) {
+          const d = new Date(end + "T00:00:00Z");
+          d.setUTCDate(d.getUTCDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          const totals = {};
+          for (const k of NUTRIENTS) totals[k] = 0;
+          byDay.set(key, { date: key, totals, entries: [] });
+        }
+
+        for (const r of logs.data || []) {
+          const bucket = byDay.get(r.eaten_on);
+          if (!bucket) continue;
+          bucket.entries.push(r);
+          for (const k of NUTRIENTS) {
+            const v = Number(r[k]);
+            if (Number.isFinite(v)) bucket.totals[k] += v;
+          }
+        }
+        for (const b of byDay.values()) {
+          for (const k of NUTRIENTS) b.totals[k] = Math.round(b.totals[k] * 10) / 10;
+        }
+
+        return res.status(200).json({ targets, days: [...byDay.values()] });
       }
 
       case "list_registrations": {
