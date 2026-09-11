@@ -28,3 +28,9 @@ src/*.backup
 
 sprite-work/
 src/*.backup
+
+# Scratch that `git add -A` in push.cmd was sweeping into the repo:
+# reference GIFs, contact sheets, old patches. None of it is part of the
+# app, the repo is public, and anything committed stays in the history.
+Claude outputs/
+scratchpad/
