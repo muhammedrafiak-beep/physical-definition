@@ -429,6 +429,21 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
+      // Read-only. The Flow prompt views are the production method for the
+      // whole exercise-video library, so they are not public: anon and
+      // authenticated hold no privilege on them. This action is the only way
+      // in, and requireAdmin() has already run above, once, for every action.
+      case "flow_prompts": {
+        const { data, error } = await db
+          .from("pd_flow_prompts")
+          .select(
+            "exercise_name,view,equipment,muscles,barefoot,base_key,region,mirror,p_start,p_mid,p_end,p_anatomy"
+          )
+          .order("exercise_name");
+        if (error) throw error;
+        return res.status(200).json({ rows: data || [] });
+      }
+
       default:
         return res.status(400).json({ error: `Unknown action: ${String(action)}` });
     }
