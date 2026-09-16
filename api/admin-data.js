@@ -437,7 +437,7 @@ export default async function handler(req, res) {
         const { data, error } = await db
           .from("pd_flow_prompts")
           .select(
-            "exercise_name,view,equipment,muscles,barefoot,base_key,region,mirror,p_start,p_mid,p_end,p_anatomy,p_video"
+            "exercise_name,view,equipment,muscles,barefoot,base_key,region,mirror,p_start,p_mid,p_end,p_anatomy,p_video,p_image"
           )
           .order("exercise_name");
         if (error) throw error;
