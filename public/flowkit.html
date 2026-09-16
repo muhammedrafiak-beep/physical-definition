@@ -222,6 +222,7 @@ function render(r){
   p.appendChild(card(2,"End — masked edit of the start","box from outside the canvas, all four sides",r.p_end));
   if(three) p.appendChild(card(3,"Mid — masked edit","skip this if the movement is small",r.p_mid));
   p.appendChild(card(three?4:3,"Anatomy window — masked edit","run on every frame, pose must not change",r.p_anatomy));
+  if(r.p_video) p.appendChild(card("▶","Video prompt — paste into Google Flow","body set-up, direction lock and range lock, generated from the database",r.p_video));
 
   const s=slug(r.exercise_name);
   const cmd=document.createElement("div");cmd.className="card";
