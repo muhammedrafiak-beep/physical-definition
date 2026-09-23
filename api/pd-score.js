@@ -16,6 +16,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { requireClient } from "./_lib/client-auth.js";
 import { rateLimit, bucket, tooMany } from "./_lib/ratelimit.js";
+import { previewWriteBlocked } from "./_lib/preview-guard.js";
 
 // Must match the formula the app shows on screen. It lives here because this
 // is the copy that decides what is stored; PDScore.jsx displays the same
@@ -46,6 +47,20 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Before auth, env checks, rate limiting or any database call: a preview
+  // deployment must never write a real pd_scores row (it uses production DB
+  // credentials). Only the environment name is echoed, never a credential.
+  {
+    const b = typeof req.body === "string" ? safeJson(req.body) : (req.body || {});
+    if (previewWriteBlocked(String(b.action || ""))) {
+      return res.status(403).json({
+        error: "Preview build: PD-100 scores are not saved.",
+        preview_blocked: true,
+        env: process.env.VERCEL_ENV || "unset",
+      });
+    }
   }
 
   const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
