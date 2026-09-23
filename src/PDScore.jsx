@@ -345,11 +345,12 @@ export function PDScore({ client, onClose }) {
     if(videoRef.current?.srcObject) videoRef.current.srcObject.getTracks().forEach(t=>t.stop());
     if(timerRef.current) clearInterval(timerRef.current);
     if(plankRef.current) clearInterval(plankRef.current);
-    if(probeRef.current){
+    const P = probeRef.current;   // this run's probe; a restart installs a new one
+    if(P){
       // Is the stream PDScore opened itself still live after closing? (PR-1 check)
       const first = firstStreamRef.current?.getVideoTracks?.() || [];
-      probeRef.current.event("stop", { first_stream_tracks: first.map(t => t.readyState) });
-      setTimeout(() => { probeRef.current?.event("stop_plus_1s", { first_stream_tracks: first.map(t => t.readyState) }); setProbeTick(t=>t+1); }, 1000);
+      P.event("stop", { first_stream_tracks: first.map(t => t.readyState) });
+      setTimeout(() => { P.event("stop_plus_1s", { first_stream_tracks: first.map(t => t.readyState) }); setProbeTick(t=>t+1); }, 1000);
     }
   }
 
@@ -577,11 +578,12 @@ function ProbePanel({ probe, tick, setTick, label, setLabel, rec, setRec, file, 
       {s && (
         <div style={{ marginTop:4 }}>
           <div>src {s.meta.source} · captureTime {s.meta.capture_time_available ? "yes" : "no"}</div>
-          <div>fps {s.processed_fps ? s.processed_fps.toFixed(1) : "–"} · frames {s.processed_frames} · not sent {s.camera_frames_not_sent}</div>
+          <div>fps proc {s.processed_fps ? s.processed_fps.toFixed(1) : "–"} · cam {s.camera_fps ? s.camera_fps.toFixed(1) : "–"} · dup {s.duplicate_sends} · not sent {s.camera_frames_not_sent}</div>
           <div>inference med/p95 {ms(s.inference_ms)}</div>
           <div>draw {ms(s.draw_ms)} · to paint {ms(s.to_paint_ms)}</div>
           <div>partial (not glass) {ms(s.partial_ms)}</div>
           <div>gated-out {s.gated_out_frames} · lm rec {s.landmark_frames_recorded}/{s.landmark_cap}</div>
+          {s.truncated && <div style={{ color:"#FF8A80" }}>LOG TRUNCATED: {s.timing_frames_dropped} frames, {s.events_dropped} events dropped</div>}
           <button onClick={() => { saveLocal(probe.exportLog(), `pd100-probe-${Date.now()}.json`); setTick(t => t + 1); }}>Save log</button>{" "}
           <button onClick={() => { try { navigator.clipboard.writeText(JSON.stringify(probe.summary(), null, 1)); } catch { /* ignore */ } }}>Copy summary</button>
         </div>

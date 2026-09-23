@@ -47,3 +47,23 @@ test("probe module contains no network calls", () => {
   const src = readFileSync(new URL("./probe.js", import.meta.url), "utf8");
   for (const bad of ["fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "supabase"]) assert.ok(!src.includes(bad), bad);
 });
+
+test("timing frames and routine events are capped and drops are counted; key events kept", () => {
+  const P = createProbe({ now: () => 0 });
+  for (let i = 0; i < 20005; i++) { P.beforeSend(); P.onResult({}); }
+  for (let i = 0; i < 4010; i++) P.event("rep");
+  P.event("split", { at: 1 }); P.event("submit_dry_run", {});
+  const s = P.summary(), log = P.exportLog();
+  assert.equal(log.frames.length, 20000); assert.equal(s.timing_frames_dropped, 5);
+  assert.equal(s.events_dropped, 10); assert.equal(s.truncated, true);
+  assert.ok(log.events.some(e => e.type === "split") && log.events.some(e => e.type === "submit_dry_run"));
+});
+
+test("duplicate sends of the same camera frame are counted", () => {
+  const P = createProbe({ now: () => 0 });
+  P.onVideoFrame(10, {}); P.beforeSend(); P.onResult({});
+  P.beforeSend(); P.onResult({});                  // same frame again
+  P.onVideoFrame(20, {}); P.beforeSend(); P.onResult({});
+  const s = P.summary();
+  assert.equal(s.duplicate_sends, 1); assert.equal(s.camera_frames_not_sent, 0);
+});

@@ -25,7 +25,16 @@
 // panel response after t_paint. Glass-to-glass needs an external high-speed
 // video of the person and the screen.
 
+// Size bounds. Once a cap is reached further records are DROPPED (newest
+// discarded, oldest kept) and counted; the summary and panel report it.
+// Size: ~1.5 KB per frame with landmarks (measured in the sandbox smoke run),
+// timing-only frames are far smaller; worst case at the caps is roughly
+// 10-12 MB (estimate, not measured on a phone).
 const MAX_FRAMES = 3600;          // landmark log cap (~2 min at 30 fps)
+const MAX_TIMING_FRAMES = 20000;  // timing records (~11 min at 30 fps)
+const MAX_EVENTS = 4000;          // routine events (rep, plank_tick, gate)
+// Always kept regardless of MAX_EVENTS (a handful per run):
+const KEY_EVENTS = new Set(["split", "submit_dry_run", "stop", "stop_plus_1s", "replay_end"]);
 const r4 = (v) => (typeof v === "number" ? Math.round(v * 1e4) / 1e4 : v);
 
 export function probeEnabled() {
@@ -74,8 +83,13 @@ export function createProbe({ now = () => performance.now() } = {}) {
   let landmarkFrames = 0;
   let pending = null;           // frame between t_send and t_result
   let lastVfc = null;
-  let camFramesSeen = 0, sends = 0;
+  let camFramesSeen = 0, sends = 0, dupSends = 0, lastSentVfc = null;
   let lastGate = null;
+  let framesDropped = 0, eventsDropped = 0;
+  const pushEvent = (e) => {
+    if (events.length < MAX_EVENTS || KEY_EVENTS.has(e.type)) events.push(e);
+    else eventsDropped += 1;
+  };
 
   return {
     meta,
@@ -93,6 +107,10 @@ export function createProbe({ now = () => performance.now() } = {}) {
 
     beforeSend() {
       sends += 1;
+      // Same camera frame sent again (rAF loop faster than the camera)?
+      const vfcNow = lastVfc?.t_vfc ?? null;
+      if (vfcNow !== null && vfcNow === lastSentVfc) dupSends += 1;
+      lastSentVfc = vfcNow;
       pending = {
         seq: sends,
         t_send: now(),
@@ -112,7 +130,9 @@ export function createProbe({ now = () => performance.now() } = {}) {
         f.wlm = packLm(res.poseWorldLandmarks);
         landmarkFrames += 1;
       }
-      frames.push(f);
+      // Beyond the cap the record is still returned (so the caller's code
+      // path is unchanged) but not stored.
+      if (frames.length < MAX_TIMING_FRAMES) frames.push(f); else framesDropped += 1;
       return f;
     },
 
@@ -125,12 +145,12 @@ export function createProbe({ now = () => performance.now() } = {}) {
     state(f, s) {
       Object.assign(f, s);
       if (s.gate_ok !== lastGate) {
-        events.push({ t: now(), type: "gate", ok: s.gate_ok, station: s.station });
+        pushEvent({ t: now(), type: "gate", ok: s.gate_ok, station: s.station });
         lastGate = s.gate_ok;
       }
     },
 
-    event(type, data = {}) { events.push({ t: now(), type, ...data }); },
+    event(type, data = {}) { pushEvent({ t: now(), type, ...data }); },
 
     summary() {
       const iv = (fn) => stats(frames.map(fn));
@@ -144,7 +164,9 @@ export function createProbe({ now = () => performance.now() } = {}) {
         processed_fps: dur > 0 ? (frames.length - 1) / dur : null,
         camera_frames_seen: camFramesSeen,
         frames_sent: sends,
-        camera_frames_not_sent: Math.max(0, camFramesSeen - sends),
+        camera_frames_not_sent: Math.max(0, camFramesSeen - (sends - dupSends)),
+        duplicate_sends: dupSends,   // same camera frame processed again
+        camera_fps: (() => { const d = dur; return d > 0 ? camFramesSeen / d : null; })(),
         inference_ms: iv((f) => f.t_result - f.t_send),
         draw_ms: iv((f) => f.t_drawn - f.t_result),
         to_paint_ms: iv((f) => f.t_paint - f.t_result),
@@ -152,6 +174,10 @@ export function createProbe({ now = () => performance.now() } = {}) {
         landmark_frames_recorded: landmarkFrames,
         landmark_cap: MAX_FRAMES,
         events: events.length,
+        timing_frames_dropped: framesDropped,
+        events_dropped: eventsDropped,
+        truncated: framesDropped > 0 || eventsDropped > 0,
+        caps: { timing_frames: MAX_TIMING_FRAMES, events: MAX_EVENTS, landmark_frames: MAX_FRAMES },
       };
     },
 
