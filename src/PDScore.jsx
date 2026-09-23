@@ -1,6 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icons";
 import { G } from "./theme";
+import { probeEnabled, probeShortRun, createProbe, saveLocal } from "./pose/probe";
 
 // The leaderboard used to be read and written straight from here with the
 // anon key — the last place in src/ that did. Two things were wrong with it:
@@ -44,6 +45,11 @@ function calcAngle(a,b,c){
 }
 function pt(L,i){return{x:L[i].x,y:L[i].y};}
 function fmt(s){const m=Math.floor(s/60);const x=s%60;return `${m}:${String(x).padStart(2,"0")}`;}
+// PR-1 probe: ?pdprobe=1&short=1 shortens the circuit for timing runs.
+// Without both flags these return exactly the original targets.
+const SHORT = probeEnabled() && probeShortRun();
+const repTarget = (st) => (SHORT ? (st.isTime ? 5 : 2) : st.reps);
+
 function tier(sec){
   if(sec<420) return {n:"Elite", c:G.red};
   if(sec<660) return {n:"Advanced", c:"#9A6212"};
@@ -65,6 +71,18 @@ export function PDScore({ client, onClose }) {
   const topHipRef = useRef(null);
   const timerRef = useRef(null);
   const plankRef = useRef(null);
+  // PR-1 probe refs. probeRef stays null unless ?pdprobe=1.
+  const probeRef = useRef(null);
+  const gateRef = useRef(null);
+  const plankSecRef = useRef(0);
+  const firstStreamRef = useRef(null);
+  const fileRef = useRef(null);
+  const replayRef = useRef(false);
+  const PROBE = probeEnabled();
+  const [probeTick, setProbeTick] = useState(0);
+  const [probeLabel, setProbeLabel] = useState("");
+  const [probeRec, setProbeRec] = useState(false);
+  const [probeFile, setProbeFile] = useState(null);
 
   const [screen, setScreen] = useState("intro");
   const [station, setStation] = useState(0);
@@ -104,6 +122,7 @@ export function PDScore({ client, onClose }) {
     const avg=vs.reduce((s,v)=>s+v,0)/vs.length, lo=Math.min.apply(null,vs);
     const feetIn=(L[27].y<0.97 && L[28].y<0.97 && L[27].y>0.02 && L[28].y>0.02);
     const vis=(avg>=0.6 && lo>=0.2 && feetIn) ? 1 : 0;
+    gateRef.current={ gate_ok:!!vis, vis_avg:avg, vis_min:lo, feet_in:feetIn };
     if(vis<0.6){ setGood(false); setTip("Move back — full body must be visible"); return; }
 
     const st = STATIONS[stationRef.current];
@@ -168,13 +187,17 @@ export function PDScore({ client, onClose }) {
     lastRepRef.current = now;
     repsRef.current += 1;
     setReps(repsRef.current);
+    probeRef.current?.event("rep", { station: stationRef.current, reps: repsRef.current, elapsed: elapsedRef.current });
     const st = STATIONS[stationRef.current];
-    if(repsRef.current >= st.reps) nextStation();
+    if(repsRef.current >= repTarget(st)) nextStation();
   }
 
   function nextStation(){
     const now = elapsedRef.current;
     setTimes(p => [...p, { name: STATIONS[stationRef.current].name, at: now }]);
+    // Probe keeps its own copy of every split so the submitted stationTimes
+    // can be compared with what actually happened (PR-3).
+    probeRef.current?.event("split", { station: stationRef.current, name: STATIONS[stationRef.current].name, at: now, plank_sec: plankSecRef.current });
     if(stationRef.current >= STATIONS.length-1){ finish(); return; }
     stationRef.current += 1;
     repsRef.current = 0;
@@ -191,10 +214,11 @@ export function PDScore({ client, onClose }) {
   const elapsedRef = useRef(0);
   function startPlank(){
     if(plankRef.current) clearInterval(plankRef.current);
-    let s=0;
+    let s=0; plankSecRef.current=0;
     plankRef.current = setInterval(() => {
-      s+=1; setPlankSec(s);
-      if(s >= 60){ clearInterval(plankRef.current); nextStation(); }
+      s+=1; setPlankSec(s); plankSecRef.current=s;
+      probeRef.current?.event("plank_tick", { s, gate_ok: gateRef.current?.gate_ok ?? null, elapsed: elapsedRef.current });
+      if(s >= (SHORT ? 5 : 60)){ clearInterval(plankRef.current); nextStation(); }
     }, 1000);
   }
 
@@ -210,6 +234,12 @@ export function PDScore({ client, onClose }) {
     setFinalScore({ total, score, tier: tier(total) });
     setScreen("done");
     setSaving(true);
+    if(probeRef.current){
+      // Probe runs never reach the leaderboard: log what WOULD be sent.
+      probeRef.current.event("submit_dry_run", { payload: { totalSeconds: total, scaled: false, stationTimes: times } });
+      setSaving(false); setProbeTick(t=>t+1);
+      return;
+    }
     try {
       // Only the time and the station splits are sent. The name on the board
       // and the score itself are worked out on the server from the session —
@@ -227,18 +257,38 @@ export function PDScore({ client, onClose }) {
 
   async function start(){
     setScreen("loading");
+    if(PROBE){
+      probeRef.current = createProbe();
+      probeRef.current.setDeviceLabel(probeLabel);
+      probeRef.current.setRecording(probeRec);
+      if(probeFile) probeRef.current.meta.source = "file";
+    }
     try{
-      const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" } });
+      const useFile = PROBE && probeFile;
+      const stream = useFile ? null : await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" } });
+      if(PROBE) firstStreamRef.current = stream;
       stationRef.current=0; repsRef.current=0; elapsedRef.current=0;
       setStation(0); setReps(0); setElapsed(0); setTimes([]);
       setScreen("live");
       await new Promise(r => setTimeout(r, 120));
-      videoRef.current.srcObject = stream;
+      if(useFile){
+        if(fileRef.current) URL.revokeObjectURL(fileRef.current);
+        fileRef.current = URL.createObjectURL(probeFile);
+        videoRef.current.src = fileRef.current;
+      } else {
+        videoRef.current.srcObject = stream;
+      }
       await videoRef.current.play();
+      if(PROBE && videoRef.current.requestVideoFrameCallback){
+        const v = videoRef.current;
+        const reg = () => v.requestVideoFrameCallback((now, md) => { probeRef.current?.onVideoFrame(now, md); if(v.srcObject || v.src) reg(); });
+        reg();
+      }
       if(!poseRef.current){
         poseRef.current = new window.Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}` });
         poseRef.current.setOptions({ modelComplexity:1, smoothLandmarks:true, minDetectionConfidence:0.6, minTrackingConfidence:0.6 });
         poseRef.current.onResults(res => {
+          const pf = probeRef.current ? probeRef.current.onResult(res) : null;
           const cv = canvasRef.current; if(!cv) return;
           const ctx = cv.getContext("2d");
           cv.width = res.image.width; cv.height = res.image.height;
@@ -247,16 +297,40 @@ export function PDScore({ client, onClose }) {
           if(res.poseLandmarks){
             if(window.drawConnectors) window.drawConnectors(ctx,res.poseLandmarks,window.POSE_CONNECTIONS,{color:"#C9E3D8",lineWidth:3});
             if(window.drawLandmarks) window.drawLandmarks(ctx,res.poseLandmarks,{color:G.gold,fillColor:"#D3E0F2",lineWidth:2,radius:4});
+            gateRef.current = null;
             analyze(res.poseLandmarks.map(p=>({...p,x:1-p.x})));
           }
           ctx.restore();
+          if(pf){
+            probeRef.current.afterDraw(pf);
+            if(res.poseLandmarks) probeRef.current.state(pf, { ...(gateRef.current||{}), station: stationRef.current, stage: stageRef.current, reps: repsRef.current, plank_sec: plankSecRef.current, elapsed: elapsedRef.current });
+          }
         });
       }
-      camRef.current = new window.Camera(videoRef.current, {
-        onFrame: async () => { await poseRef.current.send({ image: videoRef.current }); },
-        width:640, height:480
-      });
-      await camRef.current.start();
+      if(useFile){
+        // Replay: same Pose instance and onResults path; the camera is never opened.
+        replayRef.current = true;
+        const v = videoRef.current;
+        const loop = async () => {
+          if(!replayRef.current) return;
+          if(v.ended){ replayRef.current=false; probeRef.current?.event("replay_end"); setProbeTick(t=>t+1); return; }
+          probeRef.current?.beforeSend();
+          await poseRef.current.send({ image: v });
+          requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+      } else {
+        camRef.current = new window.Camera(videoRef.current, {
+          onFrame: async () => { probeRef.current?.beforeSend(); await poseRef.current.send({ image: videoRef.current }); },
+          width:640, height:480
+        });
+        await camRef.current.start();
+        if(probeRef.current){
+          const tr = videoRef.current.srcObject?.getVideoTracks?.()[0];
+          probeRef.current.meta.video_settings = tr?.getSettings ? tr.getSettings() : null;
+          probeRef.current.meta.stream_replaced_by_camera_utils = videoRef.current.srcObject !== stream;
+        }
+      }
       timerRef.current = setInterval(() => { elapsedRef.current+=1; setElapsed(elapsedRef.current); }, 1000);
     }catch(e){
       setScreen("intro");
@@ -265,19 +339,34 @@ export function PDScore({ client, onClose }) {
   }
 
   function stopCam(){
+    if(replayRef.current && videoRef.current) videoRef.current.pause();
+    replayRef.current = false;
     if(camRef.current) camRef.current.stop();
     if(videoRef.current?.srcObject) videoRef.current.srcObject.getTracks().forEach(t=>t.stop());
     if(timerRef.current) clearInterval(timerRef.current);
     if(plankRef.current) clearInterval(plankRef.current);
+    if(probeRef.current){
+      // Is the stream PDScore opened itself still live after closing? (PR-1 check)
+      const first = firstStreamRef.current?.getVideoTracks?.() || [];
+      probeRef.current.event("stop", { first_stream_tracks: first.map(t => t.readyState) });
+      setTimeout(() => { probeRef.current?.event("stop_plus_1s", { first_stream_tracks: first.map(t => t.readyState) }); setProbeTick(t=>t+1); }, 1000);
+    }
   }
 
   const card = { background:G.surf, border:`1px solid ${G.border}`, borderRadius:14, padding:16, marginBottom:10 };
+
+  const probePanel = PROBE ? (
+    <ProbePanel probe={probeRef.current} tick={probeTick} setTick={setProbeTick}
+      label={probeLabel} setLabel={setProbeLabel} rec={probeRec} setRec={setProbeRec}
+      file={probeFile} setFile={setProbeFile} />
+  ) : null;
 
   const hiddenVideo = <video ref={videoRef} style={{ position:"fixed",width:1,height:1,opacity:0,pointerEvents:"none" }} playsInline muted />;
 
   if(screen==="intro") return (
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto" }}>
       {hiddenVideo}
+      {probePanel}
       <div style={{ borderBottom:`1px solid ${G.border}`,position:"sticky",top:0,background:G.bg,zIndex:2 }}>
       <div style={{ ...PAGE,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center" }}>
         <div>
@@ -394,6 +483,7 @@ export function PDScore({ client, onClose }) {
     <div style={{ position:"fixed",inset:0,background:G.bg,zIndex:99999,overflowY:"auto",padding:20 }}>
       {hiddenVideo}
       <div style={PAGE}>
+      {probePanel}
       <div style={{ textAlign:"center",paddingTop:30,marginBottom:22 }}>
         <div style={{ display:"flex",justifyContent:"center",marginBottom:14 }}><div style={{ width:58,height:58,borderRadius:19,background:G.accentSoft,display:"flex",alignItems:"center",justifyContent:"center" }}><Icon n="score" s={26} c={G.accent} /></div></div>
         <div style={{ fontSize:11,color:G.muted,letterSpacing:".09em",textTransform:"uppercase",fontWeight:600 }}>PD Score</div>
@@ -432,17 +522,18 @@ export function PDScore({ client, onClose }) {
       </div>
 
       <div style={{ height:4,background:G.border,flexShrink:0 }}>
-        <div style={{ height:4,width:`${(station/5)*100 + (reps/st.reps)*20}%`,background:G.gold,transition:"width .3s" }}/>
+        <div style={{ height:4,width:`${(station/5)*100 + (reps/repTarget(st))*20}%`,background:G.gold,transition:"width .3s" }}/>
       </div>
 
       <div style={{ position:"relative",flex:1,background:"#0A1727",overflow:"hidden" }}>
         {hiddenVideo}
         <canvas ref={canvasRef} style={{ width:"100%",height:"100%",objectFit:"cover" }} />
+        {probePanel}
         <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"space-between",padding:16,pointerEvents:"none" }}>
           <div style={{ background:"rgba(0,0,0,0.62)",backdropFilter:"blur(8px)",borderRadius:16,padding:"12px 20px",width:"fit-content",border:`1px solid ${G.border}` }}>
             <div style={{ fontSize:11,color:"#C8D6EA",letterSpacing:1.5,textTransform:"uppercase" }}>{st.name}</div>
             <div className="sf" style={{ fontSize:58,color:"#FCFCFD",lineHeight:1 }}>
-              {st.isTime ? plankSec : reps}<span style={{ fontSize:22,color:"#8FA3BE" }}>/{st.reps}</span>
+              {st.isTime ? plankSec : reps}<span style={{ fontSize:22,color:"#8FA3BE" }}>/{repTarget(st)}</span>
             </div>
           </div>
           <div>
@@ -463,6 +554,38 @@ export function PDScore({ client, onClose }) {
           Skip station →
         </button>
       </div>
+    </div>
+  );
+}
+
+// PR-1 measurement panel. Rendered only with ?pdprobe=1. Everything stays on
+// this device; "Save log" writes a local file and nothing is uploaded.
+function ProbePanel({ probe, tick, setTick, label, setLabel, rec, setRec, file, setFile }) {
+  const [, setLocal] = useState(0);
+  useEffect(() => { const id = setInterval(() => setLocal(x => x + 1), 1000); return () => clearInterval(id); }, []);
+  const s = probe ? probe.summary() : null;
+  const ms = (o) => (o && o.median != null ? `${o.median.toFixed(0)} / ${o.p95.toFixed(0)} ms` : "–");
+  const box = { position:"absolute", top:8, right:8, zIndex:5, maxWidth:260, background:"rgba(0,0,0,0.8)", color:"#E6EDF6",
+    font:"11px/1.45 monospace", padding:"8px 10px", borderRadius:8, pointerEvents:"auto" };
+  return (
+    <div style={box} data-tick={tick}>
+      <div style={{ fontWeight:700, color:"#F2C94C" }}>PD-100 PROBE (on this device only)</div>
+      <label style={{ display:"block" }}>Device <input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Galaxy A54" style={{ width:130, font:"inherit" }} /></label>
+      <label style={{ display:"block" }}><input type="checkbox" checked={rec} onChange={e => setRec(e.target.checked)} /> Record landmarks (opt-in)</label>
+      <label style={{ display:"block" }}>Replay file <input type="file" accept="video/*" onChange={e => setFile(e.target.files?.[0] || null)} style={{ width:140, font:"inherit" }} /></label>
+      {file && <div>Source: file ({file.name}) <button onClick={() => setFile(null)}>use camera</button></div>}
+      {s && (
+        <div style={{ marginTop:4 }}>
+          <div>src {s.meta.source} · captureTime {s.meta.capture_time_available ? "yes" : "no"}</div>
+          <div>fps {s.processed_fps ? s.processed_fps.toFixed(1) : "–"} · frames {s.processed_frames} · not sent {s.camera_frames_not_sent}</div>
+          <div>inference med/p95 {ms(s.inference_ms)}</div>
+          <div>draw {ms(s.draw_ms)} · to paint {ms(s.to_paint_ms)}</div>
+          <div>partial (not glass) {ms(s.partial_ms)}</div>
+          <div>gated-out {s.gated_out_frames} · lm rec {s.landmark_frames_recorded}/{s.landmark_cap}</div>
+          <button onClick={() => { saveLocal(probe.exportLog(), `pd100-probe-${Date.now()}.json`); setTick(t => t + 1); }}>Save log</button>{" "}
+          <button onClick={() => { try { navigator.clipboard.writeText(JSON.stringify(probe.summary(), null, 1)); } catch { /* ignore */ } }}>Copy summary</button>
+        </div>
+      )}
     </div>
   );
 }
