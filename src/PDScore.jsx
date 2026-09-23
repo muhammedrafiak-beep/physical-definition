@@ -2,6 +2,8 @@
 import { Icon } from "./Icons";
 import { G } from "./theme";
 import { probeEnabled, probeShortRun, createProbe, saveLocal } from "./pose/probe";
+import { stopStreams, trackStates } from "./pose/streams";
+import { addSplit } from "./pd100/splits";
 
 // The leaderboard used to be read and written straight from here with the
 // anon key — the last place in src/ that did. Two things were wrong with it:
@@ -49,6 +51,9 @@ function fmt(s){const m=Math.floor(s/60);const x=s%60;return `${m}:${String(x).p
 // Without both flags these return exactly the original targets.
 const SHORT = probeEnabled() && probeShortRun();
 const repTarget = (st) => (SHORT ? (st.isTime ? 5 : 2) : st.reps);
+// Probe-only fault injection for the phone check of the start() error path:
+// ?pdprobe=1&failcam=1 throws right after getUserMedia succeeded.
+const FAILCAM = probeEnabled() && (() => { try { return new URLSearchParams(window.location.search).get("failcam") === "1"; } catch { return false; } })();
 
 function tier(sec){
   if(sec<420) return {n:"Elite", c:G.red};
@@ -75,7 +80,10 @@ export function PDScore({ client, onClose }) {
   const probeRef = useRef(null);
   const gateRef = useRef(null);
   const plankSecRef = useRef(0);
-  const firstStreamRef = useRef(null);
+  const firstStreamRef = useRef(null);   // PDScore's own getUserMedia stream (always tracked)
+  const camStreamRef = useRef(null);     // the stream camera_utils attached to the <video>
+  const timesRef = useRef([]);
+  const runRef = useRef(0);              // bumped by every start() and stopCam(): a pending start() whose run is no longer current cleans up after itself           // source of truth for splits (see pd100/splits.js)
   const fileRef = useRef(null);
   const replayRef = useRef(false);
   const PROBE = probeEnabled();
@@ -194,11 +202,14 @@ export function PDScore({ client, onClose }) {
 
   function nextStation(){
     const now = elapsedRef.current;
-    setTimes(p => [...p, { name: STATIONS[stationRef.current].name, at: now }]);
+    // Name from the index NOW, list kept in a ref: fixes the shifted names and
+    // the missing splits seen in PR-1.
+    timesRef.current = addSplit(timesRef.current, STATIONS, stationRef.current, now);
+    setTimes(timesRef.current);
     // Probe keeps its own copy of every split so the submitted stationTimes
     // can be compared with what actually happened (PR-3).
     probeRef.current?.event("split", { station: stationRef.current, name: STATIONS[stationRef.current].name, at: now, plank_sec: plankSecRef.current });
-    if(stationRef.current >= STATIONS.length-1){ finish(); return; }
+    if(stationRef.current >= STATIONS.length-1){ finish(timesRef.current); return; }
     stationRef.current += 1;
     repsRef.current = 0;
     stageRef.current = "up";
@@ -222,7 +233,7 @@ export function PDScore({ client, onClose }) {
     }, 1000);
   }
 
-  async function finish(){
+  async function finish(completedSplits = timesRef.current){
     stopCam();
     if(timerRef.current) clearInterval(timerRef.current);
     if(plankRef.current) clearInterval(plankRef.current);
@@ -236,7 +247,7 @@ export function PDScore({ client, onClose }) {
     setSaving(true);
     if(probeRef.current){
       // Probe runs never reach the leaderboard: log what WOULD be sent.
-      probeRef.current.event("submit_dry_run", { payload: { totalSeconds: total, scaled: false, stationTimes: times } });
+      probeRef.current.event("submit_dry_run", { payload: { totalSeconds: total, scaled: false, stationTimes: completedSplits } });
       setSaving(false); setProbeTick(t=>t+1);
       return;
     }
@@ -244,7 +255,7 @@ export function PDScore({ client, onClose }) {
       // Only the time and the station splits are sent. The name on the board
       // and the score itself are worked out on the server from the session —
       // a leaderboard anyone can type into is not a leaderboard.
-      await api("submit", { totalSeconds: total, scaled: false, stationTimes: times });
+      await api("submit", { totalSeconds: total, scaled: false, stationTimes: completedSplits });
     } catch (e) {
       // The effort was real and the result is already on screen. Say the
       // saving failed rather than pretending it worked.
@@ -256,6 +267,20 @@ export function PDScore({ client, onClose }) {
   }
 
   async function start(){
+    const run = ++runRef.current;
+    const cancelled = () => runRef.current !== run;
+    let stream = null, cam = null, camStream = null, vEl = null;
+    // Called when Quit/close happened while this start() was still pending.
+    // Touches only this run's own resources, never a newer run's.
+    const abandon = (where) => {
+      if(cam){ try { cam.stop(); } catch { /* ignore */ } }
+      stopStreams(stream, camStream);
+      // The screen may have changed since, so use the element THIS run used.
+      for(const v of new Set([vEl, videoRef.current])){
+        if(v && (v.srcObject === stream || (camStream && v.srcObject === camStream))) v.srcObject = (v === videoRef.current ? camStreamRef.current : null) || null;
+      }
+      probeRef.current?.event("start_abandoned", { where, first_stream_tracks: trackStates(stream), camera_stream_tracks: trackStates(camStream) });
+    };
     setScreen("loading");
     if(PROBE){
       probeRef.current = createProbe();
@@ -265,12 +290,15 @@ export function PDScore({ client, onClose }) {
     }
     try{
       const useFile = PROBE && probeFile;
-      const stream = useFile ? null : await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" } });
-      if(PROBE) firstStreamRef.current = stream;
+      stream = useFile ? null : await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" } });
+      if(cancelled()){ abandon("getUserMedia"); return; }
+      firstStreamRef.current = stream;
+      if(FAILCAM) throw new Error("probe: injected start failure after getUserMedia");
       stationRef.current=0; repsRef.current=0; elapsedRef.current=0;
-      setStation(0); setReps(0); setElapsed(0); setTimes([]);
+      setStation(0); setReps(0); setElapsed(0); setTimes([]); timesRef.current = [];
       setScreen("live");
       await new Promise(r => setTimeout(r, 120));
+      if(cancelled()){ abandon("wait"); return; }
       if(useFile){
         if(fileRef.current) URL.revokeObjectURL(fileRef.current);
         fileRef.current = URL.createObjectURL(probeFile);
@@ -278,7 +306,9 @@ export function PDScore({ client, onClose }) {
       } else {
         videoRef.current.srcObject = stream;
       }
-      await videoRef.current.play();
+      vEl = videoRef.current;
+      await vEl.play();
+      if(cancelled()){ abandon("play"); return; }
       if(PROBE && videoRef.current.requestVideoFrameCallback){
         const v = videoRef.current;
         const reg = () => v.requestVideoFrameCallback((now, md) => { probeRef.current?.onVideoFrame(now, md); if(v.srcObject || v.src) reg(); });
@@ -320,11 +350,21 @@ export function PDScore({ client, onClose }) {
         };
         requestAnimationFrame(loop);
       } else {
-        camRef.current = new window.Camera(videoRef.current, {
+        cam = new window.Camera(videoRef.current, {
           onFrame: async () => { probeRef.current?.beforeSend(); await poseRef.current.send({ image: videoRef.current }); },
           width:640, height:480
         });
-        await camRef.current.start();
+        camRef.current = cam;
+        await cam.start();
+        camStream = vEl?.srcObject || null;   // the stream camera_utils attached to this run's element
+        if(cancelled()){ abandon("camera.start"); return; }
+        camStreamRef.current = camStream;
+        // camera_utils opened its own stream and replaced ours on the <video>:
+        // ours is unused from here on, so release it now (Codex reference).
+        if(camStreamRef.current && camStreamRef.current !== stream){
+          stopStreams(stream);
+          probeRef.current?.event("first_stream_released", { first_stream_tracks: trackStates(stream) });
+        }
         if(probeRef.current){
           const tr = videoRef.current.srcObject?.getVideoTracks?.()[0];
           probeRef.current.meta.video_settings = tr?.getSettings ? tr.getSettings() : null;
@@ -333,24 +373,42 @@ export function PDScore({ client, onClose }) {
       }
       timerRef.current = setInterval(() => { elapsedRef.current+=1; setElapsed(elapsedRef.current); }, 1000);
     }catch(e){
+      if(cancelled()){ abandon("error:" + String(e?.message || e).slice(0,60)); return; }
+      const own = stream, active = videoRef.current?.srcObject || null;
+      if(cam){ try { cam.stop(); } catch { /* ignore */ } }
+      camRef.current = null;
+      stopStreams(own, camStream, active);
+      if(videoRef.current) videoRef.current.srcObject = null;
+      if(probeRef.current){
+        const P = probeRef.current, snap = () => ({ error: String(e?.message || e).slice(0,120), first_stream_tracks: trackStates(own), camera_stream_tracks: trackStates(active) });
+        P.event("start_failed", snap());
+        setTimeout(() => { P.event("start_failed_plus_1s", snap()); setProbeTick(t=>t+1); }, 1000);
+      }
+      firstStreamRef.current = null; camStreamRef.current = null;
       setScreen("intro");
       alert("Camera access denied. Allow camera in browser settings.");
     }
   }
 
   function stopCam(){
+    runRef.current += 1;   // any start() still pending is now abandoned
     if(replayRef.current && videoRef.current) videoRef.current.pause();
     replayRef.current = false;
-    if(camRef.current) camRef.current.stop();
-    if(videoRef.current?.srcObject) videoRef.current.srcObject.getTracks().forEach(t=>t.stop());
+    // Capture both streams BEFORE Camera.stop() can change video.srcObject,
+    // then stop every track of each (PDScore's own + the camera_utils one).
+    const own = firstStreamRef.current;
+    const cam = videoRef.current?.srcObject || camStreamRef.current || null;
+    if(camRef.current){ try { camRef.current.stop(); } catch { /* ignore */ } camRef.current = null; }
+    stopStreams(own, cam, camStreamRef.current);
+    if(videoRef.current) videoRef.current.srcObject = null;
+    firstStreamRef.current = null; camStreamRef.current = null;
     if(timerRef.current) clearInterval(timerRef.current);
     if(plankRef.current) clearInterval(plankRef.current);
     const P = probeRef.current;   // this run's probe; a restart installs a new one
     if(P){
-      // Is the stream PDScore opened itself still live after closing? (PR-1 check)
-      const first = firstStreamRef.current?.getVideoTracks?.() || [];
-      P.event("stop", { first_stream_tracks: first.map(t => t.readyState) });
-      setTimeout(() => { P.event("stop_plus_1s", { first_stream_tracks: first.map(t => t.readyState) }); setProbeTick(t=>t+1); }, 1000);
+      const snap = () => ({ first_stream_tracks: trackStates(own), camera_stream_tracks: trackStates(cam), same_stream: own === cam });
+      P.event("stop", snap());
+      setTimeout(() => { P.event("stop_plus_1s", snap()); setProbeTick(t=>t+1); }, 1000);
     }
   }
 

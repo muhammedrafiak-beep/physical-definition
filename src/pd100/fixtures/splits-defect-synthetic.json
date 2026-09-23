@@ -1,0 +1,16 @@
+{
+  "format": "pd100-splits-fixture/1",
+  "note": "FULLY SYNTHETIC. Invented times and events; not taken from any real run. Models the two defects of the old code: the submitted list is missing the last two splits, and each name is shifted to the next station.",
+  "splitEvents": [
+    { "station": 0, "name": "Jump Squats", "at": 40 },
+    { "station": 1, "name": "Pull-ups",    "at": 75 },
+    { "station": 2, "name": "Push-ups",    "at": 110 },
+    { "station": 3, "name": "Burpees",     "at": 160 },
+    { "station": 4, "name": "Plank Hold",  "at": 220 }
+  ],
+  "oldCodePayload": [
+    { "name": "Pull-ups", "at": 40 },
+    { "name": "Push-ups", "at": 75 },
+    { "name": "Burpees",  "at": 110 }
+  ]
+}
