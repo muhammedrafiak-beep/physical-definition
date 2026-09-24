@@ -27,6 +27,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import { requireAdmin, missingEnv } from "./_lib/admin.js";
+import { writeBlocked, sendPreviewBlocked, ADMIN_MEDIA_WRITES } from "./_lib/preview-writes.js";
 
 const PHOTO_BUCKET  = "exercise-photos";
 const VIDEO_BUCKET  = "exercise-videos";
@@ -159,6 +160,9 @@ export default async function handler(req, res) {
 
   const body = typeof req.body === "string" ? safeJson(req.body) : (req.body || {});
   const { action } = body;
+
+  // P0: a Preview must not change real media or storage (shared production DB).
+  if (writeBlocked(ADMIN_MEDIA_WRITES, action)) return sendPreviewBlocked(res);
 
   const db = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },

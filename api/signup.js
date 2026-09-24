@@ -15,6 +15,7 @@ import { hashPassword } from "./_lib/password.js";
 import { missingEnv, generatePassword } from "./_lib/admin.js";
 import { assignSystem, PARQ_QUESTIONS, EXPERIENCE, EQUIPMENT, LIMITATION } from "./_lib/assign.js";
 import { rateLimit, bucket, clientIp, tooMany } from "./_lib/ratelimit.js";
+import { isProduction, sendPreviewBlocked } from "./_lib/preview-writes.js";
 
 // How the app refers to itself when it talks to a person signing up. One
 // place, so it can change without hunting through message strings.
@@ -43,6 +44,9 @@ export default async function handler(req, res) {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  // P0: a Preview must not create real registrations (shared production DB).
+  if (!isProduction()) return sendPreviewBlocked(res);
 
   const missing = missingEnv(["SUPABASE_SERVICE_ROLE_KEY"]);
   const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;

@@ -23,6 +23,8 @@ const ORIGIN = process.env.PD_API_ORIGIN || 'https://www.physicaldefinition.com'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // P0: lets the app show "Preview: changes are not saved" on Vercel Previews.
+  define: { __PD_ENV__: JSON.stringify(process.env.VERCEL_ENV || '') },
   server: {
     proxy: {
       '/api': { target: ORIGIN, changeOrigin: true, secure: true },

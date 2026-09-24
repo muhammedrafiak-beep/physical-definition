@@ -17,6 +17,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { hashPassword } from "./_lib/password.js";
 import { requireAdmin, missingEnv, generatePassword } from "./_lib/admin.js";
+import { writeBlocked, sendPreviewBlocked, ADMIN_DATA_WRITES } from "./_lib/preview-writes.js";
 import { assignSystem } from "./_lib/assign.js";
 import { defaultTargets, NUTRIENTS } from "./_lib/nutrition.js";
 
@@ -118,6 +119,9 @@ export default async function handler(req, res) {
 
   const body = typeof req.body === "string" ? safeJson(req.body) : (req.body || {});
   const { action } = body;
+
+  // P0: a Preview must not change real client records (shared production DB).
+  if (writeBlocked(ADMIN_DATA_WRITES, action)) return sendPreviewBlocked(res);
 
   const db = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },

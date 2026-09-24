@@ -13,6 +13,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { hashPassword } from "./_lib/password.js";
 import { requireAdmin, missingEnv, generatePassword } from "./_lib/admin.js";
+import { isProduction, sendPreviewBlocked } from "./_lib/preview-writes.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -35,6 +36,9 @@ export default async function handler(req, res) {
   if (!admin) {
     return res.status(401).json({ error: "Not signed in as admin" });
   }
+
+  // P0: resetting a password is always a write; never from a Preview.
+  if (!isProduction()) return sendPreviewBlocked(res);
 
   const body = typeof req.body === "string" ? safeJson(req.body) : req.body;
   const clientId = body?.clientId;

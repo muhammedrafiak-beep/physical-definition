@@ -28,6 +28,7 @@ import { checkLimit, recordHit, bucket as rlBucket } from "./_lib/ratelimit.js";
 import { PARQ_QUESTIONS, EXPERIENCE, EQUIPMENT, LIMITATION } from "./_lib/assign.js";
 import { defaultTargets, cleanTargets, NUTRIENTS, offByBarcode, offSearch, portion } from "./_lib/nutrition.js";
 import { foodWriteBlocked } from "./_lib/preview-food-guard.js";
+import { writeBlocked, sendPreviewBlocked, CLIENT_WRITES, isProduction } from "./_lib/preview-writes.js";
 
 const BUCKET = "progress-photos";
 const SIGNED_URL_TTL_SEC = 60 * 60; // an hour is plenty for one screen
@@ -116,6 +117,7 @@ export default async function handler(req, res) {
   const { action } = body;
 
   // Before any database access: a Preview must not write a real diary.
+  if (writeBlocked(CLIENT_WRITES, action)) return sendPreviewBlocked(res);
   if (foodWriteBlocked(action)) {
     return res.status(403).json({ error: "Preview build: diary changes are not saved.", preview_blocked: true, env: process.env.VERCEL_ENV || "unset" });
   }
@@ -494,7 +496,9 @@ export default async function handler(req, res) {
         // database, and the screen offers to add it by hand instead.
         if (!food) return res.status(200).json({ food: null });
 
-        await db.from("food_barcodes").upsert([{
+        // P0: the shared barcode cache is only written in production; a
+        // Preview still returns the looked-up product.
+        if (isProduction()) await db.from("food_barcodes").upsert([{
           barcode: code, name: food.name, brand: food.brand, serving_g: food.serving_g,
           kcal_100g: food.kcal_100g, protein_100g: food.protein_100g, carbs_100g: food.carbs_100g,
           fat_100g: food.fat_100g, sugar_100g: food.sugar_100g, fibre_100g: food.fibre_100g,
