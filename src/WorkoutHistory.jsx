@@ -115,7 +115,7 @@ export function AdminWorkoutHistory({ clients = [] }) {
 
       {/* Client leaderboard (all clients view) */}
       {selectedClient === "all" && Object.keys(clientStats).length > 0 && (
-        <div style={{ background: "#F3F6FA", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+        <div style={{ background: G.surf2, borderRadius: 12, padding: 14, marginBottom: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: G.text, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}><Icon n="score" s={15} c={G.accent} />Client leaderboard</div>
           {Object.values(clientStats)
             .sort((a, b) => b.count - a.count)
@@ -126,8 +126,8 @@ export function AdminWorkoutHistory({ clients = [] }) {
                   <span style={{ fontSize: 13, fontWeight: 600, color: G.text }}>{cs.name}</span>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
-                  <span style={{ fontSize: 11, color: "#21509B" }}>{cs.count} sessions</span>
-                  <span style={{ fontSize: 11, color: "#A63A3A" }}>{Math.round(cs.calories)} kcal</span>
+                  <span style={{ fontSize: 11, color: G.accent }}>{cs.count} sessions</span>
+                  <span style={{ fontSize: 11, color: G.red }}>{Math.round(cs.calories)} kcal</span>
                 </div>
               </div>
             ))}
@@ -235,7 +235,7 @@ function calcStreak(logs) {
 // emoji competing with it for the eye.
 function StatCard({ label, value, icon, color }) {
   return (
-    <div style={{ background: "#fff", border: `1px solid ${G.line}`, borderRadius: 14, padding: "15px 12px", textAlign: "center" }}>
+    <div style={{ background: G.surf, border: `1px solid ${G.line}`, borderRadius: 14, padding: "15px 12px", textAlign: "center" }}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}><Icon n={icon} s={15} c={color} /></div>
       <div className="sf" style={{ fontSize: 24, lineHeight: 1, color: G.text }}>{value}</div>
       <div style={{ fontSize: 10, color: G.muted, marginTop: 5, letterSpacing: ".05em" }}>{label}</div>
@@ -249,7 +249,7 @@ function LogCard({ log, showClient, accentColor = "#21509B" }) {
     : 100;
 
   return (
-    <div style={{ background: "#fff", borderRadius: 12, padding: "13px 14px", border: "1px solid #E4E9F0" }}>
+    <div style={{ background: G.surf, borderRadius: 12, padding: "13px 14px", border: `1px solid ${G.border}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
         <div>
           {showClient && (
@@ -264,7 +264,7 @@ function LogCard({ log, showClient, accentColor = "#21509B" }) {
         </div>
       </div>
       {/* Progress bar */}
-      <div style={{ height: 4, background: "#E8EEF8", borderRadius: 2 }}>
+      <div style={{ height: 4, background: G.accentSoft, borderRadius: 2 }}>
         <div style={{ height: 4, width: `${pct}%`, background: pct === 100 ? "#12795A" : accentColor, borderRadius: 2 }} />
       </div>
       <div style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>

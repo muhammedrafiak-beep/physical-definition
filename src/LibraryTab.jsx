@@ -422,7 +422,7 @@ export function LibraryTab({ token, clients }) {
             {counts.unverified} carried over from the old code and never checked.
           </div>
           <button className="btn" onClick={() => setFilter("unverified")}
-            style={{ padding: "7px 13px", fontSize: 12, fontWeight: 600, borderRadius: 10, background: "#fff", color: G.amber, border: `1px solid ${G.amberLine}` }}>
+            style={{ padding: "7px 13px", fontSize: 12, fontWeight: 600, borderRadius: 10, background: G.surf, color: G.amber, border: `1px solid ${G.amberLine}` }}>
             Check them
           </button>
         </div>
@@ -581,7 +581,7 @@ function BucketPicker({ picker, base, loadBucket, rows, onClose, onChoose, onDel
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {shown.map((f) => (
             <button key={f.name} className="btn" onClick={() => onChoose(f.name)}
-              style={{ textAlign: "start", padding: "10px 12px", borderRadius: 10, border: `1px solid ${G.border}`, background: "#fff", fontSize: 12.5, color: G.text, display: "flex", justifyContent: "space-between", gap: 10 }}>
+              style={{ textAlign: "start", padding: "10px 12px", borderRadius: 10, border: `1px solid ${G.border}`, background: G.surf, fontSize: 12.5, color: G.text, display: "flex", justifyContent: "space-between", gap: 10 }}>
               <span>{f.name}</span>
               <span style={{ color: G.muted }}>{f.size ? mb(f.size) : ""}</span>
             </button>
@@ -639,7 +639,7 @@ function BulkReview({ bulk, rows, setBulk, onRun, onCancel }) {
             Upload {matched}
           </button>
           <button className="btn" onClick={onCancel}
-            style={{ minHeight: 48, padding: "0 18px", borderRadius: 12, background: "#fff", color: G.muted, fontWeight: 600, fontSize: 13, border: `1px solid ${G.border}` }}>
+            style={{ minHeight: 48, padding: "0 18px", borderRadius: 12, background: G.surf, color: G.muted, fontWeight: 600, fontSize: 13, border: `1px solid ${G.border}` }}>
             Cancel
           </button>
         </div>
@@ -838,7 +838,7 @@ function GridBox({ grid, setGrid, onSave }) {
       value={grid[key] ?? ""}
       onChange={(e) => setGrid((g) => ({ ...g, [key]: Math.max(1, Math.min(576, Number(e.target.value) || 1)) }))}
       style={{ width: 42, padding: "5px 6px", fontSize: 11.5, fontWeight: 600, textAlign: "center",
-        borderRadius: 8, border: `1px solid ${G.border}`, color: G.muted, background: "#fff" }} />
+        borderRadius: 8, border: `1px solid ${G.border}`, color: G.muted, background: G.surf }} />
   );
 
   const bad = grid.frames > grid.cols * grid.rows;
@@ -853,7 +853,7 @@ function GridBox({ grid, setGrid, onSave }) {
       {bad && <span style={{ fontSize: 11, color: G.red, fontWeight: 600 }}>too many</span>}
       {onSave && !bad && (
         <button className="btn" onClick={onSave}
-          style={{ padding: "5px 9px", fontSize: 11, fontWeight: 600, borderRadius: 8, background: "#fff", color: G.muted, border: `1px solid ${G.border}` }}>
+          style={{ padding: "5px 9px", fontSize: 11, fontWeight: 600, borderRadius: 8, background: G.surf, color: G.muted, border: `1px solid ${G.border}` }}>
           Set grid
         </button>
       )}
@@ -931,11 +931,11 @@ function PromptSheet({ row, onClose, onSave }) {
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
         <button className="btn" onClick={() => commit(true)} disabled={saving}
-          style={{ flex: 1, minWidth: 150, minHeight: 48, borderRadius: 12, background: G.accent, color: "#fff", fontWeight: 600, fontSize: 13, border: "none", opacity: saving ? 0.6 : 1 }}>
+          style={{ flex: 1, minWidth: 150, minHeight: 48, borderRadius: 12, background: G.accent, color: G.onAccent, fontWeight: 600, fontSize: 13, border: "none", opacity: saving ? 0.6 : 1 }}>
           {saving ? "Saving…" : "Save and mark checked"}
         </button>
         <button className="btn" onClick={() => commit(false)} disabled={saving}
-          style={{ minHeight: 48, padding: "0 16px", borderRadius: 12, background: "#fff", color: G.muted, fontWeight: 600, fontSize: 13, border: `1px solid ${G.border}` }}>
+          style={{ minHeight: 48, padding: "0 16px", borderRadius: 12, background: G.surf, color: G.muted, fontWeight: 600, fontSize: 13, border: `1px solid ${G.border}` }}>
           Save only
         </button>
       </div>

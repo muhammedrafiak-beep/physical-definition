@@ -290,7 +290,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
             What this changed in the sessions
           </H>
           {movement.gained.length > 0 && (
-            <div style={{ padding: "11px 13px", background: "#E6F2ED", border: `1px solid #C9E3D8`, borderRadius: 12, marginBottom: 7 }}>
+            <div style={{ padding: "11px 13px", background: G.greenSoft, border: `1px solid ${G.greenLine}`, borderRadius: 12, marginBottom: 7 }}>
               <div style={{ fontSize: 11, color: G.green, fontWeight: 700, marginBottom: 6 }}>
                 ✓ NOW IN THE SESSIONS ({movement.gained.length})
               </div>
@@ -300,7 +300,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
             </div>
           )}
           {movement.lost.length > 0 && (
-            <div style={{ padding: "11px 13px", background: "#FBF2E3", border: `1px solid ${G.amber}`, borderRadius: 12, marginBottom: 7 }}>
+            <div style={{ padding: "11px 13px", background: G.amberSoft, border: `1px solid ${G.amber}`, borderRadius: 12, marginBottom: 7 }}>
               <div style={{ fontSize: 11, color: G.amber, fontWeight: 700, marginBottom: 6 }}>
                 HELD BACK AGAIN ({movement.lost.length})
               </div>
@@ -339,7 +339,7 @@ export function AssessmentProgress({ client, G, exercises = [], onTakeNew }) {
 
       {onTakeNew && (
         <button type="button" className="btn" onClick={onTakeNew}
-          style={{ width: "100%", marginTop: 16, minHeight: 52, borderRadius: 12, background: "#fff", color: G.text, border: `1px solid ${G.border}`, fontWeight: 700, fontSize: 13 }}>
+          style={{ width: "100%", marginTop: 16, minHeight: 52, borderRadius: 12, background: G.surf, color: G.text, border: `1px solid ${G.border}`, fontWeight: 700, fontSize: 13 }}>
           + Take a new assessment
         </button>
       )}

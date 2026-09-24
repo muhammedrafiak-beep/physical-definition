@@ -52,9 +52,11 @@ export const Icon = ({ n, s = 20, c = "currentColor", w = 1.7, sx = {} }) => {
   if (!g) return null;
   const solid = SOLID.has(n);
   return (
+    // Colour goes through CSS `color` + currentColor so theme tokens
+    // (var(--pd-*)) work everywhere; presentation attributes may not take var().
     <svg width={s} height={s} viewBox="0 0 24 24" aria-hidden="true" focusable="false"
-      fill={solid ? c : "none"} stroke={solid ? "none" : c}
+      fill={solid ? "currentColor" : "none"} stroke={solid ? "none" : "currentColor"}
       strokeWidth={w} strokeLinecap="round" strokeLinejoin="round"
-      style={{ flexShrink: 0, display: "block", ...sx }}>{g}</svg>
+      style={{ flexShrink: 0, display: "block", color: c, ...sx }}>{g}</svg>
   );
 };

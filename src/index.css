@@ -45,3 +45,146 @@ body {
    100dvh is the height visible right now; the 100vh line above it stays as
    the fallback for anything that does not know dvh. */
 .pd-screen { min-height: 100vh; min-height: 100dvh; }
+
+/* ── P1 design tokens (premium V7) ─────────────────────────────
+   Light is the default. data-theme="dark" forces dark; data-theme="system"
+   follows the device. src/theme.js hands these to every inline style as
+   var(--pd-*), so no screen needs its own dark variant. The player/camera
+   "night" palette stays fixed dark and is not part of this switch. */
+:root {
+  --pd-bg: #F2F5F8;
+  --pd-surf: #FFFFFF;
+  --pd-surf2: #F2F5F8;
+  --pd-border: #D6E0EA;
+  --pd-border-hi: #C3D0DE;
+  --pd-text: #0B2036;
+  --pd-muted: #53677D;
+  --pd-dim: #93A2B7;
+  --pd-placeholder: #5E7187;
+  --pd-accent: #2459B8;
+  --pd-accent-strong: #1D4A9B;
+  --pd-on-accent: #FFFFFF;
+  --pd-accent-soft: #E8F0FF;
+  --pd-accent-line: #CFDDF5;
+  --pd-green: #17795A;
+  --pd-green-soft: #E7F5EF;
+  --pd-green-line: #C6E6D8;
+  --pd-red: #A23D4A;
+  --pd-red-soft: #FBECEE;
+  --pd-red-line: #F0D3D8;
+  --pd-amber: #925F1D;
+  --pd-amber-soft: #FBF2E3;
+  --pd-amber-line: #EFDFC0;
+  --pd-navy: #0B2036;
+  --pd-on-navy: #F5F8FB;
+  --pd-on-navy-muted: #C9D6EA;
+  --pd-grad: linear-gradient(180deg,#16304F,#0B2036);
+  --pd-nav: #FFFFFF;
+  --pd-shadow: 0 1px 2px rgba(11,32,54,.05), 0 3px 10px rgba(11,32,54,.06);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --pd-bg: #07131F;
+  --pd-surf: #102235;
+  --pd-surf2: #162B40;
+  --pd-border: #294057;
+  --pd-border-hi: #36506B;
+  --pd-text: #F5F8FB;
+  --pd-muted: #B4C3D2;
+  --pd-dim: #7F93A8;
+  --pd-placeholder: #9AAEC2;
+  --pd-accent: #79A7FF;
+  --pd-accent-strong: #A9C6FF;
+  --pd-on-accent: #07131F;
+  --pd-accent-soft: #17345F;
+  --pd-accent-line: #2A4F86;
+  --pd-green: #73D5AD;
+  --pd-green-soft: #173C33;
+  --pd-green-line: #235446;
+  --pd-red: #F29AA6;
+  --pd-red-soft: #3A1E26;
+  --pd-red-line: #5A2A35;
+  --pd-amber: #E7B96E;
+  --pd-amber-soft: #3A2B14;
+  --pd-amber-line: #5A4420;
+  --pd-navy: #162B40;
+  --pd-on-navy: #F5F8FB;
+  --pd-on-navy-muted: #C9D6EA;
+  --pd-grad: linear-gradient(180deg,#1C3A5E,#122840);
+  --pd-nav: #0B1A29;
+  --pd-shadow: 0 3px 10px rgba(5,14,24,.35);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    color-scheme: dark;
+    --pd-bg: #07131F;
+    --pd-surf: #102235;
+    --pd-surf2: #162B40;
+    --pd-border: #294057;
+    --pd-border-hi: #36506B;
+    --pd-text: #F5F8FB;
+    --pd-muted: #B4C3D2;
+    --pd-dim: #7F93A8;
+    --pd-placeholder: #9AAEC2;
+    --pd-accent: #79A7FF;
+    --pd-accent-strong: #A9C6FF;
+    --pd-on-accent: #07131F;
+    --pd-accent-soft: #17345F;
+    --pd-accent-line: #2A4F86;
+    --pd-green: #73D5AD;
+    --pd-green-soft: #173C33;
+    --pd-green-line: #235446;
+    --pd-red: #F29AA6;
+    --pd-red-soft: #3A1E26;
+    --pd-red-line: #5A2A35;
+    --pd-amber: #E7B96E;
+    --pd-amber-soft: #3A2B14;
+    --pd-amber-line: #5A4420;
+    --pd-navy: #162B40;
+    --pd-on-navy: #F5F8FB;
+    --pd-on-navy-muted: #C9D6EA;
+    --pd-grad: linear-gradient(180deg,#1C3A5E,#122840);
+    --pd-nav: #0B1A29;
+    --pd-shadow: 0 3px 10px rgba(5,14,24,.35);
+  }
+}
+
+/* PD-100 keeps light tokens until its P6 restyle (see App.jsx). */
+[data-pd-force-light] {
+  color-scheme: light;
+  --pd-bg: #F2F5F8;
+  --pd-surf: #FFFFFF;
+  --pd-surf2: #F2F5F8;
+  --pd-border: #D6E0EA;
+  --pd-border-hi: #C3D0DE;
+  --pd-text: #0B2036;
+  --pd-muted: #53677D;
+  --pd-dim: #93A2B7;
+  --pd-placeholder: #5E7187;
+  --pd-accent: #2459B8;
+  --pd-accent-strong: #1D4A9B;
+  --pd-on-accent: #FFFFFF;
+  --pd-accent-soft: #E8F0FF;
+  --pd-accent-line: #CFDDF5;
+  --pd-green: #17795A;
+  --pd-green-soft: #E7F5EF;
+  --pd-green-line: #C6E6D8;
+  --pd-red: #A23D4A;
+  --pd-red-soft: #FBECEE;
+  --pd-red-line: #F0D3D8;
+  --pd-amber: #925F1D;
+  --pd-amber-soft: #FBF2E3;
+  --pd-amber-line: #EFDFC0;
+  --pd-navy: #0B2036;
+  --pd-on-navy: #F5F8FB;
+  --pd-on-navy-muted: #C9D6EA;
+  --pd-grad: linear-gradient(180deg,#16304F,#0B2036);
+  --pd-nav: #FFFFFF;
+  --pd-shadow: 0 1px 2px rgba(11,32,54,.05), 0 3px 10px rgba(11,32,54,.06);
+  color: var(--pd-text);
+}
+
+/* Logo mark: navy tile in light, white tile in dark (V7). */
+:root, [data-pd-force-light] { --pd-logo-bg: #0B2036; --pd-logo-fg: #FCFCFD; }
+:root[data-theme="dark"] { --pd-logo-bg: #F5F8FB; --pd-logo-fg: #0B2036; }
+@media (prefers-color-scheme: dark) { :root[data-theme="system"] { --pd-logo-bg: #F5F8FB; --pd-logo-fg: #0B2036; } }

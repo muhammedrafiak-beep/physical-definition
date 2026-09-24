@@ -5,6 +5,10 @@ import App from './App.jsx'
 import { ErrorBoundary } from './ErrorBoundary.jsx'
 import { loadMedia } from './media.js'
 import { PreviewBanner } from './PreviewBanner.jsx'
+import { applyAppearance, getAppearance } from './theme.js'
+
+// P1: set Light/Dark/System before the first paint.
+applyAppearance(getAppearance())
 
 // Start fetching the exercise photo/video map while the login screen is still
 // being typed into, so the first workout screen has it already.

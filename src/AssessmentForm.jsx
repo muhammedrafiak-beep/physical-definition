@@ -205,7 +205,7 @@ export function AssessmentForm({
         );
       })}
       {parqFlags.length > 0 && (
-        <div style={{ marginTop: 10, padding: "10px 12px", background: "#FBECEC", border: `1px solid ${G.red}`, borderRadius: 8 }}>
+        <div style={{ marginTop: 10, padding: "10px 12px", background: G.redSoft, border: `1px solid ${G.red}`, borderRadius: 8 }}>
           <div style={{ fontSize: 11, color: G.red, fontWeight: 700 }}>⚠ {parqFlags.length} flagged</div>
           <div style={{ fontSize: 11, color: G.muted, marginTop: 5, lineHeight: 1.5 }}>
             Saving this records the answers and marks them for review. It does not clear them to train.
@@ -295,7 +295,7 @@ export function AssessmentForm({
             </div>
           </div>
           {verdict.blocked.map(b => (
-            <div key={b.name} style={{ padding: "7px 10px", background: "#FBECEC", border: `1px solid ${G.border}`, borderRadius: 7, marginBottom: 5 }}>
+            <div key={b.name} style={{ padding: "7px 10px", background: G.redSoft, border: `1px solid ${G.border}`, borderRadius: 7, marginBottom: 5 }}>
               <div style={{ fontSize: 11.5, color: G.text }}>{b.name}</div>
               {b.reasons.map(r => (
                 <div key={r.id} style={{ fontSize: 10, color: G.red, marginTop: 2 }}>

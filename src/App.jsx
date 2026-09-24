@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { MediaFrame } from "./MediaFrame";
 import { printMedia, getMedia } from "./media";
-import { G } from "./theme";
+import { G, getAppearance, setAppearance } from "./theme";
+import { Segmented } from "./ui";
 import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
 import { NutritionTab, planKey } from "./FoodDiary";
@@ -479,12 +480,12 @@ input,select,button,textarea{font-family:'Public Sans',ui-sans-serif,system-ui,s
 .btn:active{opacity:.8;transform:scale(.985);}
 .btn:focus-visible,.inp:focus-visible,a:focus-visible{outline:2px solid ${G.accent};outline-offset:2px;}
 
-.inp{background:#fff;border:1px solid ${G.border};border-radius:12px;padding:14px 15px;color:${G.text};font-size:16px;width:100%;min-height:52px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .15s,box-shadow .15s;}
+.inp{background:${G.surf};border:1px solid ${G.border};border-radius:12px;padding:14px 15px;color:${G.text};font-size:16px;width:100%;min-height:52px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .15s,box-shadow .15s;}
 .inp:focus{border-color:${G.accent};box-shadow:0 0 0 3px ${G.accentSoft};}
-.inp::placeholder{color:#7E8FA8;}
+.inp::placeholder{color:${G.placeholder};}
 select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235C6D84' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
 
-.card{background:#fff;border:1px solid ${G.border};border-radius:16px;box-shadow:0 1px 2px rgba(14,32,53,.04);}
+.card{background:${G.surf};border:1px solid ${G.border};border-radius:16px;box-shadow:${G.shadow};}
 
 /* NIGHT. The player sets this on its root, and the shared primitives follow
    it there rather than each needing a dark variant passed in. */
@@ -534,14 +535,14 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 
 const Logo = ({ s = 32 }) => (
   <svg width={s} height={s} viewBox="0 0 48 48" role="img" aria-label="Physical Definition">
-    <rect width="48" height="48" rx="13" fill="#0E2035" />
-    <text x="24" y="32" textAnchor="middle" fontFamily="'Instrument Serif',Georgia,serif" fontSize="21" fill="#FCFCFD">PD</text>
+    <rect width="48" height="48" rx="13" style={{ fill: "var(--pd-logo-bg)" }} />
+    <text x="24" y="32" textAnchor="middle" fontFamily="'Instrument Serif',Georgia,serif" fontSize="21" style={{ fill: "var(--pd-logo-fg)" }}>PD</text>
   </svg>
 );
 const Av = ({ name = "?", sz = 38 }) => (<div style={{ width: sz, height: sz, borderRadius: Math.round(sz * 0.32), background: G.accentSoft, display: "flex", alignItems: "center", justifyContent: "center", fontSize: Math.round(sz * 0.34), fontWeight: 700, color: G.accent, flexShrink: 0, letterSpacing: ".01em" }}>{(name || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>);
 const VV = {
   gold: { background: G.grad, color: G.paper, fontWeight: 600, borderRadius: 12 },
-  ghost: { background: "#fff", border: `1px solid ${G.border}`, color: G.text, fontWeight: 600, borderRadius: 11 },
+  ghost: { background: G.surf, border: `1px solid ${G.border}`, color: G.text, fontWeight: 600, borderRadius: 11 },
   danger: { background: G.redSoft, border: `1px solid ${G.redLine}`, color: G.red, fontWeight: 600, borderRadius: 11 },
   green: { background: G.greenSoft, border: `1px solid ${G.greenLine}`, color: G.green, fontWeight: 600, borderRadius: 11 },
   amber: { background: G.amberSoft, border: `1px solid ${G.amberLine}`, color: G.amber, fontWeight: 600, borderRadius: 11 },
@@ -608,7 +609,7 @@ const Ovl = ({ show, close, ch, mw = 520 }) => {
     <div style={{ position: "fixed", inset: 0, background: "rgba(14,32,53,0.42)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-start", justifyContent: "center", zIndex: 1000, padding: 16, overflowY: "auto" }} onClick={close}>
       <div className="card" style={{ position: "relative", width: "100%", maxWidth: mw, padding: 22, border: `1px solid ${G.borderHi}`, marginTop: 20, marginBottom: 20 }} onClick={e => e.stopPropagation()}>
         <button type="button" className="btn" onClick={close} aria-label="Close"
-          style={{ position: "absolute", top: 12, insetInlineEnd: 12, width: 40, height: 40, borderRadius: 12, background: "#fff", border: `1px solid ${G.border}`, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+          style={{ position: "absolute", top: 12, insetInlineEnd: 12, width: 40, height: 40, borderRadius: 12, background: G.surf, border: `1px solid ${G.border}`, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
           <Icon n="close" s={15} c={G.muted} w={2} />
         </button>
         <div style={{ paddingInlineEnd: 44 }}>{ch}</div>
@@ -622,7 +623,7 @@ const Ovl = ({ show, close, ch, mw = 520 }) => {
 const LangBtn = ({ lang, setLang }) => (
   <button className="btn" onClick={() => setLang(lang === "en" ? "ar" : "en")}
     aria-label={lang === "en" ? "Switch to Arabic" : "Switch to English"}
-    style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 44, padding: "0 16px", background: "#fff", border: `1px solid ${G.border}`, borderRadius: 22, color: G.text, fontSize: 13, fontWeight: 600 }}>
+    style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 44, padding: "0 16px", background: G.surf, border: `1px solid ${G.border}`, borderRadius: 22, color: G.text, fontSize: 13, fontWeight: 600 }}>
     {lang === "en" ? "العربية" : "English"}
   </button>);
 const FF = ({ label, value, onChange, type = "text", ph, opts, dir = "ltr" }) => (<div><div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>{opts ? <select className="inp" value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }}>{opts.map(o => <option key={typeof o === "object" ? o.id : o} value={typeof o === "object" ? o.id : o} style={{ background: G.surf2 }}>{typeof o === "object" ? o.label : o}</option>)}</select> : <input className="inp" type={type} placeholder={ph} value={value} onChange={e => onChange(e.target.value)} style={{ direction: dir }} />}</div>);
@@ -1102,7 +1103,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: G.gold }}>⚡ {isAr ? "خطة التمرين" : "Workout Plan"}</div>
                 {ws && <div style={{ fontSize: 11, color: ws.color, marginTop: 2 }}>{ws.emoji} {isAr ? ws.nameAr : ws.name}</div>}
-                {ws && <button onClick={() => setShowDayPicker(true)} style={{ marginTop: 8, background: G.gold, color: "#FCFCFD", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>}
+                {ws && <button onClick={() => setShowDayPicker(true)} style={{ marginTop: 8, background: G.gold, color: G.onAccent, border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>▶ Start Workout</button>}
               </div>
               {!editing ? (
                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
@@ -1154,7 +1155,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setShowDayPicker(false)} style={{ width: "100%", background: "#fff", color: G.text, border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
+                <button onClick={() => setShowDayPicker(false)} style={{ width: "100%", background: G.surf, color: G.text, border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
               </div>
             </div>
           )}
@@ -1245,7 +1246,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
   // Already answered, something was flagged, nobody has cleared it yet.
   if (!st.needed) {
     return (
-      <div className="card" style={{ padding: "16px 16px", marginBottom: 14, border: `1px solid ${G.amber}`, background: "#FBF2E3" }}>
+      <div className="card" style={{ padding: "16px 16px", marginBottom: 14, border: `1px solid ${G.amber}`, background: G.amberSoft }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: G.amber }}>
           {isAr ? "تحدث مع مدربك أولاً" : "Speak to your trainer first"}
         </div>
@@ -1255,7 +1256,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
             : "From your answers, it is worth speaking to Rafi — and to your doctor if he suggests it — before your next session. Your plan is here waiting; nothing has been taken away."}
         </div>
         <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
-          style={{ display: "inline-block", marginTop: 12, padding: "11px 16px", borderRadius: 10, background: "#E6F2ED", border: `1px solid ${G.green}`, color: G.green, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+          style={{ display: "inline-block", marginTop: 12, padding: "11px 16px", borderRadius: 10, background: G.greenSoft, border: `1px solid ${G.green}`, color: G.green, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
           <Icon n="whatsapp" s={15} /> {isAr ? "راسل رافي" : "Message Rafi"}
         </a>
       </div>
@@ -1339,7 +1340,7 @@ function ScreeningCard({ client, isAr, onAnswered }) {
         </div>
       ))}
       {wantIntake && intake.limitation && intake.limitation !== "none" && (
-        <div style={{ fontSize: 11.5, color: G.blue, background: "#E8EEF8", border: `1px solid #D3E0F2`, borderRadius: 9, padding: "10px 12px", marginBottom: 14, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11.5, color: G.blue, background: G.accentSoft, border: `1px solid ${G.accentLine}`, borderRadius: 9, padding: "10px 12px", marginBottom: 14, lineHeight: 1.6 }}>
           {isAr
             ? "سيراجع رافي هذا معك. لن يتوقف تدريبك."
             : "Rafi will look at this with you. It does not stop your training."}
@@ -1767,7 +1768,7 @@ function RegPage({ lang, setLang }) {
               : "Your training plan is already waiting. Save this password — it will not be shown again."}
       </div>
       {[[isAr ? "البريد" : "Email", result.email], [isAr ? "كلمة المرور" : "Password", result.password]].map(([k, v]) => (
-        <div key={k} style={{ background: "#F3F6FA", border: `1px solid ${G.border}`, borderRadius: 10, padding: "11px 13px", marginBottom: 9 }}>
+        <div key={k} style={{ background: G.surf2, border: `1px solid ${G.border}`, borderRadius: 10, padding: "11px 13px", marginBottom: 9 }}>
           <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 4 }}>{k}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: G.text, wordBreak: "break-all" }}>{v}</div>
@@ -1779,7 +1780,7 @@ function RegPage({ lang, setLang }) {
         </div>
       ))}
       {result.needsReview && (
-        <div style={{ fontSize: 12, color: G.amber, background: "#FBF2E3", border: "1px solid #EFE0C2", borderRadius: 9, padding: "10px 12px", margin: "12px 0", lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: G.amber, background: G.amberSoft, border: `1px solid ${G.amberLine}`, borderRadius: 9, padding: "10px 12px", margin: "12px 0", lineHeight: 1.6 }}>
           <Icon n="alert" s={14} sx={{ display: "inline-block", verticalAlign: "-2px", marginInlineEnd: 6 }} />{isAr ? "سيتواصل معك أحد مدربينا للتأكد من أن هذه الخطة مناسبة لك." : "One of our coaches will check in to make sure this plan suits you."}
         </div>
       )}
@@ -1796,7 +1797,7 @@ function RegPage({ lang, setLang }) {
       </div>
       <div style={{ fontSize: 14, color: G.muted, lineHeight: 1.8 }}>{result.message}</div>
       <a href={`https://wa.me/${TRAINER.whatsapp}`} target="_blank" rel="noreferrer"
-        style={{ display: "inline-block", marginTop: 18, padding: "10px 18px", background: "#E6F2ED", border: "1px solid #C9E3D8", borderRadius: 9, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+        style={{ display: "inline-block", marginTop: 18, padding: "10px 18px", background: G.greenSoft, border: `1px solid ${G.greenLine}`, borderRadius: 9, color: G.green, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
         <Icon n="whatsapp" s={15} /> {isAr ? "تواصل معنا" : "Message us"}
       </a>
     </div>
@@ -1873,7 +1874,7 @@ function RegPage({ lang, setLang }) {
           ]} />
       </div>
       {f.limitation !== "none" && (
-        <div style={{ fontSize: 12, color: G.blue, background: "#E8EEF8", border: "1px solid #D3E0F2", borderRadius: 9, padding: "10px 12px", marginTop: 12, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: G.blue, background: G.accentSoft, border: `1px solid ${G.accentLine}`, borderRadius: 9, padding: "10px 12px", marginTop: 12, lineHeight: 1.6 }}>
           {isAr ? "سيبني أحد مدربينا خطتك بنفسه بدلاً من أن يخمّن التطبيق." : "One of our coaches will build your plan personally rather than have the app guess — pain is not something software should be assessing."}
         </div>
       )}
@@ -2315,6 +2316,7 @@ export default function App() {
                 <div className="sf" style={{ fontSize: 28, lineHeight: 1.15 }}>{t.welcome}, {liveC.name.split(" ")[0]}</div>
                 <div style={{ fontSize: 13, color: G.muted, marginTop: 6 }}>{t.memberSince} {liveC.joinDate}</div>
               </div>
+              <AppearanceCard isAr={isAr} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginBottom: 11 }}>
                 {[{ l: t.age, v: `${liveC.age}y` }, { l: t.weight, v: `${liveC.weight}kg` }, { l: t.height, v: `${liveC.height}cm` }, { l: t.goal, v: liveC.goal }].map((x, i) => (
                   <div key={i} className="card" style={{ padding: "14px 16px" }}><div style={{ fontSize: 10, color: G.muted, textTransform: "uppercase", letterSpacing: ".09em", fontWeight: 600, marginBottom: 6 }}>{x.l}</div><div className="sf" style={{ fontSize: 22, lineHeight: 1.1, fontWeight: 700 }}>{x.v}</div></div>
@@ -2338,7 +2340,7 @@ export default function App() {
                     <Av name={TRAINER.name} sz={42} />
                     <div><div style={{ fontSize: 14.5, fontWeight: 600 }}>{TRAINER.name}</div><div style={{ fontSize: 11, color: G.muted }}>{isAr ? TRAINER.designationAr : TRAINER.designation}</div></div>
                   </div>
-                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: "#E6F2ED", border: "1px solid #C9E3D8", borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
+                  <a href={`https://wa.me/${TRAINER.whatsapp}?text=${encodeURIComponent(`Hi! 👋\nI am ${liveC.name}.\n\nI need help with: `)}`} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", background: G.greenSoft, border: `1px solid ${G.greenLine}`, borderRadius: 8, color: G.green, textDecoration: "none", fontSize: 12, fontWeight: 700 }}>💬 WhatsApp</a>
                 </div>
               </div>
               <button className="btn" onClick={logout}
@@ -2509,7 +2511,7 @@ export default function App() {
                                   </button>
                                 ))}
                               </div>
-                              <button onClick={() => setShowClientDayPicker(false)} style={{ width: "100%", background: "#fff", color: G.text, border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => setShowClientDayPicker(false)} style={{ width: "100%", background: G.surf, color: G.text, border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
                             </div>
                           </div>
                         )}
@@ -2573,7 +2575,9 @@ export default function App() {
             </div>
           )}
           {cTab === "pdscore" && (
-              <PDScore client={liveC} onClose={() => setCTab("workout")} />
+              // P1: PD-100 keeps the light tokens until its own restyle (P6),
+              // so PDScore.jsx is not touched while its pending branches land.
+              <div data-pd-force-light=""><PDScore client={liveC} onClose={() => setCTab("workout")} /></div>
             )}
 
           {cTab === "progress" && (
@@ -2593,7 +2597,7 @@ export default function App() {
             "trophy". The selected tab is now stated three ways (ink icon, ink
             label, and a rule under it) rather than by colour alone.
             48px tall inside a 60px bar: comfortably past the 44px minimum. */}
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.surf, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}>
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: G.nav, borderTop: `1px solid ${G.border}`, display: "flex", zIndex: 100, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}>
           {[
             { id: "workout", l: "Train", i: "train" },
             { id: "nutrition", l: "Food", i: "food" },
@@ -2606,9 +2610,10 @@ export default function App() {
             return (
               <button key={tab.id} onClick={() => setCTab(tab.id)} aria-current={on ? "page" : undefined}
                 style={{ flex: 1, background: "none", border: "none", padding: "9px 2px 7px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, minHeight: 56, position: "relative" }}>
-                <Icon n={tab.i} s={21} c={on ? G.ink : G.dim} w={on ? 1.9 : 1.7} />
-                <span style={{ fontSize: 10, fontWeight: on ? 700 : 500, color: on ? G.ink : G.muted, letterSpacing: ".01em", whiteSpace: "nowrap" }}>{tab.l}</span>
-                {on && <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 22, height: 2, borderRadius: 2, background: G.ink }} />}
+                <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 28, borderRadius: 14, background: on ? G.accentSoft : "transparent" }}>
+                  <Icon n={tab.i} s={21} c={on ? G.accentStrong : G.muted} w={on ? 1.9 : 1.7} />
+                </span>
+                <span style={{ fontSize: 12, fontWeight: on ? 700 : 500, color: on ? G.text : G.muted, letterSpacing: 0, whiteSpace: "nowrap" }}>{tab.l}</span>
               </button>
             );
           })}
@@ -2635,7 +2640,7 @@ export default function App() {
         {aTab === "dashboard" && (
           <div className="fd">
             <div style={{ marginBottom: 14 }}><div className="sf gd" style={{ fontSize: 22, fontWeight: 700 }}>{t.welcome}, {TRAINER.name.split(" ")[0]}! 👋</div></div>
-            {regs.length > 0 && <div style={{ background: "#FBF2E3", border: "1px solid #EFE0C2", borderRadius: 11, padding: "11px 13px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}><div><div style={{ fontSize: 13, fontWeight: 700, color: G.amber }}>📋 {regs.length} {t.pendingRequests}</div></div><Btn ch={isAr ? "مراجعة" : "Review"} v="amber" onClick={() => setATab("requests")} sx={{ padding: "7px 14px", fontSize: 12 }} /></div>}
+            {regs.length > 0 && <div style={{ background: G.amberSoft, border: `1px solid ${G.amberLine}`, borderRadius: 11, padding: "11px 13px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}><div><div style={{ fontSize: 13, fontWeight: 700, color: G.amber }}>📋 {regs.length} {t.pendingRequests}</div></div><Btn ch={isAr ? "مراجعة" : "Review"} v="amber" onClick={() => setATab("requests")} sx={{ padding: "7px 14px", fontSize: 12 }} /></div>}
             {/* Screening, above the numbers on purpose.
                 A flagged client is someone who reported chest pain or
                 dizziness and is now sitting locked out of their own workout
@@ -2690,7 +2695,7 @@ export default function App() {
               </div>
             </div>
             <div className="card" style={{ padding: 16 }}>
-              {(()=>{const today=new Date();today.setHours(0,0,0,0);const up=clients.filter(cl=>cl.dob).map(cl=>{const[,m,d]=cl.dob.split("-");let b=new Date(today.getFullYear(),+m-1,+d);if(b<today)b.setFullYear(today.getFullYear()+1);return{...cl,days:Math.ceil((b-today)/864e5)};}).filter(cl=>cl.days<=30).sort((a,b)=>a.days-b.days);if(!up.length)return null;return(<><div style={{fontSize:10,color:"#9A6212",letterSpacing:1.5,textTransform:"uppercase",marginBottom:8,fontWeight:700}}>🎂 {isAr?"مواليد قادمة":"Upcoming Birthdays"}</div>{up.map(cl=>(<div key={cl.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${G.border}`}}><span style={{fontSize:13,color:G.text,fontWeight:600}}>{cl.name}</span><span style={{fontSize:12,color:cl.days<=7?"#9A6212":G.muted,fontWeight:700}}>{cl.days===0?"🎉 Today!":cl.days===1?"Tomorrow 🎂":cl.days+" days"}</span></div>))}<div style={{height:1,background:G.border,margin:"12px 0"}}></div></>);})()}
+              {(()=>{const today=new Date();today.setHours(0,0,0,0);const up=clients.filter(cl=>cl.dob).map(cl=>{const[,m,d]=cl.dob.split("-");let b=new Date(today.getFullYear(),+m-1,+d);if(b<today)b.setFullYear(today.getFullYear()+1);return{...cl,days:Math.ceil((b-today)/864e5)};}).filter(cl=>cl.days<=30).sort((a,b)=>a.days-b.days);if(!up.length)return null;return(<><div style={{fontSize:10,color:G.amber,letterSpacing:1.5,textTransform:"uppercase",marginBottom:8,fontWeight:700}}>🎂 {isAr?"مواليد قادمة":"Upcoming Birthdays"}</div>{up.map(cl=>(<div key={cl.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${G.border}`}}><span style={{fontSize:13,color:G.text,fontWeight:600}}>{cl.name}</span><span style={{fontSize:12,color:cl.days<=7?"#9A6212":G.muted,fontWeight:700}}>{cl.days===0?"🎉 Today!":cl.days===1?"Tomorrow 🎂":cl.days+" days"}</span></div>))}<div style={{height:1,background:G.border,margin:"12px 0"}}></div></>);})()}
               <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>{t.goalsDistribution}</div>
               {Object.entries(goals).map(([g, c]) => (<div key={g} style={{ marginBottom: 10 }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 12 }}><span>{g}</span><span style={{ color: G.gold, fontWeight: 700 }}>{c}</span></div><div style={{ height: 3, background: G.surf2, borderRadius: 3 }}><div style={{ height: "100%", width: `${(c / clients.length) * 100}%`, background: G.grad, borderRadius: 3 }} /></div></div>))}
             </div>
@@ -2737,7 +2742,7 @@ export default function App() {
                     <Btn ch={disabled ? "▶" : "⏸"} v={disabled ? "green" : "amber"} onClick={() => toggleStatus(c.id)} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
                     <Btn ch="🗑️" v="danger" onClick={() => { if (window.confirm(`${isAr ? "حذف" : "Delete"} ${c.name}?`)) deleteClient(c.id); }} sx={{ padding: "10px 6px", fontSize: 13, minHeight: 42 }} />
                   </div>
-                    <div style={{ marginTop:10,padding:"10px 12px",background:"#F3F6FA",borderRadius:10,border:`1px solid ${G.border}` }}>
+                    <div style={{ marginTop:10,padding:"10px 12px",background:G.surf2,borderRadius:10,border:`1px solid ${G.border}` }}>
                       <div style={{ fontSize:11,color:G.muted,marginBottom:5,fontWeight:600 }}>📝 {isAr?"ملاحظات المدرب":"Trainer Notes"}</div>
                       <textarea value={notesDraft[c.id]??(c.trainer_notes||"")} onChange={e=>setNotesDraft(p=>({...p,[c.id]:e.target.value}))} onBlur={async()=>{if(notesDraft[c.id]!==undefined){const upd={...c,trainer_notes:notesDraft[c.id]};await dbUpdateClient(upd);setClients(p=>p.map(x=>x.id===c.id?upd:x));setNotesDraft(p=>{const n={...p};delete n[c.id];return n;});}}} placeholder={isAr?"ملاحظات خاصة...":"Private notes..."} style={{width:"100%",minHeight:55,background:"transparent",border:"none",color:G.text,fontSize:12,resize:"none",outline:"none",lineHeight:1.6,fontFamily:"Inter,sans-serif",padding:0}} />
                     </div>
@@ -2762,7 +2767,7 @@ export default function App() {
                         setResettingId(null);
                       }
                     }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: "#E8EEF8", border: "1px solid #D3E0F2", borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700, opacity: resettingId === c.id ? 0.6 : 1 }}>
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", background: G.accentSoft, border: `1px solid ${G.accentLine}`, borderRadius: 7, color: G.gold, fontSize: 11, fontWeight: 700, opacity: resettingId === c.id ? 0.6 : 1 }}>
                     {resettingId === c.id
                       ? (isAr ? "جارٍ..." : "Working…")
                       : `🔑 ${isAr ? "كلمة مرور جديدة ومشاركة" : "New password & share"}`}
@@ -2799,7 +2804,7 @@ export default function App() {
             {regs.length === 0
               ? <div className="card" style={{ padding: "36px 20px", textAlign: "center", color: G.muted }}><div style={{ fontSize: 26, marginBottom: 8 }}>📋</div><div>{t.noRequests}</div></div>
               : regs.map(reg => (
-                <div key={reg.id} className="card" style={{ padding: 14, marginBottom: 10, border: "1px solid #EFE0C2" }}>
+                <div key={reg.id} className="card" style={{ padding: 14, marginBottom: 10, border: `1px solid ${G.amberLine}` }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 11 }}>
                     <Av name={reg.name} sz={38} />
                     <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 700 }}>{reg.name}</div><div style={{ fontSize: 11, color: G.muted }}>{reg.email} · {reg.phone}</div><div style={{ fontSize: 10, color: G.muted }}>{new Date(reg.submittedAt).toLocaleString()}</div></div>
@@ -2814,7 +2819,7 @@ export default function App() {
                       Showing the name and goal but not the reason is how a
                       chest-pain answer gets a one-click approval. */}
                   {reg.blocked_reason && (
-                    <div style={{ background: "#FBECEC", border: `1px solid ${G.red}`, borderRadius: 8, padding: "9px 11px", marginBottom: 11 }}>
+                    <div style={{ background: G.redSoft, border: `1px solid ${G.red}`, borderRadius: 8, padding: "9px 11px", marginBottom: 11 }}>
                       <div style={{ fontSize: 10, color: G.red, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 700, marginBottom: 5 }}>
                         ⚠ Not started automatically
                       </div>
@@ -2961,14 +2966,14 @@ export default function App() {
               <>
                 <div style={{ background: G.surf2, border: `1px solid ${G.borderHi}`, borderRadius: 11, padding: 14, marginBottom: 12, fontFamily: "monospace", direction: "ltr" }}>
                   <div style={{ display:"flex",flexDirection:"column",gap:10,marginBottom:16 }}>
-  <div style={{ background:"#F3F6FA",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
+  <div style={{ background:G.surf2,borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
     <div style={{ fontSize:11,color:G.muted,marginBottom:6,fontWeight:600 }}>📧 {isAr?"البريد الإلكتروني":"Email"}</div>
     <div style={{ display:"flex",alignItems:"center",gap:8 }}>
       <div style={{ flex:1,fontSize:13,color:G.text,fontWeight:600,wordBreak:"break-all" }}>{shareD.email}</div>
       <button onClick={()=>navigator.clipboard.writeText(shareD.email)} style={{ flexShrink:0,background:G.accentSoft,border:`1px solid ${G.accentLine}`,borderRadius:7,padding:"6px 12px",color:G.accent,fontSize:12,cursor:"pointer",fontWeight:600 }}>📋 {isAr?"نسخ":"Copy"}</button>
     </div>
   </div>
-  <div style={{ background:"#F3F6FA",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
+  <div style={{ background:G.surf2,borderRadius:10,padding:"12px 14px",border:"1px solid rgba(255,255,255,0.08)" }}>
     <div style={{ fontSize:11,color:G.muted,marginBottom:6,fontWeight:600 }}>🔑 {isAr?"كلمة المرور":"Password"}</div>
     <div style={{ display:"flex",alignItems:"center",gap:8 }}>
       <div style={{ flex:1,fontSize:14,color:G.text,fontWeight:700,letterSpacing:2 }}>{shareD.password}</div>
@@ -2980,7 +2985,7 @@ export default function App() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {shareD?.phone && (
                     <a href={`https://wa.me/${shareD.phone.replace(/\D/g, "")}?text=${encodeURIComponent(credText)}`} target="_blank" rel="noreferrer"
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", background: "#E6F2ED", border: "1px solid #C9E3D8", borderRadius: 11, color: G.green, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", background: G.greenSoft, border: `1px solid ${G.greenLine}`, borderRadius: 11, color: G.green, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>
                       💬 {t.sendWhatsapp}
                     </a>
                   )}
@@ -3029,3 +3034,16 @@ export default function App() {
 
 
 
+
+// P1: Light / Dark / System. Stored per device (localStorage "pd_theme");
+// System follows the phone's setting. Arabic labels need native review.
+function AppearanceCard({ isAr }) {
+  const [val, setVal] = useState(getAppearance());
+  return (
+    <div className="card" style={{ padding: 14, marginBottom: 11 }}>
+      <div id="pd-appearance-label" style={{ fontSize: 12, color: G.muted, textTransform: "uppercase", letterSpacing: ".09em", fontWeight: 600, marginBottom: 8 }}>{isAr ? "المظهر" : "Appearance"}</div>
+      <Segmented label={isAr ? "المظهر" : "Appearance"} value={val} onChange={(v) => setVal(setAppearance(v))}
+        options={[{ value: "light", label: isAr ? "فاتح" : "Light" }, { value: "dark", label: isAr ? "داكن" : "Dark" }, { value: "system", label: isAr ? "النظام" : "System" }]} />
+    </div>
+  );
+}

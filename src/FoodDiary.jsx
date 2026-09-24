@@ -197,23 +197,23 @@ export function NutritionTab({ title, plan = null, legacyText = "", noPlanText =
       <div style={summaryCard} aria-busy={busy && !day}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
           <span style={{ fontSize: 34, fontWeight: 700, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{busy && !day ? "–" : Math.round(kcal).toLocaleString()}</span>
-          <span style={{ fontSize: 15, color: "#C9D6EA" }}>/ {kcalT ? Math.round(kcalT).toLocaleString() : "—"} {L.logged}</span>
+          <span style={{ fontSize: 15, color: G.onNavyMuted }}>/ {kcalT ? Math.round(kcalT).toLocaleString() : "—"} {L.logged}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.18)", borderRadius: 3, overflow: "hidden" }}
             role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={L.logged}>
-            <div style={{ width: `${pct}%`, height: "100%", background: "#D3E0F2", borderRadius: 3, transition: "width .25s" }} />
+            <div style={{ width: `${pct}%`, height: "100%", background: G.accentLine, borderRadius: 3, transition: "width .25s" }} />
           </div>
-          <span style={{ fontSize: 12, color: "#C9D6EA", fontVariantNumeric: "tabular-nums" }}>{pct}%</span>
+          <span style={{ fontSize: 12, color: G.onNavyMuted, fontVariantNumeric: "tabular-nums" }}>{pct}%</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginTop: 14, borderTop: "1px solid rgba(255,255,255,0.14)", paddingTop: 12 }}>
           {[["protein_g", L.protein, "#F6D9D9", <Icon key="i" n="train" s={16} c={G.red} />], ["carbs_g", L.carbs, "#F4E4BF", <MacroIcon key="i" kind="carbs" />], ["fat_g", L.fat, "#D8E4F6", <MacroIcon key="i" kind="fat" />]].map(([k, lab, bg, ic], i) => (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, paddingInlineStart: i ? 10 : 0, borderInlineStart: i ? "1px solid rgba(255,255,255,0.14)" : "none" }}>
               <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 15, background: bg, display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>{ic}</span>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: "#C9D6EA" }}>{lab}</div>
+                <div style={{ fontSize: 11, color: G.onNavyMuted }}>{lab}</div>
                 <div style={{ fontSize: 13.5, fontWeight: 700, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-                  {Math.round(Number(totals[k]) || 0)}<span style={{ fontWeight: 500, color: "#C9D6EA" }}> / {targets[k] ? Math.round(targets[k]) : "—"}g</span>
+                  {Math.round(Number(totals[k]) || 0)}<span style={{ fontWeight: 500, color: G.onNavyMuted }}> / {targets[k] ? Math.round(targets[k]) : "—"}g</span>
                 </div>
               </div>
             </div>
@@ -295,7 +295,7 @@ export function NutritionTab({ title, plan = null, legacyText = "", noPlanText =
                         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 7 }}>
                           <span dir="ltr" style={{ ...chipS, background: G.amberSoft, color: G.amber }}>{m.cal} kcal</span>
                           <span dir="ltr" style={{ ...chipS, background: G.redSoft, color: G.red }}>P {m.p}g</span>
-                          <span dir="ltr" style={{ ...chipS, background: "#FBF2E3", color: G.amber }}>C {m.c}g</span>
+                          <span dir="ltr" style={{ ...chipS, background: G.amberSoft, color: G.amber }}>C {m.c}g</span>
                           <span dir="ltr" style={{ ...chipS, background: G.accentSoft, color: G.accent }}>F {m.f}g</span>
                         </div>
                       </div>
@@ -341,7 +341,7 @@ export function NutritionTab({ title, plan = null, legacyText = "", noPlanText =
       {/* Room for the floating Add food button above the fixed bottom nav. */}
       <div aria-hidden="true" style={{ height: 68 }} />
       <button onClick={() => setAdding(true)} style={fab}>
-        <Icon n="plus" s={16} c="#FCFCFD" w={2.2} /> {L.addFood}
+        <Icon n="plus" s={16} c={G.onAccent} w={2.2} /> {L.addFood}
       </button>
 
       {adding && (
@@ -354,11 +354,11 @@ export function NutritionTab({ title, plan = null, legacyText = "", noPlanText =
 function MacroIcon({ kind }) {
   // Line icons in the app's stroke style (Icons.jsx has none for these two).
   return kind === "carbs" ? (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke={G.amber} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" style={{ color: G.amber }} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 21V9" /><path d="M12 13c-2.5 0-4-1.6-4-4 2.5 0 4 1.6 4 4zM12 13c2.5 0 4-1.6 4-4-2.5 0-4 1.6-4 4zM12 17c-2.5 0-4-1.6-4-4 2.5 0 4 1.6 4 4zM12 17c2.5 0 4-1.6 4-4-2.5 0-4 1.6-4 4zM12 9c-1.3-1-1.3-3.5 0-5 1.3 1.5 1.3 4 0 5z" />
     </svg>
   ) : (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke={G.accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" style={{ color: G.accent }} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 3.5c3 4 5.5 7 5.5 10.2A5.5 5.5 0 0 1 12 19.5a5.5 5.5 0 0 1-5.5-5.8C6.5 10.5 9 7.5 12 3.5z" />
     </svg>
   );
@@ -367,8 +367,8 @@ function MacroIcon({ kind }) {
 function Chevron({ dir = "right" }) {
   const rot = { right: 0, down: 90, left: 180, up: 270 }[dir];
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: `rotate(${rot}deg)` }}>
-      <path d="M9 5l7 7-7 7" fill="none" stroke={G.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: `rotate(${rot}deg)`, color: G.muted }}>
+      <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -693,7 +693,7 @@ function Scanner({ onCode, onError, busy }) {
 
       {!live && (
         <button onClick={start} disabled={starting} style={{ ...primaryBtn, width: "100%", justifyContent: "center" }}>
-          <Icon n="camera" s={15} c="#FCFCFD" /> {starting ? "Opening…" : "Open the camera"}
+          <Icon n="camera" s={15} c={G.onAccent} /> {starting ? "Opening…" : "Open the camera"}
         </button>
       )}
 
@@ -717,7 +717,7 @@ function Scanner({ onCode, onError, busy }) {
 // ── styles ─────────────────────────────────────────────────
 const primaryBtn = {
   display: "inline-flex", alignItems: "center", gap: 7, minHeight: 44, padding: "0 16px",
-  borderRadius: 10, border: "none", background: G.accent, color: "#FCFCFD",
+  borderRadius: 10, border: "none", background: G.accent, color: G.onAccent,
   fontSize: 13, fontWeight: 700, cursor: "pointer",
 };
 const ghostBtn = {
@@ -767,10 +767,10 @@ const sheet = {
 
 const datePill = { display: "inline-flex", alignItems: "center", gap: 2, background: G.surf, border: `1px solid ${G.border}`, borderRadius: 999, padding: "2px 4px", boxShadow: "0 1px 2px rgba(14,32,53,0.04)" };
 const pillBtn = { width: 34, height: 36, border: "none", background: "transparent", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: 18 };
-const summaryCard = { background: G.ink, color: "#FCFCFD", borderRadius: 18, padding: "16px 16px 14px", marginBottom: 14, boxShadow: "0 6px 18px rgba(14,32,53,0.18)" };
+const summaryCard = { background: G.navy, color: G.onNavy, borderRadius: 18, padding: "16px 16px 14px", marginBottom: 14, boxShadow: "0 6px 18px rgba(14,32,53,0.18)" };
 const segWrap = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, background: G.surf, border: `1px solid ${G.border}`, borderRadius: 14, padding: 4, marginBottom: 14 };
 const segBtn = { minHeight: 42, border: "none", borderRadius: 10, background: "transparent", color: G.muted, fontSize: 14, fontWeight: 700, cursor: "pointer" };
-const segOn = { background: G.accent, color: "#FCFCFD", boxShadow: "0 2px 6px rgba(33,80,155,0.25)" };
+const segOn = { background: G.accent, color: G.onAccent, boxShadow: "0 2px 6px rgba(33,80,155,0.25)" };
 const planHead = { display: "flex", alignItems: "center", gap: 12, background: G.surf, border: `1px solid ${G.border}`, borderRadius: 16, padding: 10, marginBottom: 10, boxShadow: "0 1px 3px rgba(14,32,53,0.05)" };
 const activePill = { display: "inline-flex", alignItems: "center", gap: 6, background: G.greenSoft, color: G.green, fontSize: 12, fontWeight: 700, borderRadius: 999, padding: "6px 10px", flex: "0 0 auto" };
 const mealRow = { background: G.surf, border: `1px solid ${G.border}`, borderRadius: 16, padding: 10, marginBottom: 10, boxShadow: "0 1px 3px rgba(14,32,53,0.05)" };
@@ -780,4 +780,4 @@ const chipS = { fontSize: 10, fontWeight: 700, borderRadius: 999, padding: "3px 
 const logBtnS = { minWidth: 58, minHeight: 36, borderRadius: 10, border: `1.5px solid ${G.accent}`, background: G.surf, color: G.accent, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: "0 10px" };
 const loggedBtnS = { ...logBtnS, border: `1.5px solid ${G.greenLine}`, background: G.greenSoft, color: G.green, cursor: "default", display: "inline-flex", alignItems: "center", gap: 4 };
 const chevBtn = { width: 36, height: 36, border: "none", background: "transparent", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: 18 };
-const fab = { position: "fixed", left: "50%", transform: "translateX(-50%)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)", zIndex: 90, display: "inline-flex", alignItems: "center", gap: 8, minHeight: 48, padding: "0 22px", borderRadius: 999, border: "none", background: G.accent, color: "#FCFCFD", fontSize: 15, fontWeight: 700, boxShadow: "0 8px 20px rgba(33,80,155,0.35)", cursor: "pointer" };
+const fab = { position: "fixed", left: "50%", transform: "translateX(-50%)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)", zIndex: 90, display: "inline-flex", alignItems: "center", gap: 8, minHeight: 48, padding: "0 22px", borderRadius: 999, border: "none", background: G.accent, color: G.onAccent, fontSize: 15, fontWeight: 700, boxShadow: "0 8px 20px rgba(33,80,155,0.35)", cursor: "pointer" };
