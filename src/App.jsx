@@ -4,7 +4,7 @@ import { printMedia, getMedia } from "./media";
 import { G } from "./theme";
 import { LibraryTab } from "./LibraryTab";
 import { WorkoutPlayer, resolveWarmup, resolveCooldown } from "./WorkoutPlayer";
-import { FoodDiary } from "./FoodDiary";
+import { NutritionTab, planKey } from "./FoodDiary";
 import { ClientFood } from "./ClientFood";
 import { AdminWorkoutHistory, ClientWorkoutHistory } from "./WorkoutHistory";
 import { PDScore } from "./PDScore";
@@ -2349,9 +2349,11 @@ export default function App() {
           )}
           {(cTab === "workout" || cTab === "nutrition") && (
             <div className="fd">
+              {cTab === "workout" && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div className="sf" style={{ fontSize: 26, lineHeight: 1.15 }}>{cTab === "workout" ? t.workout : t.nutrition}</div>
+                <div className="sf" style={{ fontSize: 26, lineHeight: 1.15 }}>{t.workout}</div>
               </div>
+              )}
               {cTab === "workout" ? (
                 (() => {
                   const ws = systemFor(liveC);
@@ -2542,76 +2544,31 @@ export default function App() {
                   }
                 })()
               ) : (
-                <div>
-                  {/* What they ATE comes first, then the plan for what
-                      they should. A plan with nothing recorded against
-                      it is a document; the diary is what makes it a
-                      habit, and burying it under the meal cards would
-                      have meant nobody found it. */}
-                  <FoodDiary />
-                  {(() => {
-                    const mp = MEALS.find(m => m.id === liveC.mealPlanId);
-                    return mp ? (
-                      <div>
-                        <div style={{ borderRadius: 12, overflow: "hidden", marginBottom: 14, position: "relative" }}>
-                          <img src={mp.image} alt={mp.name} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
-                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.8))", padding: "20px 14px 12px" }}>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{mp.emoji} {isAr ? mp.nameAr : mp.name}</div>
-                          </div>
-                        </div>
-                        <div>
-                          {(() => {
-                            const pal = PAL.find(p => p.id === (liveC.pal || "moderate")) || PAL[2];
-                            const tdee = calcTDEE(liveC.weight, liveC.height, liveC.age, liveC.gender || "male", pal.factor);
-                            const target = goalCal(tdee, liveC.goal);
-                            const scaledPlan = scaleMealPlan(mp, target);
-                            return scaledPlan.meals.map((m, i) => {
-                              const mealImg = MEAL_IMAGES[mp.id]?.[`${m.name}@${m.time}`] || MEAL_IMAGES[mp.id]?.[m.name];
-                              const prepSteps = MEAL_PREP[mp.id]?.[m.name];
-                              return (
-                                <div key={i} style={{ marginBottom: 16, borderRadius: 18, overflow: "hidden", background: G.surf, boxShadow: "0 6px 20px rgba(14,32,53,0.08)" }}>
-                                  {mealImg && (
-                                    <div style={{ position: "relative" }}>
-                                      <img src={mealImg} alt={m.name} style={{ width: "100%", height: 170, objectFit: "cover", display: "block" }} />
-                                      <div style={{ position: "absolute", top: 10, left: 10, background: mp.color, color: "#FCFCFD", fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 20 }}>{m.time}</div>
-                                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(transparent, rgba(0,0,0,0.65))" }} />
-                                    </div>
-                                  )}
-                                  <div style={{ padding: "12px 14px" }}>
-                                    <div style={{ fontSize: 16, fontWeight: 800, color: G.text, marginBottom: 6 }}>{isAr ? m.nameAr : m.name}</div>
-                                    <div style={{ fontSize: 11.5, color: G.muted, lineHeight: 1.5, marginBottom: 8 }}>{m.items}</div>
-                                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: prepSteps ? 10 : 0 }}>
-                                      <span style={{ background: G.amberSoft, color: G.amber, fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>{m.cal} kcal</span>
-                                      <span style={{ background: "#ef444415", color: "#A63A3A", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>P {m.p}g</span>
-                                      <span style={{ background: "#f59e0b15", color: G.amber, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>C {m.c}g</span>
-                                      <span style={{ background: "#60a5fa15", color: G.blue, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20 }}>F {m.f}g</span>
-                                    </div>
-                                    {prepSteps && (
-                                      <details style={{ background: G.surf2, borderRadius: 12, padding: "10px 12px" }}>
-                                        <summary style={{ fontSize: 12, fontWeight: 700, color: G.accent, cursor: "pointer", listStyle: "none", minHeight: 30, display: "flex", alignItems: "center" }}>How to prep</summary>
-                                        <ol style={{ margin: "8px 0 0", paddingLeft: 18 }}>
-                                          {prepSteps.map((step, si) => (
-                                            <li key={si} style={{ fontSize: 11.5, color: G.text, lineHeight: 1.6, marginBottom: 4 }}>{step}</li>
-                                          ))}
-                                        </ol>
-                                      </details>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="card" style={{ padding: 16, minHeight: 150 }}>
-                        {liveC.nutritionPlan
-                          ? <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.9, color: G.text }}>{liveC.nutritionPlan}</pre>
-                          : <div style={{ textAlign: "center", padding: "36px 20px", color: G.muted }}><div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}><Icon n="food" s={26} c={G.dim} /></div><div style={{ color: G.muted }}>{t.trainerWillAdd}</div></div>}
-                      </div>
-                    );
-                  })()}
-                </div>
+                (() => {
+                  // Diary (what was logged) and Meal plan (what the trainer
+                  // assigned) now share one screen with a switch between them;
+                  // see NutritionTab in FoodDiary.jsx. The plan data is the same
+                  // static plan + scaling + photos + prep notes as before.
+                  const mp = MEALS.find(m => m.id === liveC.mealPlanId);
+                  let plan = null;
+                  if (mp) {
+                    const pal = PAL.find(p => p.id === (liveC.pal || "moderate")) || PAL[2];
+                    const tdee = calcTDEE(liveC.weight, liveC.height, liveC.age, liveC.gender || "male", pal.factor);
+                    const target = goalCal(tdee, liveC.goal);
+                    const scaledPlan = scaleMealPlan(mp, target);
+                    plan = {
+                      id: mp.id, name: isAr ? mp.nameAr : mp.name, image: mp.image,
+                      meals: scaledPlan.meals.map(m => ({
+                        key: planKey(mp.id, m.time), time: m.time, label: m.name, labelShown: isAr ? m.nameAr : m.name,
+                        items: m.items, cal: m.cal, p: m.p, c: m.c, f: m.f,
+                        img: MEAL_IMAGES[mp.id]?.[`${m.name}@${m.time}`] || MEAL_IMAGES[mp.id]?.[m.name] || null,
+                        prep: MEAL_PREP[mp.id]?.[m.name] || [],
+                      })),
+                    };
+                  }
+                  return <NutritionTab key={liveC.id} title={t.nutrition} plan={plan} isAr={isAr}
+                    legacyText={mp ? "" : (liveC.nutritionPlan || "")} noPlanText={t.trainerWillAdd} />;
+                })()
               )}
             </div>
           )}

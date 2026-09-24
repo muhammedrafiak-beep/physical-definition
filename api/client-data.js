@@ -27,6 +27,7 @@ import { missingEnv } from "./_lib/admin.js";
 import { checkLimit, recordHit, bucket as rlBucket } from "./_lib/ratelimit.js";
 import { PARQ_QUESTIONS, EXPERIENCE, EQUIPMENT, LIMITATION } from "./_lib/assign.js";
 import { defaultTargets, cleanTargets, NUTRIENTS, offByBarcode, offSearch, portion } from "./_lib/nutrition.js";
+import { foodWriteBlocked } from "./_lib/preview-food-guard.js";
 
 const BUCKET = "progress-photos";
 const SIGNED_URL_TTL_SEC = 60 * 60; // an hour is plenty for one screen
@@ -113,6 +114,11 @@ export default async function handler(req, res) {
 
   const body = typeof req.body === "string" ? safeJson(req.body) : (req.body || {});
   const { action } = body;
+
+  // Before any database access: a Preview must not write a real diary.
+  if (foodWriteBlocked(action)) {
+    return res.status(403).json({ error: "Preview build: diary changes are not saved.", preview_blocked: true, env: process.env.VERCEL_ENV || "unset" });
+  }
 
   const db = createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -390,7 +396,7 @@ export default async function handler(req, res) {
 
         const [logs, tg] = await Promise.all([
           db.from("food_logs")
-            .select("id, eaten_at, meal, name, brand, barcode, grams, " + NUTRIENTS.join(", "))
+            .select("id, eaten_at, meal, name, brand, barcode, grams, source, " + NUTRIENTS.join(", "))
             .eq("client_id", me.id)
             .eq("eaten_on", day)
             .order("eaten_at", { ascending: true }),
@@ -424,6 +430,18 @@ export default async function handler(req, res) {
           for (const k of NUTRIENTS) vals[k] = num(body[k], 0, 100000);
         }
 
+        // A planned meal (source "plan:<plan>@<time>", set by the Meal plan
+        // view) can be logged once per day. The button is already disabled
+        // once it is logged; this is the check that survives a double tap or
+        // a second device.
+        const src = clean(body.source, 20) || "manual";
+        if (src.startsWith("plan:")) {
+          const dup = await db.from("food_logs").select("id").eq("client_id", me.id)
+            .eq("eaten_on", isoDate(body.date)).eq("source", src).limit(1);
+          if (dup.error) throw dup.error;
+          if ((dup.data || []).length) return res.status(409).json({ error: "That meal is already logged for this day.", duplicate: true });
+        }
+
         const row = {
           client_id: me.id,
           eaten_on: isoDate(body.date),
@@ -431,7 +449,7 @@ export default async function handler(req, res) {
           name,
           brand: clean(body.brand, 60),
           barcode: clean(body.barcode, 32),
-          source: clean(body.source, 20) || "manual",
+          source: src,
           ...vals,
         };
 
