@@ -12,7 +12,7 @@ function block(sel) {
     if (body.includes("--pd-bg:")) { i = at; break; }
   }
   const body = css.slice(i, css.indexOf("}", i));
-  return Object.fromEntries([...body.matchAll(/--pd-([a-z-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+  return Object.fromEntries([...body.matchAll(/--pd-([a-z0-9-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
 }
 const light = block(":root"), dark = block(':root[data-theme="dark"]');
 const lum = (h) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
@@ -22,6 +22,13 @@ const PAIRS = [
   ["text", "bg", 15], ["text", "surf", 7], ["muted", "surf", 4.5], ["muted", "bg", 4.5], ["accent", "surf", 4.5],
   ["accent-strong", "accent-soft", 5.7], ["on-accent", "accent", 4.5], ["green", "green-soft", 4.5], ["red", "red-soft", 4.5],
   ["amber", "amber-soft", 4.5], ["on-navy", "navy", 7], ["on-navy-muted", "navy", 4.5], ["placeholder", "surf", 4.5],
+  // P2 segmented control: selected text on its chip, and the chip outline
+  // against the track (non-text contrast, WCAG 1.4.11).
+  ["accent-strong", "accent-soft", 4.5], ["accent", "surf2", 3],
+  // P2 Train day chip: selected outline against the page.
+  ["accent", "bg", 3],
+  // P2 Train day chip (selected) and the muted text inside the hero.
+  ["on-navy-muted", "navy", 4.5],
 ];
 for (const [name, pal] of [["light", light], ["dark", dark]]) {
   test(`${name}: every token pair meets its contrast target`, () => {

@@ -85,7 +85,7 @@ export function MediaFrame({
       {shown.kind === "none" && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, opacity: 0.35, color: "currentColor" }}>
           <Icon n="dumbbell" s={24} />
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".03em" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".03em" }}>
             {media.loaded ? emptyLabel : " "}
           </div>
         </div>

@@ -188,3 +188,6 @@ body {
 :root, [data-pd-force-light] { --pd-logo-bg: #0B2036; --pd-logo-fg: #FCFCFD; }
 :root[data-theme="dark"] { --pd-logo-bg: #F5F8FB; --pd-logo-fg: #0B2036; }
 @media (prefers-color-scheme: dark) { :root[data-theme="system"] { --pd-logo-bg: #F5F8FB; --pd-logo-fg: #0B2036; } }
+
+/* P2: horizontal scrollers (Train day chips) hide the scrollbar but keep scrolling. */
+.pd-hscroll::-webkit-scrollbar { display: none; }

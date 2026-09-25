@@ -1150,7 +1150,7 @@ function PlansTab({ clients, selC, setSelC, setClients, lang, onUpdate }) {
                     Full workout — every day
                   </button>
                   {ws.days.map((day, i) => (
-                    <button key={i} onClick={() => { setActiveDay(day.name); setShowPlayer(true); setShowDayPicker(false); }} style={{ background: `${ws.color}15`, color: ws.color, border: `1px solid ${ws.color}30`, borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                    <button key={i} onClick={() => { setActiveDay(day.name); setShowPlayer(true); setShowDayPicker(false); }} style={{ background: G.surf, color: G.text, border: `1px solid ${G.border}`, borderInlineStart: `3px solid ${ws.color}`, borderRadius: 12, minHeight: 48, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
                       {day.name}
                     </button>
                   ))}
@@ -1942,6 +1942,7 @@ export default function App() {
   const [lastAssessedAt, setLastAssessedAt] = useState(null);
   const [showClientPlayer, setShowClientPlayer] = useState(false);
   const [showClientDayPicker, setShowClientDayPicker] = useState(false);
+  const [trainDayIdx, setTrainDayIdx] = useState(0);   // P2: which programme day the Train tab previews
   const [activeDay, setActiveDay] = useState(null);
   const [selC, setSelC] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -2351,11 +2352,27 @@ export default function App() {
           )}
           {(cTab === "workout" || cTab === "nutrition") && (
             <div className="fd">
-              {cTab === "workout" && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div className="sf" style={{ fontSize: 26, lineHeight: 1.15 }}>{t.workout}</div>
-              </div>
-              )}
+              {cTab === "workout" && (() => {
+                // P2 (V7): "Ready to train?" when a programme is assigned; the
+                // plain "Workout" title otherwise. Week comes from the same
+                // programmeState the progress card uses — no new logic.
+                const ws0 = systemFor(liveC);
+                const pr0 = ws0 ? programmeState(ws0, clientLogs, lastAssessedAt) : null;
+                const day0 = new Date().toLocaleDateString(isAr ? "ar" : "en-GB", { weekday: "long" });
+                return (
+                  <div style={{ marginBottom: 16 }}>
+                    {ws0 && (
+                      <div style={{ fontSize: 12, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600, marginBottom: 6 }}>
+                        {day0}{pr0?.weeks ? (isAr ? ` · الأسبوع ${pr0.week} من ${pr0.weeks}` : ` · Week ${pr0.week} of ${pr0.weeks}`) : ""}
+                      </div>
+                    )}
+                    <h1 className="sf" style={{ fontSize: 30, lineHeight: 1.12, fontWeight: 400, color: G.text, margin: 0 }}>
+                      {ws0 ? (isAr ? "مستعد للتمرين؟" : "Ready to train?") : t.workout}
+                    </h1>
+                    {ws0 && <div style={{ fontSize: 14, color: G.muted, marginTop: 6, lineHeight: 1.5 }}>{isAr ? "خطتك جاهزة." : "Your plan is ready."}</div>}
+                  </div>
+                );
+              })()}
               {cTab === "workout" ? (
                 (() => {
                   const ws = systemFor(liveC);
@@ -2414,7 +2431,7 @@ export default function App() {
                           return (
                             <div className="card" style={{ padding: "16px 18px", marginBottom: 16 }}>
                               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-                                <div style={{ fontSize: 10, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600 }}>
+                                <div style={{ fontSize: 12, color: G.muted, letterSpacing: ".09em", textTransform: "uppercase", fontWeight: 600 }}>
                                   {isAr ? `الأسبوع ${pr.week} من ${pr.weeks}` : `Week ${pr.week} of ${pr.weeks}`}
                                 </div>
                                 <div style={{ fontSize: 12, color: G.muted }}>
@@ -2440,78 +2457,127 @@ export default function App() {
                             red — which reads as an error, not a plan. The
                             colour survives as a 3px rule on the day bar and
                             nowhere else. */}
-                        <div className="card" style={{ padding: 18, marginBottom: 16 }}>
-                          <div className="sf" style={{ fontSize: 22, lineHeight: 1.2, color: G.text }}>{isAr ? ws.nameAr : ws.name}</div>
-                          <div style={{ fontSize: 12.5, color: G.muted, marginTop: 6, lineHeight: 1.55 }}>{isAr ? ws.descAr : ws.desc}</div>
+                        <div style={{ position: "relative", overflow: "hidden", background: G.grad, borderRadius: 20, padding: "20px 18px 18px", marginBottom: 18, color: G.onNavy, boxShadow: G.shadow }}>
+                          <div aria-hidden="true" style={{ position: "absolute", right: -60, top: -60, width: 190, height: 190, borderRadius: "50%", border: "26px solid rgba(255,255,255,.05)" }} />
+                          <div style={{ fontSize: 12, color: G.onNavyMuted, letterSpacing: ".1em", textTransform: "uppercase", fontWeight: 600 }}>{isAr ? "برنامجك" : "Your programme"}</div>
+                          <div className="sf" style={{ fontSize: 26, lineHeight: 1.15, marginTop: 6 }}>{isAr ? ws.nameAr : ws.name}</div>
+                          <div style={{ fontSize: 13.5, color: G.onNavyMuted, marginTop: 6, lineHeight: 1.55 }}>{isAr ? ws.descAr : ws.desc}</div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                            <span dir="ltr" style={{ fontSize: 12, fontWeight: 600, color: G.onNavy, background: "rgba(255,255,255,.12)", borderRadius: 999, padding: "5px 11px" }}>{isAr ? `${ws.days.length} أيام` : `${ws.days.length} days`}</span>
+                            <span dir="ltr" style={{ fontSize: 12, fontWeight: 600, color: G.onNavy, background: "rgba(255,255,255,.12)", borderRadius: 999, padding: "5px 11px" }}>{isAr ? `${ws.days.reduce((n, d) => n + d.exercises.length, 0)} تمرين` : `${ws.days.reduce((n, d) => n + d.exercises.length, 0)} exercises`}</span>
+                          </div>
                           <button onClick={() => setShowClientDayPicker(true)} disabled={scr.blocked}
                             title={scr.blocked ? (isAr ? "أكمل الفحص الصحي أولاً" : "Finish the health check first") : undefined}
-                            style={{ marginTop: 15, width: "100%", minHeight: 52, background: scr.blocked ? G.soft : G.grad, color: scr.blocked ? G.muted : G.paper, border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 12, fontWeight: 600, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, cursor: scr.blocked ? "not-allowed" : "pointer" }}><Icon n="play" s={14} c={scr.blocked ? G.muted : G.paper} /> Start session</button>
+                            style={{ marginTop: 16, width: "100%", minHeight: 52, background: scr.blocked ? "rgba(255,255,255,.10)" : "#FFFFFF", color: scr.blocked ? G.onNavyMuted : "#0B2036", border: scr.blocked ? "1px solid rgba(255,255,255,.22)" : "none", borderRadius: 14, fontWeight: 700, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, cursor: scr.blocked ? "not-allowed" : "pointer" }}><Icon n="play" s={14} c={scr.blocked ? G.onNavyMuted : "#0B2036"} /> Start session</button>
                         </div>
                         {/* Days with exercise cards */}
-                        {ws.days.map((day, di) => (
-                          <div key={di} style={{ marginBottom: 20 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 12, padding: "10px 12px", background: G.soft, borderRadius: 10, borderInlineStart: `3px solid ${ws.color}` }}>
-                              <span>{day.name}</span>
-                              <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} disabled={scr.blocked}
-                                style={{ background: scr.blocked ? "transparent" : G.grad, color: scr.blocked ? G.muted : G.paper, border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 10, minHeight: 40, padding: "0 16px", fontWeight: 600, fontSize: 12, flexShrink: 0, cursor: scr.blocked ? "not-allowed" : "pointer" }}>Start</button>
-                            </div>
-                            {/* The list has to match the session. If the player
-                                leaves a movement out because of the assessment,
-                                showing it here would read as the app losing
-                                exercises. Held-back ones are shown separately
-                                and explained, not silently dropped — someone
-                                working towards them should be able to see them. */}
-                            {(() => {
-                              const lv = liveC.capabilityLevels || liveC.capability_levels || null;
-                              const gated = lv && Object.keys(lv).length;
-                              const ready = [], notYet = [];
-                              for (const ex of day.exercises) {
-                                if (!gated || meetsRequirement(lv, getExerciseRequirement(ex.name))) ready.push(ex);
-                                else notYet.push(ex);
-                              }
-                              return (
-                                <>
-                                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                                    {ready.map((ex, ei) => (
-                                      <ExerciseCard key={ei} exercise={ex} color={ws.color} lang={lang} />
-                                    ))}
+                        {/* P2 (V7): the programme's days as a scrolling row of
+                            44 px chips; the chosen day's exercises and its own
+                            Start button below. Every day and every exercise is
+                            still one tap away; the actions are unchanged. */}
+                        {(() => {
+                          const di = Math.min(trainDayIdx, ws.days.length - 1);
+                          const day = ws.days[di];
+                          return (
+                            <div style={{ marginBottom: 20 }}>
+                              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+                                <h2 style={{ fontSize: 17, fontWeight: 700, color: G.text, margin: 0 }}>{isAr ? "الجلسات" : "Sessions"}</h2>
+                              </div>
+                              <div role="tablist" aria-label={isAr ? "أيام البرنامج" : "Programme days"} className="pd-hscroll"
+                                onKeyDown={(e) => {
+                                  // ARIA tabs: arrows / Home / End move the selection
+                                  // and focus (reversed in RTL); Tab leaves the row.
+                                  const n = ws.days.length; const back = isAr ? "ArrowRight" : "ArrowLeft", fwd = isAr ? "ArrowLeft" : "ArrowRight";
+                                  let to = null;
+                                  if (e.key === fwd) to = (di + 1) % n; else if (e.key === back) to = (di - 1 + n) % n;
+                                  else if (e.key === "Home") to = 0; else if (e.key === "End") to = n - 1;
+                                  if (to == null) return;
+                                  e.preventDefault(); setTrainDayIdx(to);
+                                  const el = e.currentTarget.querySelectorAll('[role="tab"]')[to]; if (el) { el.focus(); el.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+                                }}
+                                style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 14, scrollbarWidth: "none" }}>
+                                {ws.days.map((d, i) => {
+                                  const on = i === di;
+                                  return (
+                                    <button key={i} id={`pd-day-tab-${i}`} role="tab" aria-selected={on} aria-controls="pd-day-panel" tabIndex={on ? 0 : -1} onClick={() => setTrainDayIdx(i)} className="btn"
+                                      style={{ flex: "0 0 auto", minWidth: 64, minHeight: 56, padding: "6px 14px", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+                                        background: on ? G.navy : G.surf, color: on ? G.onNavy : G.text,
+                                        // selected: accent outline, so it separates from the page in dark too (>= 3:1)
+                                        border: `1.5px solid ${on ? G.accent : G.border}` }}>
+                                      <span style={{ fontSize: 12, fontWeight: 600, color: on ? G.onNavyMuted : G.muted }}>{isAr ? `اليوم ${i + 1}` : `Day ${i + 1}`}</span>
+                                      <span style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis" }}>{d.name.replace(/^Day \d+\s*[—-]\s*/, "").split(" (")[0]}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div role="tabpanel" id="pd-day-panel" aria-labelledby={`pd-day-tab-${di}`} className="card" style={{ padding: 14 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontSize: 15, fontWeight: 700, color: G.text, lineHeight: 1.35 }}>{day.name}</div>
+                                    <div style={{ fontSize: 12.5, color: G.muted, marginTop: 2 }}>{isAr ? `معاينة الجلسة · ${day.exercises.length} تمارين` : `Session preview · ${day.exercises.length} exercises`}</div>
                                   </div>
-                                  {notYet.length > 0 && (
-                                    <div style={{ marginTop: 10, padding: "10px 12px", background: G.surf2, border: `1px dashed ${G.border}`, borderRadius: 10 }}>
-                                      <div style={{ fontSize: 10, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 700 }}>
-                                        Working towards
+                                  <button onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); }} disabled={scr.blocked}
+                                    style={{ background: scr.blocked ? "transparent" : G.accent, color: scr.blocked ? G.muted : G.onAccent, border: scr.blocked ? `1px solid ${G.border}` : "none", borderRadius: 12, minHeight: 44, padding: "0 18px", fontWeight: 700, fontSize: 14, flexShrink: 0, cursor: scr.blocked ? "not-allowed" : "pointer" }}>Start</button>
+                                </div>
+                            {/* The list has to match the session. If the player
+                                    leaves a movement out because of the assessment,
+                                    showing it here would read as the app losing
+                                    exercises. Held-back ones are shown separately
+                                    and explained, not silently dropped — someone
+                                    working towards them should be able to see them. */}
+                                {(() => {
+                                  const lv = liveC.capabilityLevels || liveC.capability_levels || null;
+                                  const gated = lv && Object.keys(lv).length;
+                                  const ready = [], notYet = [];
+                                  for (const ex of day.exercises) {
+                                    if (!gated || meetsRequirement(lv, getExerciseRequirement(ex.name))) ready.push(ex);
+                                    else notYet.push(ex);
+                                  }
+                                  return (
+                                    <>
+                                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                                        {ready.map((ex, ei) => (
+                                          <ExerciseCard key={ei} exercise={ex} color={ws.color} lang={lang} />
+                                        ))}
                                       </div>
-                                      {notYet.map((ex, ei) => {
-                                        const why = blockedBy(lv, getExerciseRequirement(ex.name))[0];
-                                        return (
-                                          <div key={ei} style={{ marginTop: 7 }}>
-                                            <div style={{ fontSize: 12, color: G.text }}>{ex.name}</div>
-                                            {why && <div style={{ fontSize: 10.5, color: G.muted, marginTop: 1 }}>{why.name} — {why.neededLabel}</div>}
+                                      {notYet.length > 0 && (
+                                        <div style={{ marginTop: 10, padding: "10px 12px", background: G.surf2, border: `1px dashed ${G.border}`, borderRadius: 10 }}>
+                                          <div style={{ fontSize: 12, color: G.muted, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 700 }}>
+                                            Working towards
                                           </div>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        ))}
+                                          {notYet.map((ex, ei) => {
+                                            const why = blockedBy(lv, getExerciseRequirement(ex.name))[0];
+                                            return (
+                                              <div key={ei} style={{ marginTop: 7 }}>
+                                                <div style={{ fontSize: 12, color: G.text }}>{ex.name}</div>
+                                                {why && <div style={{ fontSize: 12, color: G.muted, marginTop: 1 }}>{why.name} — {why.neededLabel}</div>}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          );
+                        })()}
                         {showClientDayPicker && ws && (
                           <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(14,32,53,0.45)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
                             <div className="card" style={{ borderRadius: 18, padding: 24, width: "100%", maxWidth: 360 }}>
                               <div className="sf" style={{ fontSize: 21, marginBottom: 16 }}>Select a day</div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-                                <button onClick={() => { setActiveDay(null); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: G.accentSoft, color: G.accent, border: "none", borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                                <button onClick={() => { setActiveDay(null); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: G.accentSoft, color: G.accentStrong, border: `1px solid ${G.accentLine}`, borderRadius: 12, minHeight: 48, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
                                   Full workout — every day
                                 </button>
                                 {ws.days.map((day, i) => (
-                                  <button key={i} onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: `${ws.color}15`, color: ws.color, border: `1px solid ${ws.color}30`, borderRadius: 10, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                                  <button key={i} onClick={() => { setActiveDay(day.name); setShowClientPlayer(true); setShowClientDayPicker(false); }} style={{ background: G.surf, color: G.text, border: `1px solid ${G.border}`, borderInlineStart: `3px solid ${ws.color}`, borderRadius: 12, minHeight: 48, padding: "12px 16px", fontWeight: 700, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
                                     {day.name}
                                   </button>
                                 ))}
                               </div>
-                              <button onClick={() => setShowClientDayPicker(false)} style={{ width: "100%", background: G.surf, color: G.text, border: "none", borderRadius: 10, padding: "10px", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => setShowClientDayPicker(false)} style={{ width: "100%", minHeight: 48, background: G.surf2, color: G.text, border: `1px solid ${G.border}`, borderRadius: 12, padding: "10px", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
                             </div>
                           </div>
                         )}

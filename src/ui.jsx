@@ -13,9 +13,12 @@ export function Segmented({ label, value, options, onChange }) {
         const on = o.value === value;
         return (
           <button key={o.value} role="radio" aria-checked={on} onClick={() => onChange(o.value)} className="btn"
-            style={{ minHeight: 44, borderRadius: 10, border: "none", fontSize: 14, fontWeight: 700,
-              background: on ? G.surf : "transparent", color: on ? G.text : G.muted,
-              boxShadow: on ? G.shadow : "none" }}>
+            // P2: the selected option is an accent-soft chip with a 1.5 px
+            // accent outline (>= 3:1 against the track in both themes) and
+            // accent-strong text, so the choice reads clearly in dark too.
+            style={{ minHeight: 44, borderRadius: 10, fontSize: 14, fontWeight: 700,
+              background: on ? G.accentSoft : "transparent", color: on ? G.accentStrong : G.muted,
+              border: on ? `1.5px solid ${G.accent}` : "1.5px solid transparent" }}>
             {o.label}
           </button>
         );

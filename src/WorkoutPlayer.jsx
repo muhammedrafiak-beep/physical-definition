@@ -756,10 +756,10 @@ export function WorkoutPlayer({
               {fmtClock(elapsed)}
             </span>
               {setStarted && phase === "exercise" && (
-                <button onClick={() => setIsPaused(p => !p)} aria-label={isPaused ? "Resume" : "Pause"} style={{ background:"#1B3350",border:"1px solid #24405F",borderRadius:10,color:"#FCFCFD",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n={isPaused ? "play" : "pause"} s={14} c="#FCFCFD" w={2} /></button>
+                <button onClick={() => setIsPaused(p => !p)} aria-label={isPaused ? "Resume" : "Pause"} style={{ background:"#1B3350",border:"1px solid #24405F",borderRadius:10,color:"#FCFCFD",width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n={isPaused ? "play" : "pause"} s={14} c="#FCFCFD" w={2} /></button>
               )}
-            <button onClick={() => setShowAI(true)} aria-label="Form check" title="Form check" style={{ background:"rgba(143,180,234,0.14)",border:"1px solid #24405F",borderRadius:10,color:"#8FB4EA",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n="ai" s={15} c="#8FB4EA" /></button>
-            <button onClick={handleEndEarly} style={{ ...iconBtnStyle, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, border: "1px solid #24405F" }} aria-label="End workout"><Icon n="close" s={15} c="#8FA3BE" w={2} /></button>
+            <button onClick={() => setShowAI(true)} aria-label="Form check" title="Form check" style={{ background:"rgba(143,180,234,0.14)",border:"1px solid #24405F",borderRadius:10,color:"#8FB4EA",width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><Icon n="ai" s={15} c="#8FB4EA" /></button>
+            <button onClick={handleEndEarly} style={{ ...iconBtnStyle, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, border: "1px solid #24405F" }} aria-label="End workout"><Icon n="close" s={15} c="#8FA3BE" w={2} /></button>
           </div>
         </div>
 
@@ -807,7 +807,7 @@ export function WorkoutPlayer({
                   screen is saved when the rest ends. */}
               {showLogger && (
                 <div style={{ width: "100%", maxWidth: 340 }}>
-                  <div style={{ fontSize: 11, color: "#7E93B0", textAlign: "center", marginBottom: 8, letterSpacing: 1 }}>
+                  <div style={{ fontSize: 12, color: "#8FA3BE", textAlign: "center", marginBottom: 8, letterSpacing: 1 }}>
                     SET {setIdx} - ADJUST IF IT WAS DIFFERENT
                   </div>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -826,7 +826,7 @@ export function WorkoutPlayer({
                     <button
                       type="button"
                       onClick={() => setForceWeight(true)}
-                      style={{ display: "block", margin: "10px auto 0", background: "none", border: "none", color: "#7E93B0", fontSize: 11, cursor: "pointer", textDecoration: "underline" }}
+                      style={{ display: "block", margin: "6px auto 0", minHeight: 44, padding: "0 12px", background: "none", border: "none", color: "#8FA3BE", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
                     >
                       + add weight
                     </button>
@@ -835,7 +835,7 @@ export function WorkoutPlayer({
                       taps, all optional — a set with no answer here is still a
                       set, and pretending otherwise would cost the logging. */}
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 10, color: "#7E93B0", textAlign: "center", marginBottom: 6, letterSpacing: 1 }}>
+                    <div style={{ fontSize: 12, color: "#8FA3BE", textAlign: "center", marginBottom: 6, letterSpacing: 1 }}>
                       HOW MANY MORE COULD YOU HAVE DONE?
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
@@ -847,10 +847,10 @@ export function WorkoutPlayer({
                       ].map((o) => {
                         const on = rir === o.v;
                         return (
-                          <button key={o.v} type="button"
+                          <button key={o.v} type="button" aria-pressed={on}
                             onClick={() => setRir(on ? null : o.v)}
                             style={{
-                              flex: 1, padding: "8px 0", borderRadius: 8, cursor: "pointer",
+                              flex: 1, minHeight: 44, padding: "8px 0", borderRadius: 8, cursor: "pointer",
                               fontSize: 12, fontWeight: 700,
                               background: on ? accentColor : "#1B3350",
                               color: on ? "#0E2035" : "#8FA3BE",
@@ -861,7 +861,7 @@ export function WorkoutPlayer({
                     </div>
                   </div>
                   {progressed && (
-                    <div style={{ marginTop: 10, textAlign: "center", fontSize: 11, color: "#4FBF97", fontWeight: 700 }}>
+                    <div style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "#4FBF97", fontWeight: 700 }}>
                       You hit the top of the range last time - this is a step up
                     </div>
                   )}
@@ -957,7 +957,7 @@ function NumField({ label, value, step, accent, onChange }) {
     onChange(String(next));
   };
   const btn = {
-    width: 40, height: 44, flexShrink: 0, borderRadius: 8, cursor: "pointer",
+    width: 44, height: 44, flexShrink: 0, borderRadius: 8, cursor: "pointer",
     background: "#1B3350", border: "1px solid #24405F",
     color: "#fff", fontSize: 20, fontWeight: 700, lineHeight: 1,
   };
@@ -969,7 +969,7 @@ function NumField({ label, value, step, accent, onChange }) {
     // not be logged at all. The 130px basis lets them stack instead of
     // squeezing the input down to nothing on the narrowest phones.
     <div style={{ flex: "1 1 130px", minWidth: 0 }}>
-      <div style={{ fontSize: 9, color: "#7E93B0", letterSpacing: 1.2, textAlign: "center", marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "#8FA3BE", letterSpacing: 1.2, textAlign: "center", marginBottom: 5 }}>{label}</div>
       <div style={{ display: "flex", gap: 5 }}>
         <button type="button" onClick={() => bump(-1)} style={btn}>-</button>
         <input
